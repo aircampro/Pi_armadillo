@@ -1,0 +1,193 @@
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="ja">
+<head>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta http-equiv="Content-Type" content="text/html; charset=Shift_JIS">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<meta http-equiv="Content-Script-Type" content="text/javascript">
+<script type="text/javascript"src="../sys2/app02.php"></script>
+
+	<title>ログイン</title>
+	<style type="text/css">
+	span.N { font-size: 12pt; }
+	span.N2 { background-color: #C0C0C0; }
+	fieldset.w { display: inline; }
+	</style>
+
+</head>
+<body>
+
+<h2 align="center">ユーザーログイン<br><br>
+<span class="N"><span class="N2" onclick="sub()">ログイン</span>をクリックするだけでguestユーザーのお試しができます。
+&nbsp;&nbsp;<a href="0/usage.htm"target="_blank">使い方</a></span>
+</h2>
+ 
+<p>登録済ユーザーの方は、ご自身の郵便番号、ユーザー名、パスワードを入力して、ログインしてください。</p>
+ 
+<p>これにより、ユーザーに合った解説と問題のページへ誘導できます。</p>
+ 
+<p>未登録の場合は、こちら⇒（<a href="../sys2/user_new.php">登録ページ</a>）でユーザー登録してください。</p>
+
+<!--
+<h1>申し訳ございません。<br>
+メンテナンスにより、今日はログインできません。</h1>
+ -->
+<form>
+<p><fieldset class="w">郵便番号入力欄→<input type="text"id="txtPost"value="000-0000"></fieldset>
+　 <fieldset class="w">ユーザー名入力欄→<input type="text"id="txtUser"value="guest"size="40"></fieldset></p>
+<p><fieldset class="w">パスワード入力欄→<input type="password"id="txtPasswd"value=""size="40"></fieldset>
+<input type="button"value="ログイン" id="btnLogin"onclick="sub2()">
+</p>
+<input type='hidden' name='$ssname' value='$ssid'>
+<input type='hidden' name='data2' value='test'>
+</form>
+<p id='msg'>入力後に、ログインボタンをクリックしてください。</p>
+<p style="margin-left: 10%">なお guest のユーザーでご確認される場合は、パスワードなしで始めることが可能です。<br>
+ですが guest のログインでは、履歴が残せないため次回のページ誘導ができません。<br>
+また登録しないと見えないページもあります。ぜひ、ユーザー登録してからご使用ください。<br>
+（登録に 料金が掛かるわけではございません。またニックネームが使え、メールの入力なしで登録可能です。）
+</p>
+</body>
+<script>
+
+//ログイン用で入力したデータをコンマで繋げた1行の文字列を得る。この際に入力チェックを行う。
+var msg_p=document.getElementById("msg");//メッセージ表示用
+
+function get_data_with_check(){
+	var post = document.getElementById("txtPost").value;
+	var user = document.getElementById("txtUser").value;
+	var paswd = document.getElementById("txtPasswd").value;
+	if((post+user+paswd).match(',') != null) {
+		msg_p.innerHTML="入力欄に , コンマの文字を入力しないでください。";
+		return "";
+	}
+	
+	var data ="" + post + "," + user + "," + paswd;
+	return data;
+}
+
+function sub2(){
+	var data2 = get_data_with_check();//ログイン用で入力したデータをコンマで繋げた1行の文字列を得る
+	if( data2 == "") return;//不正な入力
+
+	msg_p.innerHTML="現在、ユーザー認証を行っています。";
+	document.getElementById("btnLogin").disabled = true;
+	var data3 = crypt_send(data2,"../sys2/loginprg.php");//暗号化して送信、そして受信して復号
+	document.getElementById("btnLogin").disabled = false;
+
+	var all = data3.split(",");// コンマで分解した文字列取得
+	if( all[0] == 'NEXT_PAGE' ){
+		var next_path = all[1];
+		msg_p.innerHTML=next_path + "のページへ移動します。";
+		location.href = next_path;
+	} else if(all[0] == 'MESSAGE' ){
+		msg_p.innerHTML =  all[1];//メッセージ
+	} else {
+		msg_p.innerHTML="未対応メッセージ<br>" + data3;
+	}
+}
+</script>
+<p>
+<span id=app_message></span>
+<span id='logonmsg'></span></p>
+<script src="jv_check.js"></script>
+<script language="javascript">
+	var v_post="", v_user="", v_password="", v_date="";
+	
+	var msgObj = document.getElementById("app_message");
+	
+	function sub_main() {
+		if(navigator.cookieEnabled){//クッキーが可能か？
+			var flagCookie = false;
+			var wPostUser="";	
+			var s = document.cookie;
+			var len;
+			if(s != null &&  (len = s.length) > "values=0".length){
+				s = s.substring("values=".length, len);
+				var i = s.indexOf(";");
+				if(i != -1){
+					s = s.substring(0, i);
+				}
+				i = s.indexOf("/");
+				if(i != -1){
+					v_post = s.substring(0, i);
+					s = s.substring(i+1, s.length);
+					i = s.indexOf( "/");
+					if(i != -1){
+						v_user = s.substring(0, i);
+						s = s.substring(i+1, s.length);
+						i = s.indexOf("/");
+						if(i != -1){
+							v_password = s.substring(0, i);
+							v_date = s.substring(i+1, s.length);
+							v_date = unescape(v_date);
+						}					
+					}
+					
+				}
+				if(v_user != ""){
+					s="<br><br>「以前に記憶したグループ名、ユーザ名、パスワード」を、";
+					s+="<input type='button' value='設定' onclick='r1_cookie()'>で上記へ設定できます。<br>";	
+					s+="この情報の有効期間は「" + v_date  + "」まで です。<br>";	
+					var apname = navigator.userAgent.toLowerCase();
+					//alert(apname);
+					if(apname.indexOf("safari") != -1 && apname.indexOf("chrome") == -1){
+						s+="この情報の消去は「環境設定」メニューの[セキュリティ]の{Cookie受け入れ}でCookiを表示して削除ください。";	
+					} else {
+						s+="Cookieを利用しているこの情報は、<input type='button' value='消去' onclick='w2_cookie()'>で消去できます。";	
+					}
+					msgObj.innerHTML = s;
+					flagCookie = true;
+				}
+			}
+		
+			if(flagCookie == false){
+				s="<br><br>上記に入力したグループ名、ユーザー名、パスワードを次のボタンで30日間記憶できます。";	
+				s+="<input type='button' value='記憶' onclick='w1_cookie()' alt='Cookieで保存'>";
+				msgObj.innerHTML = s;
+			}
+		}
+	}
+	
+	function w1_cookie(){
+		if(document.getElementById("txtUser").value == "guest"){
+			alert("guestのユーザー名では記憶できません。");
+			return;
+		}
+		var d = new Date();
+		var t = Date.parse(d);
+		//t += 2 * 60 * 1000;//2分後
+		//t += ( 60 * 1000 ) * 60 * 24 * 10;//10日間分
+		//d.setTime(t);
+		d.setDate(d.getDate() + 30);//30日間分
+		
+		s = "values=" + document.getElementById("txtPost").value;
+		s += "/" + document.getElementById("txtUser").value;
+		s += "/" + document.getElementById("txtPasswd").value;
+		s += "/" + escape(d.toLocaleString());
+		s += ";expires=" + d.toGMTString();
+		s += ";domain=" + location.hostname;
+		document.cookie=s;
+		sub_main();
+		//alert("以上を\n"+d.toLocaleString()+"までの\n期限で記憶しました。");
+	}
+	function r1_cookie(){
+		document.getElementById("txtPost").value=v_post;
+		document.getElementById("txtUser").value=v_user;
+		document.getElementById("txtPasswd").value=v_password;
+	}
+
+	function w2_cookie(){//クッキーをクリアする
+		var d = new Date();
+		d.setYear(d.getYear() - 1);
+		document.cookie = "values=0;expires=" + d.toGMTString();
+		//alert(document.cookie);
+		v_post="", v_user="", v_password="", v_date="";
+		sub_main();
+	}
+
+	sub_main();
+</script>
+
+</html>

@@ -1,0 +1,29 @@
+#smallArea {
+  background-color: #bbedce;
+  width: 80px;
+  height: 26px;
+  padding-top: 4px;
+
+  /* border */
+  border: 1px solid; /*  */
+  border-bottom: transparent; /*  */
+  border-top-left-radius: 8px; /*  */
+  border-top-right-radius: 8px; /* */
+  margin-bottom: -1px;
+  position: relative;
+  text-align: center;
+}
+
+#largeArea {
+  background-color: #fff;
+  width: 200px;
+  height: 40px;
+  padding: 20px;
+
+  border: 1px solid;
+}
+
+.disp-area {
+  margin-top: 20px;
+  margin-left: 20px;
+}
