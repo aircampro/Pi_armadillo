@@ -1,0 +1,443 @@
+BODY {
+    color: #333333;
+/*    font-size:1em; */
+/*    font-family:'メイリオ',Meiryo,'ヒラギノ角ゴ Pro W3','Hiragino Kaku Gothic Pro','ＭＳ Ｐゴシック',sans-serif;  */
+}
+H2 {
+    width: 100%;
+    font-weight: bold;
+    color: #ffffff;
+    background-color: #8484ee;
+    border: 1px none #8888f8;
+    border-top: 1px solid #8888f8;
+    border-left: 1px solid #8888f8;
+    border-right: 1px solid #666699;
+    border-bottom: 1px solid #666699;
+    padding: 5px 3px 3px 0.5em;
+    margin-top: 5px;
+    margin-bottom: 10px;
+    text-shadow: 1px 1px 3px #333333;
+    background: linear-gradient(#8886f8, #8484ee, #6868d9);
+}
+H3 {
+    width: 100%;
+    color: #ffffff;
+    font-weight: bold;
+    font-size: 1.3em;
+    background-color: #8484ee;
+    border: 1px none #8888f8;
+    border-top: 1px solid #8888f8;
+    border-left: 1px solid #8888f8;
+    border-right: 1px solid #666699;
+    border-bottom: 1px solid #666699;
+    padding: 7px 3px 5px 0.5em;
+    text-shadow: 1px 1px 2px #333333;
+    background: linear-gradient(#8888f8, #8484ee, #6868d9);
+}
+H4 {
+    width: 100%;
+    font-weight: bold;
+    font-size: 1em;
+    color: #ffffff;
+    background-color: #8484ee;
+    border: 1px none #8888f8;
+    border-top: 1px solid #ccccff;
+    border-left: 1px solid #ccccff;
+    border-right: 1px solid #666699;
+    border-bottom: 1px solid #666699;
+    padding: 5px 3px 3px 0.5em;
+    text-shadow: 1px 1px 2px #333333;
+    background: linear-gradient(#8888f8, #8484ee, #6868d9);
+}
+H5 {
+    font-size: 1em;
+}
+
+
+A:link {
+    color: #000099;
+}
+A:visited {
+    color: #000099;
+}
+A:hover {
+    color: #ff0000;
+}
+A.noul, span.noul {
+    text-decoration: none;
+}
+H4 A:link {
+    color: #ffffff;
+}
+H4 A:visited {
+    color: #ffffff;
+}
+H4 A:hover {
+    color: #ff0000;
+}
+.lLink {
+    text-decoration: underline; 
+    color: #000099;
+    cursor: pointer;
+}
+.lLink:hover {
+    color: #ff0000;
+}
+H4 span.lLink {
+    color: #ffffff;
+}
+B.color3 span.lLink, a {
+    text-decoration: none; 
+}
+
+P {
+    text-indent: 1em;
+}
+P.noi {
+    text-indent: 0em;
+}
+P.note { margin: 0.3em 0 0.3em 0; padding-left:3.8em; text-indent:-3.8em; }
+P.note::before { color: red; content:"【注意】　"; }
+P.note::after { content:"　▯"; }
+P.notei { margin: 0.3em 0 0.3em 0; padding-left:4.4em; text-indent:-4.4em; }
+P.notei::before { 
+      color: red;
+      content:"【注意 " counter(ipnote) "】　";
+      counter-increment: ipnote;
+}
+P.notei::after { content:"　▯"; }
+
+.hang4 {
+    padding-left:3.8em; 
+    text-indent:-3.8em;
+}
+.hang5 {
+    padding-left:4.8em; 
+    text-indent:-4.8em;
+}
+.hang6 {
+    padding-left:5.8em; 
+    text-indent:-5.8em;
+}
+.i {
+    margin: 0em 1em 0em 1em;
+}
+.ip {
+    margin: 0.3em 0em 0.3em 0em;
+}
+.il1 {
+    margin: 0px 0px 0px 25px;
+}
+.il2 {
+    margin: 0px 0px 0px 55px;
+}
+.ix {  /* Hanrei */
+    margin: 0px 80px 0px 40px;
+}
+
+.color0 {
+    color: #000000; } /* black */
+.color1 {
+    color: #ff0000; } /* red */
+.color2 {
+    color: #00ff00; } /* green */
+.color3 {
+    color: #0000ff; } /* blue */
+.color4 {
+    color: #00cc00; } /* lightgreen */
+.color5 {
+    color: #ff6600; } /* orange */
+.color6 {
+    color: #ff00ff; } /* fuchsia */
+.color7 {
+    color: #ccffff; } /* lightblue */
+.color8 {
+    color: #ffffff; } /* white */
+.color9 {
+    color: #000099; } /* darkblue */
+.color10 {
+    color: purple; } /* purple */
+
+
+.c0 {background-color:#8484ee; color: #ffffff;}
+.c1 {background-color: #ffffdc;}
+.c2 {background-color: #d0f0ff;}
+.c3 {background-color: #f2fff2;}
+.c4 {color: #ff00b4;}
+
+PRE.c {
+    border: 1px solid gray;
+    padding: 5px;
+    white-space: pre;
+    width: 100%;
+    background-color: #fffff0;
+}
+DIV.c {
+    border: 1px solid gray;
+    padding: 5px;
+    width: 100%;
+    background-color: #fffff0;
+}
+EM {
+    color: #ff0000;
+    font-style: normal;
+}
+
+/* 用語集 */
+.term H4 {
+    color: #333355;
+    margin: 1.3em 0em 0.6em 0em;
+    border: 1px solid #c0c0c0;
+    background-color: #e0e0e0;
+    padding: 2px 2px 2px 4px;
+}
+
+/* HTMLリファレンス */
+.border {
+    background-color: #fffcf8;
+    border-color: #999999;
+    border-width: 1px;
+    border-style: solid;
+    padding: 0px 0px 0px 0px;
+    margin: 0px 0px 0px 0px; 
+}
+IFRAME.ref { /* Frame for the drop-down menu */
+    width: 100%; height: 13.4em; border-width: 0px; border-style: none; margin: 0px; padding: 0px; 
+}
+
+.w_4 { /* 4em width */
+    width: 4em;
+}
+.w_5 { /* 5em width */
+    width: 5em;
+}
+.w_6 { /* 6em width */
+    width: 6em;
+}
+.w_7 { /* 7em width */
+    width: 7em;
+}
+.w_8 { /* 8em width */
+    width: 8em;
+}
+.w_9 { /* 9em width */
+    width: 9em;
+}
+.w_10 { /* 10em width */
+    width: 10em;
+}
+.w_11 { /* 11em width */
+    width: 11em;
+}
+
+.w5 { /* 5th width */
+    width: 9em;
+}
+.w6 { /* 6th width */
+    width: 9.5em;
+}
+.w7 { /* 7th width */
+    width: 10em;
+}
+.w8 { /* 8th width */
+    width: 10.5em;
+}
+.w9 { /* 9th width */
+    width: 11em;
+}
+.w10 { /* 10th width */
+    width: 11.5em;
+}
+.w11 { /* 11th width */
+    width: 12em;
+}
+.MenuL { /* Menu Item Left */
+    margin: 0 0.5em 0 3em;
+    text-align: right;
+    cursor: pointer;
+    float: left;
+}
+.MenuC { /* Menu Item Center */
+    margin: 0 0.5em 0 0;
+    text-align: right;
+    cursor: pointer;
+    float: left;
+}
+.MenuR { /* Menu Item Right */
+    margin: 0 3em 0 0;
+    text-align: right;
+    cursor: pointer; 
+    float: left;
+}
+TABLE.brdr1 { border: solid 1px #000000; }
+TABLE.brdr1 TH, TABLE.brdr1 TD {
+              border: solid 1px #000000; }
+TABLE.p { /* Plain color */
+    background-color: #fffcf8;
+    border-color: #c0c0c0;
+    border-collapse: collapse;
+}
+TABLE.p TH {
+    border-color: #999999;
+}
+TABLE.p TD {
+    border-color: #999999;
+}
+TABLE.pt { /* Main Table  */
+    width: 85%;
+    margin: 0px auto 0px auto;
+    background-color: #fffcf8;
+    border-color: #c0c0c0;
+    border-collapse: collapse;
+    border-width: 1px;
+    border-style: solid;
+    border-spacing: 3px;
+}
+TABLE.pt TH { /* Table Header */
+    border-color: #999999;
+    border-width: 1px;
+    border-style: solid;
+    white-space: nowrap;
+    padding: 3px;
+}
+TABLE.pt TD { /* Table Data */
+    border-color: #999999;
+    border-width: 1px;
+    border-style: solid;
+    padding: 3px;
+}
+TR.th { /* Table Header */
+    background-color: #CCCCFF;
+}
+TR.at { /* ATtribute list */
+    background-color: #CCCCFF;
+    border-color: #c0c0c0;
+}
+TR.ss { /* Sample Source */
+    background-color: #FFCCCC;
+}
+TR.sv { /* Sample View */
+    background-color: #DDFFDD;
+}
+TR.p { /* Source View */
+    background-color: #fffff0;
+}
+
+TABLE.kw { /* KeyWord */
+    border-style: solid none none solid;
+    border-width: 1px 0px 0px 1px;
+    border-color: #808080;
+    border-spacing: 0px; 
+    padding: 0px;
+}
+TABLE.kw TH { /* KeyWord */
+    background-color:#c0c0c0;
+    border-style: solid;
+    border-width: 1px;
+    border-color: #ffffff #808080 #808080 #ffffff;
+    padding: 2.2px;
+    white-space:nowrap;
+}
+TABLE.kw TD { /* KeyWord */
+    border-style: none solid solid none;
+    border-width: 0px 1px 1px 0px;
+    border-color: #808080;
+    padding: 3.2px;
+}
+
+
+TABLE.radius { 
+    border-spacing: 0.13em;
+    border-style:solid; 
+    border-width:0.4em; 
+    border-color:#66cdaa; 
+    border-radius: 1.97em 0.6em 1em 0.6em; 
+    margin: 0px auto 0px auto;
+}
+TABLE.radius TH, TABLE.radius TD { 
+    border: solid 0px red; 
+    padding-left: 0.6em; 
+    white-space: nowrap;
+}
+TABLE.radius TR.at { 
+    border: none 0px; 
+    text-shadow: -1px -1px 2px #ececec;
+}
+TH.topl, TD.topl {  /* Top-Left */
+    border-radius: 1.52em 0px 0px 0px / 1.52em 0px 0px 0px ;
+    border: solid 1px #ff0000;
+}
+TH.btmr, TD.btmr {  /* Bottom-Right */
+    border-radius: 0px 0px 0.6em 0px;
+    padding-right: 0.35em;
+}
+
+TH.bdl, TD.bdl {white-space: nowrap; padding: 0.2em 0em;}
+TD.qno {text-align: center; white-space: nowrap;}
+TD.qst {text-align : left; padding-left: 3px; white-space: nowrap;}
+TH.sel, TD.sel {white-space: nowrap; padding: 0.1em 0.5em;}
+TD.cat {text-align : center; padding-top: 0.4em; white-space: nowrap ;}
+
+/* 旧バージョン（以下の parenth1, parenth0 クラスに置換） */
+ol.parenth { 
+    counter-reset: itemp;
+    padding-left: 3em;  
+    text-indent: -1.5em;  
+}
+ol.parenth > li { display: block; }
+ol.parenth > li::before { content:"(" counter(itemp) ") "; counter-increment: itemp; }
+/* 旧バージョン（以下の bracket1, bracket0 クラスに置換） */
+ol.bracket { 
+    counter-reset: itemb;
+    padding-left: 3em;  
+    text-indent: -1.5em;  
+}
+ol.bracket > li { display: block; }
+ol.bracket > li::before { content:"[" counter(itemb) "] "; counter-increment: itemb; }
+
+/* 新バージョン（以下の parenth1→トップレベル用, parenth0→入れ子用） */
+ol.parenth0 { margin: 0.5em 0; }
+ol.parenth1 { margin: 0.5em 0 0.5em 1em;}
+ol.parenth0, ol.parenth1 { 
+    counter-reset: itemp; 
+}
+ol.parenth0 * li, ol.parenth1 * li {
+    position: relative; 
+    top: 0; left: -1em; 
+    text-indent: 0em;
+   }
+ol.parenth0 > li, ol.parenth1 > li {
+    display: block; position: relative; 
+    top: 0; left: -1em !important; 
+    text-indent: -1.45em !important;
+}
+ol.parenth0 > li::before, ol.parenth1 > li::before { 
+    content:"(" counter(itemp) ") "; 
+    counter-increment: itemp; 
+}
+
+/* 新バージョン（以下の bracket1→トップレベル用, bracket0→入れ子用） */
+ol.bracket0 { margin: 0.5em 0;}
+ol.bracket1 { margin: 0.5em 0 0.5em 1em; }
+ol.bracket0, ol.bracket1 { 
+    counter-reset: itemb;
+}
+ol.bracket0 * li, ol.bracket1 * li {
+    position: relative;
+    top: 0; left: -1em;
+    text-indent: 0em;
+}
+ol.bracket0 > li, ol.bracket1 > li { 
+    display: block; position: relative;
+    top: 0; left: -1em !important;
+    text-indent: -1.45em !important;
+}
+ol.bracket0 > li::before, ol.bracket1 > li::before {
+    content:"[" counter(itemb) "] ";
+    counter-increment: itemb; 
+}
+
+
+/* Copyright (C) 2012 大阪教育大学 情報科学講座，2017 大阪教育大学 理数情報講座 */
+/* 2012年4月20日 最終更新：2017年5月17日 */
+/* http://www.osaka-kyoiku.ac.jp/~joho/ */

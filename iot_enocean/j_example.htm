@@ -1,0 +1,63 @@
+<!doctype html>
+<html>
+   <head>
+      <meta charset="UTF-8">
+      <title>enOcean Sensors connected to Raspberry Pi</title>
+      <link rel="stylesheet" type="text/css" media="screen, tv" href="style.css">
+      <link rel="stylesheet" type="text/css" media="print" href="print.css">
+      <link rel="stylesheet" type="text/css" media="handheld"  href="mobile.css">
+      <style type="text/css" media="speech">
+      <!--
+         p { voice-family: male}
+      -->
+      </style>
+      <style type="text/css" media="screen, handheld, print, tv" >
+      <!--
+         ol.x li { margin-top: 1em; }
+         div.right { text-align: right; }
+         div.float { float: left}
+      -->
+      </style>
+      <script type="text/javascript" src="top_iframe_set.js"></script>
+   </head>
+   <body onload="SetFrameSrc();">
+<!--
+   Shows live temperature sensors。
+-->
+      <header id="PageHead" style="width: 101%; background-color:#ffffff;">
+         <hr style="margin:0.2em 0;padding:0;">
+      </header>
+<div id="PageBody" style="position:static; margin-top: 0em;" >
+<section>
+<h2><b>Telemetry Values</b> - enOcean Temperature Sensors</h2>
+<h4 id="Summary">■ ~~ STM-431J ~~ ■</h4>
+<div class="i">
+   <table class="radius">
+      <tr class="at"><th class="w6 topl">Temperature DegC</th><th>Sensor ID</th></tr>
+      <tr class="c2"><th><span class="lLink" onclick="localLink('sensor_details.html#Sensor1');">04:01:53:e1</span></th>
+         <td class="bdl"> {<span class="border">{{ t1 }}!</span> DegC}</td></tr>
+      <tr class="c1"><th><span class="lLink" onclick="localLink('sensor_details.html#Sensor2');">04:00:6f:e5</span></th>
+         <td class="bdl"> {<span class="border">{{ t2 }}!</span> DegC}</td></tr>
+      <tr class="c2"><th><span class="lLink" onclick="localLink('sensor_details.html#Sensor3');">spare1</span></th>
+         <td><b>to configure</b></td></tr>
+      <tr class="c1"><th><span class="lLink" onclick="localLink('sensor_details.html#Sensor4');">spare2</span></th>
+         <td><b>to configure</b></td></tr>
+      <tr class="c2"><th><span class="lLink" onclick="localLink('sensor_details.html#Sensor5');">spare3</span></th>
+         <td><b>to configure</b></td></tr>
+      <tr class="c1"><th><span class="lLink" onclick="localLink('sensor_details.html#Sensor6');">spare4</span></th>
+         <td><b>to configure</b></td></tr>
+   </table>
+</div>
+</section>
+
+
+<hr>
+<footer>
+<div class="i">
+  <div class="ix">■ Copyright (C) 2023 Air Cam Pro ■</div>
+</div>
+</footer>
+</div>
+
+   </body>
+</html>
