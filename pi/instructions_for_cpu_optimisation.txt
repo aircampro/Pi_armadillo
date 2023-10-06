@@ -1,0 +1,509 @@
+
+========================= disabling powersave mode in x86 ====================================================
+
+cat /sys/devices/system/cpu/cpuidle/current_driver
+intel_idle
+
+vi /etc/default/grub
+GRUB_CMDLINE_LINUX="intel_idle.max_cstate=0 processor.max_cstate=0"
+
+sudo update-grub
+
+systemctl reboot
+
+then you should get
+
+you@Ubunt-18-dev1:~$ cat /sys/devices/system/cpu/cpuidle/current_driver
+none
+
+========================= Notes for x86 Performance Improvement ====================================================
+
+you@Ubunt-18-dev1:~$ sudo cpupower info
+analyzing CPU 0:
+perf-bias: 6
+
+you@Ubunt-18 $ sudo cpupower frequency-info
+
+if its not there install it like this
+sudo apt-get install -y linux-tools-$(uname -r)
+
+>>>>>>>>>>>>>>>>>>> BEFORE <<<<<<<<<<<<<<<<<<
+you@Ubunt-18-dev1:~$ sudo cpupower frequency-info
+analyzing CPU 0:
+  driver: intel_pstate
+  CPUs which run at the same hardware frequency: 0
+  CPUs which need to have their frequency coordinated by software: 0
+  maximum transition latency:  Cannot determine or is not supported.
+  hardware limits: 500 MHz - 1.90 GHz
+  available cpufreq governors: performance powersave
+  current policy: frequency should be within 500 MHz and 1.90 GHz.
+                  The governor "powersave" may decide which speed to use
+                  within this range.
+  current CPU frequency: Unable to call hardware
+  current CPU frequency: 1.23 GHz (asserted by call to kernel)
+  boost state support:
+    Supported: no
+    Active: no
+	
+>>>>>>>>>>>>>>>>>> AFTER <<<<<<<<<<<<<<<<<<<<<<<<<
+you@Ubunt-18-dev1:~$ sudo cpupower frequency-info
+analyzing CPU 0:
+  driver: intel_pstate
+  CPUs which run at the same hardware frequency: 0
+  CPUs which need to have their frequency coordinated by software: 0
+  maximum transition latency:  Cannot determine or is not supported.
+  hardware limits: 500 MHz - 1.90 GHz
+  available cpufreq governors: performance powersave
+  current policy: frequency should be within 500 MHz and 2.00 GHz.
+                  The governor "performance" may decide which speed to use
+                  within this range.
+  current CPU frequency: Unable to call hardware
+  current CPU frequency: 1.51 GHz (asserted by call to kernel)
+  boost state support:
+    Supported: yes
+    Active: yes
+
+------------------------------------- cpu turbo boost enabling ------------------------
+
+sudo apt install msr-tools
+
+sudo rdmsr -p0 0x1a0 -f 38:38
+	
+if no file returned
+sudo modprobe msr
+
+use these scripts to enable or disable the performance boost you need to activate it to enable 
+sudo ./boost_enable.sh
+
+>> -----------  boost_enable.sh ---------- <<
+if test -z $(which rdmsr) ; then
+    echo "msr-tools is not installed. Run 'sudo apt-get install msr-tools' to install it." >&2
+    exit 1
+fi
+
+cores=$(cat /proc/cpuinfo | grep processor | awk '{print $3}')
+for core in $cores; do
+    sudo wrmsr -p${core} 0x1a0 0x850089
+    state=$(sudo rdmsr -p${core} -f 38:38 0x1a0)
+    echo "core ${core}: 0=enabled 1=disabled ${state}"
+done
+
+>> -----------  boost_disable.sh ---------- <<
+if test -z $(which rdmsr) ; then
+    echo "msr-tools is not installed. Run 'sudo apt-get install msr-tools' to install it." >&2
+    exit 1
+fi
+
+cores=$(cat /proc/cpuinfo | grep processor | awk '{print $3}')
+for core in $cores; do
+    sudo wrmsr -p${core} 0x1a0 0x4000850089
+    state=$(sudo rdmsr -p${core} -f 38:38 0x1a0)
+    echo "core ${core}: 0=enabled 1=disabled ${state}"
+done
+
+sudo cpupower frequency-info
+analyzing CPU 0:
+  driver: intel_pstate
+  CPUs which run at the same hardware frequency: 0
+  CPUs which need to have their frequency coordinated by software: 0
+  maximum transition latency:  Cannot determine or is not supported.
+  hardware limits: 500 MHz - 1.90 GHz
+  available cpufreq governors: performance powersave
+  current policy: frequency should be within 500 MHz and 1.90 GHz.
+                  The governor "powersave" may decide which speed to use
+                  within this range.
+  current CPU frequency: Unable to call hardware
+  current CPU frequency: 1.08 GHz (asserted by call to kernel)
+  boost state support:
+    Supported: yes
+    Active: yes
+
+	
+==================== CPU POWER ===============================================
+
+Remove any form of powersave and set to high performance
+
+cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
+powersave
+
+sudo apt install cpufrequtils
+
+cpufreq-info
+
+sudo cpufreq-set -g performance
+
+you@Ubunt-18-dev1:~$ cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
+performance
+
+sudo x86_energy_perf_policy
+
+to set using this like below
+sudo x86_energy_perf_policy -c 0 -v "performance"
+
+to watch it all ---------------------->
+
+watch grep \"cpu MHz\" /proc/cpuinfo
+
+for thermal control of overheating ------->
+
+sudo service thermald restart
+
+each of the cores might report soething like this
+
+you@Ubuntu $ cat /proc/cpuinfo
+
+processor       : 3
+vendor_id       : GenuineIntel
+cpu family      : 6
+model           : 61
+model name      : Intel(R) Core(TM) i3-5005U CPU @ 2.00GHz
+stepping        : 4
+microcode       : 0x2f
+cpu MHz         : 1995.701
+cache size      : 3072 KB
+physical id     : 0
+siblings        : 4
+core id         : 1
+cpu cores       : 2
+apicid          : 3
+initial apicid  : 3
+fpu             : yes
+fpu_exception   : yes
+cpuid level     : 20
+wp              : yes
+flags           : fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf pni pclmulqdq dtes64 monitor ds_cpl vmx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb invpcid_single pti ssbd ibrs ibpb stibp tpr_shadow vnmi flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap intel_pt xsaveopt dtherm arat pln pts md_clear flush_l1d
+bugs            : cpu_meltdown spectre_v1 spectre_v2 spec_store_bypass l1tf mds swapgs itlb_multihit srbds
+bogomips        : 3990.99
+clflush size    : 64
+cache_alignment : 64
+address sizes   : 39 bits physical, 48 bits virtual
+power management:
+
+==================== start-up scripts for x86 ===================================
+
+Sony Cam needs bulk transfer rate to be 150 not 50
+Therefore follow the instructions below.
+
+Use the systemd start up service instead
+it actually says rc.local is no longer running upon boot up on Raspberry Pi4
+
+so create a file like this 
+
+sudo vi /etc/systemd/system/usb_bulk_transfer_rate.service
+
+write this for example 
+
+[Unit]
+Description=set usb bulk transfer rate
+After=multi-user.target
+
+[Service]
+ExecStart=/usr/bin/python3 /home/anthony/start_up/write_bulk_transfer_usb.py
+
+[Install]
+WantedBy=multi-user.target
+
+then write this in the python file (or what ever you prefer to use)
+cd /home/anthony/start_up
+sudo vi write_bulk_transfer_usb.py
+
+with open("/sys/module/usbcore/parameters/usbfs_memory_mb", "w") as f:
+    print("150", file=f)
+f.close()
+
+then start the service as follows
+
+sudo systemctl enable usb_bulk_transfer_rate.service
+sudo systemctl start usb_bulk_transfer_rate.service
+sudo systemctl status usb_bulk_transfer_rate.service
+
+check success by looking for 150 returned from the command
+
+pi@CameraPi:~/cams/src/acp/sonyCam $ cat /sys/module/usbcore/parameters/usbfs_memory_mb
+150
+
+============== now set the cpu performance to boost ==========================
+
+sudo vi /etc/systemd/system/boost_cpu.service
+
+[Unit]
+Description=set usb bulk transfer rate
+After=multi-user.target
+
+[Service]
+ExecStart=/home/anthony/cpu_boost/boost_enable.sh
+
+[Install]
+WantedBy=multi-user.target
+
+make a directory to store the start-up script in
+mkdir cpu_boost
+cd /home/anthony/cpu_boost
+sudo vi boost_enable.sh
+
+>> -----------  boost_enable.sh ---------- Enable Boost and set performance policy for energy saving <<
+#!/bin/bash
+#if test -z $(/bin/which rdmsr) ; then
+#   /bin/echo "msr-tools is not installed. Run 'sudo apt-get install msr-tools' to install it." >&2
+#   exit 1
+#fi
+
+sleep 120 # give machine chance to stabilise before tweaking kernel run time
+cores=$(/bin/cat /proc/cpuinfo | /bin/grep processor | /usr/bin/awk '{print $3}')
+for core in $cores; do
+    /usr/sbin/wrmsr -p${core} 0x1a0 0x850089
+    state=$(/usr/sbin/rdmsr -p${core} -f 38:38 0x1a0)
+    /bin/echo "core ${core}: 0=enabled 1=disabled ${state}"
+done
+/usr/bin/x86_energy_perf_policy -c 0 -v "performance"
+echo $?
+echo "perf policy to performance returned"
+/usr/bin/cpupower frequency-set --governor performance
+echo $?
+echo "governor performance returned"
+for core in $cores;do
+    /bin/echo performance | /usr/bin/tee /sys/devices/system/cpu/cpu${core}/cpufreq/scaling_governor
+done
+
+ensure it is executable
+chmod +x boost_enable.sh
+
+then start this service as follows
+
+sudo systemctl enable boost_cpu.service
+sudo systemctl start boost_cpu.service
+sudo systemctl status boost_cpu.service
+
+alternatively you can run it via the cronab file
+
+like this
+$> sudo crontab -e
+
+and add this
+# Edit this file to introduce tasks to be run by cron.
+#
+# Each task to run has to be defined through a single line
+# indicating with different fields when the task will be run
+# and what command to run for the task
+#
+# To define the time you can provide concrete values for
+# minute (m), hour (h), day of month (dom), month (mon),
+# and day of week (dow) or use '*' in these fields (for 'any').#
+# Notice that tasks will be started based on the cron's system
+# daemon's notion of time and timezones.
+#
+# Output of the crontab jobs (including errors) is sent through
+# email to the user the crontab file belongs to (unless redirected).
+#
+# For example, you can run a backup of all your user accounts
+# at 5 a.m every week with:
+# 0 5 * * 1 tar -zcf /var/backups/home.tgz /home/
+#
+# For more information see the manual pages of crontab(5) and cron(8)
+#
+# m h  dom mon dow   command
+@reboot /home/anthony/cpu_boost/boost_enable.sh 2&>1 >> /home/anthony/cpu_boost/a.log
+
+then F10 to save and exit the editor
+
+To start mavlink router automatically at boot-up add the following to the crontab
+
+@reboot sleep 5 && /home/anthony/start_mav_router.sh
+*/1 * * * * /home/anthony/start_mav_router.sh
+
+the following files should be in your $HOME directory
+start_mav_router.sh
+#!/bin/bash
+# ============================================================================================
+#
+# Check if the process is running if its not then respawn via the crontab file
+#
+# ============================================================================================
+#
+MAVROUTEHOME=/home/anthony
+/bin/ps -ael | /bin/grep mavlink-routerd > /dev/null 2>&1
+if [ $? -ne 0 ]
+then
+    sudo $MAVROUTEHOME/kill_all_mavroute_ports.sh > /dev/null 2>&1
+    /usr/bin/mavlink-routerd  -e 10.0.2.51:14550 -e 127.0.0.1:14551 /dev/ttyACM0:115200 > $MAVROUTEHOME/mavrd.log 2>&1 &
+fi
+
+ensure it is executable
+chmod +x start_mav_router.sh
+
+kill_all_mavroute_ports.sh
+#!/bin/bash
+#
+# list the used ports being used by mavlink router amd kill them all before re-starting mav-router
+#
+TMPLIST=/home/anthony/tmplist
+/bin/touch $TMPLIST
+#
+# do for all ports that your mavrouter-uses we use 5760=tcp 14550=redEdge 14551=SonyCam
+#
+for pp in :5760 :14550 :14551
+do
+    sudo /usr/bin/lsof -i $pp | /usr/bin/awk '{ if (tag==1) {print $2} if($2=="PID") tag=1 }' > $TMPLIST
+    if [ -f $TMPLIST ]
+    then
+        for pid in `cat $TMPLIST`
+        do
+            /bin/kill -9 "$pid"
+        done
+        rm $TMPLIST
+    fi
+done
+
+ensure it is executable
+chmod +x kill_all_mavroute_ports.sh
+
+============================= manjaro linux RPI ==================================
+
+[mav-sony@mav-sony ~]$ cat /sys/devices/system/cpu/cpuidle/current_driver
+none
+
+available govenors
+[mav-sony@mav-sony ~]$ cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors
+conservative ondemand userspace powersave performance schedutil
+
+[mav-sony@mav-sony ~]$ cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies
+600000 700000 800000 900000 1000000 1100000 1200000 1300000 1400000 1500000
+
+echo "performance"| sudo tee /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
+
+add this to /boot/config.txt to overclock it# Overclock CPU
+over_voltage=4
+arm_freq=1900
+
+after this you should have
+[mav-sony@mav-sony ~]$ cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies
+600000 700000 800000 900000 1000000 1100000 1200000 1300000 1400000 1500000 1600000 1700000 1800000 1900000
+
+[mav-sony@mav-sony ~]$ cat /proc/cpuinfo
+processor       : 0
+BogoMIPS        : 108.00
+Features        : fp asimd evtstrm crc32 cpuid
+CPU implementer : 0x41
+CPU architecture: 8
+CPU variant     : 0x0
+CPU part        : 0xd08
+CPU revision    : 3
+
+processor       : 1
+BogoMIPS        : 108.00
+Features        : fp asimd evtstrm crc32 cpuid
+CPU implementer : 0x41
+CPU architecture: 8
+CPU variant     : 0x0
+CPU part        : 0xd08
+CPU revision    : 3
+
+processor       : 2
+BogoMIPS        : 108.00
+Features        : fp asimd evtstrm crc32 cpuid
+CPU implementer : 0x41
+CPU architecture: 8
+CPU variant     : 0x0
+CPU part        : 0xd08
+CPU revision    : 3
+
+processor       : 3
+BogoMIPS        : 108.00
+Features        : fp asimd evtstrm crc32 cpuid
+CPU implementer : 0x41
+CPU architecture: 8
+CPU variant     : 0x0
+CPU part        : 0xd08
+CPU revision    : 3
+
+Hardware        : BCM2835
+Revision        : c03114
+Serial          : 10000000983904b7
+Model           : Raspberry Pi 4 Model B Rev 1.4
+
+================ cpu limit =================================
+
+you can use cpulimit to limit the proesses load
+clone from the github and compile
+
+if you use manjaro you need to remove the deprecated library 
+
+here is the list of commands i used you need to change the || to single in the 2 files for it to compile with the gcc.
+
+  396  sudo git clone https://github.com/opsengine/cpulimit
+  397  ls
+  398  cd cpulimit
+  399  make
+  400  sudo make
+  401  sudo pacman -S linux-headers
+  402  sudo yay -Qo /usr/include/linux/sysctl.h
+  403  yay -Qo /usr/include/linux/sysctl.h
+  404  sudo make
+  405  sudo pacman -S base-devel
+  406  make
+  407  vi cpulimit.c
+  408  ls
+  409  cd src
+  410  ls
+  411  vi cpulimit.c
+  412  sudo vi cpulimit.c
+  413  cd ..
+  414  make
+  415  cd src
+  416  sudo vi cpulimit.c
+  417  cd ..
+  418  make
+  419  sudo make
+  420  cd src
+  421  vi cpulimit.c
+  422  grep APPLE *.c
+  423  grep "||" *
+  424  ls process*
+  425  cd ..
+  426  ls
+  427  cd tests
+  428  ls
+  429  sudo vi process_iterator_test.c
+  430  cd ..
+  431  sudo make
+  432  ls
+  433  cpulimit
+  434  pwd
+  436  sudo make clean
+  437  sudo make all
+  438  ls
+  439  cd src
+  440  ls
+  441  ./cpulimit
+  
+HDMI
+======
+/opt/vc/bin/tvservice --off
+
+LED
+=====
+see if its on for example
+
+$ cat /sys/class/leds/led0/trigger
+none rc-feedback kbd-scrolllock kbd-numlock kbd-capslock kbd-kanalock kbd-shiftlock kbd-altgrlock kbd-ctrllock kbd-altlock kbd-shiftllock kbd-shiftrlock kbd-ctrlllock kbd-ctrlrlock timer oneshot heartbeat backlight gpio cpu cpu0 cpu1 cpu2 cpu3 default-on input panic actpwr mmc1 [mmc0] rfkill-any rfkill-none rfkill0 rfkill1
+$ cat /sys/class/leds/led0/brightness
+0
+
+This will turn it off
+$ echo none | sudo tee /sys/class/leds/led0/trigger
+$ echo 1 | sudo tee /sys/class/leds/led0/brightness
+
+
+
+  
+
+
+
+
+	
+
+	
+
+
+
+	
