@@ -1,0 +1,55 @@
+#==========================
+#
+# this shows your devices ..... $ sudo hcitool lescan
+#LE Scan ...
+#B8:27:EB:ED:D3:E5 (unknown)
+#B8:27:EB:ED:D3:E5 TomoSoftx
+#C4:64:E3:FC:13:07 (unknown)
+
+# $ sudo python3 bleperipheral.py
+#on -> stateChange: poweredOn
+#on -> advertisingStart1: success
+#onAdvertisingStart
+#ApproachCharacteristic - onSubscribe
+#Sending notification with value-set : 1
+#Sending notification with value-cmd : 2
+
+
+# this invokes the BLE gattool in interactive mode for probing $ sudo gatttool -b B8:27:EB:ED:D3:E5 --interactive
+# [B8:27:EB:ED:D3:E5][LE]> connect
+#Attempting to connect to B8:27:EB:ED:D3:E5
+#Connection successful
+#[B8:27:EB:ED:D3:E5][LE]> characteristics
+#handle: 0x0002, char properties: 0x02, char value handle: 0x0003, uuid: 00002a00-0000-1000-8000-00805f9b34fb
+#handle: 0x0004, char properties: 0x02, char value handle: 0x0005, uuid: 00002a01-0000-1000-8000-00805f9b34fb
+#handle: 0x0007, char properties: 0x20, char value handle: 0x0008, uuid: 00002a05-0000-1000-8000-00805f9b34fb
+#handle: 0x000b, char properties: 0x08, char value handle: 0x000c, uuid: 0000fff4-0000-1000-8000-00805f9b34fb
+#handle: 0x000d, char properties: 0x12, char value handle: 0x000e, uuid: 0000fff0-0000-1000-8000-00805f9b34fb
+#handle: 0x0010, char properties: 0x08, char value handle: 0x0011, uuid: 0000fff3-0000-1000-8000-00805f9b34fb
+#[B8:27:EB:ED:D3:E5][LE]> char-desc
+#handle: 0x0001, uuid: 00002800-0000-1000-8000-00805f9b34fb
+#handle: 0x0002, uuid: 00002803-0000-1000-8000-00805f9b34fb
+#handle: 0x0003, uuid: 00002a00-0000-1000-8000-00805f9b34fb
+#handle: 0x0004, uuid: 00002803-0000-1000-8000-00805f9b34fb
+#handle: 0x0005, uuid: 00002a01-0000-1000-8000-00805f9b34fb
+#handle: 0x0006, uuid: 00002800-0000-1000-8000-00805f9b34fb
+#handle: 0x0007, uuid: 00002803-0000-1000-8000-00805f9b34fb
+#handle: 0x0008, uuid: 00002a05-0000-1000-8000-00805f9b34fb
+#handle: 0x0009, uuid: 00002902-0000-1000-8000-00805f9b34fb
+#handle: 0x000a, uuid: 00002800-0000-1000-8000-00805f9b34fb
+#handle: 0x000b, uuid: 00002803-0000-1000-8000-00805f9b34fb
+#handle: 0x000c, uuid: 0000fff4-0000-1000-8000-00805f9b34fb
+#handle: 0x000d, uuid: 00002803-0000-1000-8000-00805f9b34fb
+#handle: 0x000e, uuid: 0000fff0-0000-1000-8000-00805f9b34fb
+#handle: 0x000f, uuid: 00002902-0000-1000-8000-00805f9b34fb
+#handle: 0x0010, uuid: 00002803-0000-1000-8000-00805f9b34fb
+#handle: 0x0011, uuid: 0000fff3-0000-1000-8000-00805f9b34fb
+#[B8:27:EB:ED:D3:E5][LE]> char-write-req 0x0f 0100
+#Characteristic value was written successfully
+#[B8:27:EB:ED:D3:E5][LE]> char-write-req 0x11 020
+#Characteristic value was written successfully
+#Notification handle = 0x000e value: 31
+#[B8:27:EB:ED:D3:E5][LE]> char-write-req 0x0c 020
+#Characteristic value was written successfully
+#Notification handle = 0x000e value: 32
+#[B8:27:EB:ED:D3:E5][LE]>
