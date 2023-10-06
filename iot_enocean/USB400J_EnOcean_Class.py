@@ -33,30 +33,30 @@ class Erp2Thread(threading.Thread):
 
     def run(self):
 
-        sub_telegram = self.esp3.option[0] #オプションからSub Telegramを取り出す。Send: 3 / receive: 1
-        dbm = self.esp3.option[1] * (-1) #オプションからdBmを取り出す。正負反転させる
+        sub_telegram = self.esp3.option[0]        #。Send: 3 / receive: 1
+        dbm = self.esp3.option[1] * (-1)          # Retrieve dBm from options.Invert positive and negative
 
-        erp2_header = self.esp3.data[0] #データからヘッダーとなる1バイトを取り出す
+        erp2_header = self.esp3.data[0]           # Retrieve 1 byte as header from data
 
-        if erp2_header == ord(b'\x21'): #Originator-ID 32 bit nio Destination-ID、No extended header、1BS telegram のものだけ処理する
-            originator_id = binascii.hexlify(self.esp3.data[1:5]) #データからセンサーIDを取り出す
-            status_code = self.esp3.data[5] #データからセンサーのステータスを取り出す
+        if erp2_header == ord(b'\x21'): #Originator-ID 32 bit nio Destination-ID、No extended header、1BS telegram 
+            originator_id = binascii.hexlify(self.esp3.data[1:5]) #Extract Sensor ID from data
+            status_code = self.esp3.data[5] #Retrieve Sensor status from data
             button_status = ""
             door_status = ""
 
             if originator_id == 'ZZ:XX:XX:XX': #SID for the unit which is Open/close sensor: STM250J
-                if status_code == ord(b'\x09'):  #センサーのステータスを人間が解る言葉に翻訳する。STM250Jはcloseとopenだけだが、ボタンのセンサーも同様のプロトコルらしい
-                    button_status = "押されていません。"
-                    door_status = "閉まっています。"
+                if status_code == ord(b'\x09'):  #Translate the status of the sensor into words that humans can understand.The STM250J is only close and open, but the sensor of the button seems to be a similar protocol
+                    button_status = "Not pressed."
+                    door_status = "It is closed"
                 elif status_code == ord(b'\x08'):
-                    button_status = "押されていません。"
-                    door_status = "開いています。"
+                    button_status = "Not pressed."
+                    door_status = "It is open."
                 elif status_code == ord(b'\x01'):
-                    button_status = "押されています。"
-                    door_status = "閉まっています。"
+                    button_status = "is being pushed。"
+                    door_status = "It is closed."
                 elif status_code == ord(b'\x00'):
-                    button_status = "押されています。"
-                    door_status = "開いています。"
+                    button_status = "It is pressed"
+                    door_status = "It is open。"
                 print( 'STM250JーID：%sは%s %s' % (originator_id , door_status, button_status) )
             elif originator_id == 'XX:XX:XX:XX': # SID for the unit which is Open/close sensor: CS-EO429J
                 if status_code == '08':
@@ -91,53 +91,53 @@ def main():
         denbun = ser.read()
         esp3 = Esp3()
 
-        if sync_start or denbun == b'\x55':   #0x55で同期開始
+        if sync_start or denbun == b'\x55':   # Start syncing with 0x55
             sync_start = True
 
-            denbun = ser.read()    #データ長を読み込み
+            denbun = ser.read()    #Read data length
             data_length = 256 * ord(denbun)
             denbun = ser.read()
             data_length = data_length + ord(denbun)
 
             esp3.data_length = data_length
 
-            denbun = ser.read()   #オプション長を読み込み
+            denbun = ser.read()   #Read option length
             option_length = ord(denbun)
 
             esp3.option_length = option_length
 
-            denbun = ser.read()  #パケットタイプを読み込み
+            denbun = ser.read()  #Read packet types
             packet_type = denbun
 
             esp3.packet_type = packet_type
 
-            denbun = ser.read() #CRC8(Header)を読み込み
+            denbun = ser.read() #CRC8(Header)
             crc8_header = denbun
 
             esp3.crc8_header = crc8_header
 
             data = bytearray(data_length)
             for loop_counter in range(data_length):
-                denbun = ser.read() #データを読み込む、長さ分読み込む
+                denbun = ser.read() #Read data, read length
                 data[loop_counter ] = denbun
 
             esp3.data = data
 
             option = bytearray(option_length)
             for loop_counter in range(option_length):
-                denbun = ser.read() #オプションんを読み込む、長さ分読み込む
+                denbun = ser.read() #Option No load, length min load
                 option[loop_counter] = denbun
 
             esp3.option = option
 
-            denbun = ser.read() #CRC8(Data)を読み込み
+            denbun = ser.read() #CRC8(Data)
             crc8_data = denbun
 
             esp3.crc8_data = crc8_data
 
             sync_start = False
 
-        if esp3.packet_type == b'\x0A':  #パケットタイプがERP2のものだけスレッドで処理する
+        if esp3.packet_type == b'\x0A':  #Only those with packet type ERP2 are processed by thread
 
             erp2_thread = Erp2Thread(esp3)
 
