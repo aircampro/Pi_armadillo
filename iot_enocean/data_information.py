@@ -4,14 +4,14 @@ import arrow
 
 # we can also define structures using ctypes rather than store our outputs in tuples
 import ctypes
-class SEA_LVL_JSON_T(Structure):
-    __fields__ = [('sg', c_float), ('time', c_size_t)]
-class WAVE_INF_JSON_T(Structure):
-    __fields__ = [('smhi', c_float), ('time', c_size_t), ('noaa', c_float), ('meteo', c_float)]
-class WIND_SPD_JSON_T(Structure):
-    __fields__ = [('ws', c_float), ('time', c_size_t)]
-class ELEVATION_JSON_T(Structure):
-    __fields__ = [('elev', c_float), ('unit', c_wchar_p), ('time', c_size_t)]
+class SEA_LVL_JSON_T(ctypes.Structure):
+    __fields__ = [('sg', ctypes.c_float), ('time', ctypes.c_size_t)]
+class WAVE_INF_JSON_T(ctypes.Structure):
+    __fields__ = [('smhi', ctypes.c_float), ('time', ctypes.c_size_t), ('noaa', ctypes.c_float), ('meteo', ctypes.c_float)]
+class WIND_SPD_JSON_T(ctypes.Structure):
+    __fields__ = [('ws', ctypes.c_float), ('time', ctypes.c_size_t)]
+class ELEVATION_JSON_T(ctypes.Structure):
+    __fields__ = [('elev', ctypes.c_float), ('unit', ctypes.c_wchar_p), ('time', ctypes.c_size_t)]
 class COMPOSITION_JSON_T():    
     iron = (0,0)                                # sg,mercator in tuple
     chlorophyll = (0,0)
