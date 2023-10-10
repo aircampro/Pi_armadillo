@@ -1,0 +1,401 @@
+abd_sony.cpp:    CrInt8 CameraDevice::printCrMovie_Recording_State(SCRSDK::CrMovie_Recording_State retVal)
+abd_sony.cpp:            case SCRSDK::CrMovie_Recording_State::CrMovie_Recording_State_Not_Recording:
+abd_sony.cpp:            case SCRSDK::CrMovie_Recording_State::CrMovie_Recording_State_Recording:
+abd_sony.cpp:            case SCRSDK::CrMovie_Recording_State::CrMovie_Recording_State_Recording_Failed:
+abd_sony.cpp:    SCRSDK::CrMovie_Recording_State CameraDevice::get_rec_state_from_cam_vector(std::vector<std::tuple<std::string, std::uint8_t, std::uint32_t>>& vec)
+abd_sony.cpp:                return static_cast<SCRSDK::CrMovie_Recording_State>(std::get<2>(tup));
+abd_sony.cpp:        return SCRSDK::CrMovie_Recording_State::CrMovie_Recording_State_Recording_Failed;
+abd_sony.cpp:    SCRSDK::CrWhiteBalanceSetting CameraDevice::get_white_bal_from_cam_vector(std::vector<std::tuple<std::string, std::uint8_t, std::uint32_t>>& vec)
+abd_sony.cpp:                return static_cast<SCRSDK::CrWhiteBalanceSetting>(std::get<2>(tup));
+abd_sony.cpp:        return static_cast<SCRSDK::CrWhiteBalanceSetting>( - 1);
+abd_sony.cpp:    SCRSDK::CrNearFarEnableStatus CameraDevice::get_near_far_from_cam_vector(std::vector<std::tuple<std::string, std::uint8_t, std::uint32_t>>& vec)
+abd_sony.cpp:                return static_cast<SCRSDK::CrNearFarEnableStatus>(std::get<2>(tup));
+abd_sony.cpp:        return static_cast<SCRSDK::CrNearFarEnableStatus>(-1);
+abd_sony.cpp:    void CameraDevice::printCrWhiteBalanceSetting(SCRSDK::CrWhiteBalanceSetting retVal)
+abd_sony.cpp:            case SCRSDK::CrWhiteBalanceSetting::CrWhiteBalance_AWB:
+abd_sony.cpp:            case SCRSDK::CrWhiteBalanceSetting::CrWhiteBalance_Underwater_Auto:
+abd_sony.cpp:            case SCRSDK::CrWhiteBalanceSetting::CrWhiteBalance_Daylight:
+abd_sony.cpp:            case SCRSDK::CrWhiteBalanceSetting::CrWhiteBalance_Shadow:
+abd_sony.cpp:            case SCRSDK::CrWhiteBalanceSetting::CrWhiteBalance_Cloudy:
+abd_sony.cpp:            case SCRSDK::CrWhiteBalanceSetting::CrWhiteBalance_Tungsten:
+abd_sony.cpp:            case SCRSDK::CrWhiteBalanceSetting::CrWhiteBalance_Fluorescent:
+abd_sony.cpp:            case SCRSDK::CrWhiteBalanceSetting::CrWhiteBalance_Fluorescent_WarmWhite:
+abd_sony.cpp:            case SCRSDK::CrWhiteBalanceSetting::CrWhiteBalance_Fluorescent_CoolWhite:
+abd_sony.cpp:            case SCRSDK::CrWhiteBalanceSetting::CrWhiteBalance_Fluorescent_DayWhite:
+abd_sony.cpp:            case SCRSDK::CrWhiteBalanceSetting::CrWhiteBalance_Fluorescent_Daylight:
+abd_sony.cpp:            case SCRSDK::CrWhiteBalanceSetting::CrWhiteBalance_Flush:
+abd_sony.cpp:            case SCRSDK::CrWhiteBalanceSetting::CrWhiteBalance_ColorTemp:
+abd_sony.cpp:            case SCRSDK::CrWhiteBalanceSetting::CrWhiteBalance_Custom_1:
+abd_sony.cpp:            case SCRSDK::CrWhiteBalanceSetting::CrWhiteBalance_Custom_2:
+abd_sony.cpp:            case SCRSDK::CrWhiteBalanceSetting::CrWhiteBalance_Custom_3:
+abd_sony.cpp:            case SCRSDK::CrWhiteBalanceSetting::CrWhiteBalance_Custom:
+abd_sony.cpp:    SCRSDK::CrDriveMode CameraDevice::get_still_cap_from_cam_vector(std::vector<std::tuple<std::string, std::uint8_t, std::uint32_t>>& vec)
+abd_sony.cpp:                return static_cast<SCRSDK::CrDriveMode>(std::get<2>(tup));
+abd_sony.cpp:        return static_cast<SCRSDK::CrDriveMode>(-1);
+abd_sony.cpp:    void CameraDevice::printCrDriveMode(SCRSDK::CrDriveMode retVal)
+abd_sony.cpp:            case SCRSDK::CrDriveMode::CrDrive_Single:
+abd_sony.cpp:            case SCRSDK::CrDriveMode::CrDrive_Continuous_Hi:
+abd_sony.cpp:            case SCRSDK::CrDriveMode::CrDrive_Continuous_Hi_Plus:
+abd_sony.cpp:            case SCRSDK::CrDriveMode::CrDrive_Continuous_Hi_Live:
+abd_sony.cpp:            case SCRSDK::CrDriveMode::CrDrive_Continuous_Lo:
+abd_sony.cpp:            case SCRSDK::CrDriveMode::CrDrive_Continuous:
+abd_sony.cpp:            case SCRSDK::CrDriveMode::CrDrive_Continuous_SpeedPriority:
+abd_sony.cpp:            case SCRSDK::CrDriveMode::CrDrive_Continuous_Mid:
+abd_sony.cpp:            case SCRSDK::CrDriveMode::CrDrive_Continuous_Mid_Live:
+abd_sony.cpp:            case SCRSDK::CrDriveMode::CrDrive_Continuous_Lo_Live:
+abd_sony.cpp:            case SCRSDK::CrDriveMode::CrDrive_SingleBurstShooting_lo:
+abd_sony.cpp:            case SCRSDK::CrDriveMode::CrDrive_SingleBurstShooting_mid:
+abd_sony.cpp:            case SCRSDK::CrDriveMode::CrDrive_SingleBurstShooting_hi:
+abd_sony.cpp:            case SCRSDK::CrDriveMode::CrDrive_Timelapse:
+abd_sony.cpp:            case SCRSDK::CrDriveMode::CrDrive_Timer_2s:
+abd_sony.cpp:            case SCRSDK::CrDriveMode::CrDrive_Timer_5s:
+abd_sony.cpp:            case SCRSDK::CrDriveMode::CrDrive_Timer_10s:
+abd_sony.cpp:            case SCRSDK::CrDriveMode::CrDrive_Continuous_Bracket_03Ev_3pics:
+abd_sony.cpp:            case SCRSDK::CrDriveMode::CrDrive_Continuous_Bracket_03Ev_5pics:
+abd_sony.cpp:            case SCRSDK::CrDriveMode::CrDrive_Continuous_Bracket_03Ev_9pics:
+abd_sony.cpp:            case SCRSDK::CrDriveMode::CrDrive_Continuous_Bracket_05Ev_3pics:
+abd_sony.cpp:            case SCRSDK::CrDriveMode::CrDrive_Continuous_Bracket_05Ev_5pics:
+abd_sony.cpp:            case SCRSDK::CrDriveMode::CrDrive_Continuous_Bracket_05Ev_9pics:
+abd_sony.cpp:            case SCRSDK::CrDriveMode::CrDrive_Continuous_Bracket_07Ev_3pics:
+abd_sony.cpp:            case SCRSDK::CrDriveMode::CrDrive_Continuous_Bracket_07Ev_5pics:
+abd_sony.cpp:            case SCRSDK::CrDriveMode::CrDrive_Continuous_Bracket_07Ev_9pics:
+abd_sony.cpp:            case SCRSDK::CrDriveMode::CrDrive_Continuous_Bracket_10Ev_3pics:
+abd_sony.cpp:            case SCRSDK::CrDriveMode::CrDrive_Continuous_Bracket_10Ev_5pics:
+abd_sony.cpp:            case SCRSDK::CrDriveMode::CrDrive_Continuous_Bracket_10Ev_9pics:
+abd_sony.cpp:            case SCRSDK::CrDriveMode::CrDrive_Continuous_Bracket_20Ev_3pics:
+abd_sony.cpp:            case SCRSDK::CrDriveMode::CrDrive_Continuous_Bracket_20Ev_5pics:
+abd_sony.cpp:            case SCRSDK::CrDriveMode::CrDrive_Continuous_Bracket_30Ev_3pics:
+abd_sony.cpp:            case SCRSDK::CrDriveMode::CrDrive_Continuous_Bracket_30Ev_5pics:
+abd_sony.cpp:            case SCRSDK::CrDriveMode::CrDrive_Single_Bracket_03Ev_3pics:
+abd_sony.cpp:            case SCRSDK::CrDriveMode::CrDrive_Single_Bracket_03Ev_5pics:
+abd_sony.cpp:            case SCRSDK::CrDriveMode::CrDrive_Single_Bracket_03Ev_9pics:
+abd_sony.cpp:            case SCRSDK::CrDriveMode::CrDrive_Single_Bracket_05Ev_3pics:
+abd_sony.cpp:            case SCRSDK::CrDriveMode::CrDrive_Single_Bracket_05Ev_5pics:
+abd_sony.cpp:            case SCRSDK::CrDriveMode::CrDrive_Single_Bracket_05Ev_9pics:
+abd_sony.cpp:            case SCRSDK::CrDriveMode::CrDrive_Single_Bracket_07Ev_3pics:
+abd_sony.cpp:            case SCRSDK::CrDriveMode::CrDrive_Single_Bracket_07Ev_5pics:
+abd_sony.cpp:            case SCRSDK::CrDriveMode::CrDrive_Single_Bracket_07Ev_9pics:
+abd_sony.cpp:            case SCRSDK::CrDriveMode::CrDrive_Single_Bracket_10Ev_3pics:
+abd_sony.cpp:            case SCRSDK::CrDriveMode::CrDrive_Single_Bracket_10Ev_5pics:
+abd_sony.cpp:            case SCRSDK::CrDriveMode::CrDrive_Single_Bracket_10Ev_9pics:
+abd_sony.cpp:            case SCRSDK::CrDriveMode::CrDrive_Single_Bracket_20Ev_3pics:
+abd_sony.cpp:            case SCRSDK::CrDriveMode::CrDrive_Single_Bracket_20Ev_5pics:
+abd_sony.cpp:            case SCRSDK::CrDriveMode::CrDrive_Single_Bracket_30Ev_3pics:
+abd_sony.cpp:            case SCRSDK::CrDriveMode::CrDrive_Single_Bracket_30Ev_5pics:
+abd_sony.cpp:            case SCRSDK::CrDriveMode::CrDrive_WB_Bracket_Lo:
+abd_sony.cpp:            case SCRSDK::CrDriveMode::CrDrive_WB_Bracket_Hi:
+abd_sony.cpp:            case SCRSDK::CrDriveMode::CrDrive_DRO_Bracket_Lo:
+abd_sony.cpp:            case SCRSDK::CrDriveMode::CrDrive_DRO_Bracket_Hi:
+abd_sony.cpp:            case SCRSDK::CrDriveMode::CrDrive_Continuous_Timer_3pics:
+abd_sony.cpp:            case SCRSDK::CrDriveMode::CrDrive_Continuous_Timer_5pics:
+abd_sony.cpp:            case SCRSDK::CrDriveMode::CrDrive_Continuous_Timer_2s_3pics:
+abd_sony.cpp:            case SCRSDK::CrDriveMode::CrDrive_Continuous_Timer_2s_5pics:
+abd_sony.cpp:            case SCRSDK::CrDriveMode::CrDrive_Continuous_Timer_5s_3pics:
+abd_sony.cpp:            case SCRSDK::CrDriveMode::CrDrive_Continuous_Timer_5s_5pics:
+abd_sony.cpp:            case SCRSDK::CrDriveMode::CrDrive_LPF_Bracket:
+abd_sony.cpp:            case SCRSDK::CrDriveMode::CrDrive_RemoteCommander:
+abd_sony.cpp:            case SCRSDK::CrDriveMode::CrDrive_MirrorUp:
+abd_sony.cpp:            case SCRSDK::CrDriveMode::CrDrive_SelfPortrait_1:
+abd_sony.cpp:            case SCRSDK::CrDriveMode::CrDrive_SelfPortrait_2:
+abd_sony.cpp:    SCRSDK::CrFocusArea CameraDevice::get_focus_area_from_cam_vector(std::vector<std::tuple<std::string, std::uint8_t, std::uint32_t>>& vec)
+abd_sony.cpp:                return static_cast<SCRSDK::CrFocusArea>(std::get<2>(tup));
+abd_sony.cpp:        return static_cast<SCRSDK::CrFocusArea>(-1);
+abd_sony.cpp:    void CameraDevice::printCrFocusArea(SCRSDK::CrFocusArea retVal)
+abd_sony.cpp:            case SCRSDK::CrFocusArea::CrFocusArea_Unknown:
+abd_sony.cpp:            case SCRSDK::CrFocusArea::CrFocusArea_Wide:
+abd_sony.cpp:            case SCRSDK::CrFocusArea::CrFocusArea_Zone:
+abd_sony.cpp:            case SCRSDK::CrFocusArea::CrFocusArea_Center:
+abd_sony.cpp:            case SCRSDK::CrFocusArea::CrFocusArea_Flexible_Spot_S:
+abd_sony.cpp:            case SCRSDK::CrFocusArea::CrFocusArea_Flexible_Spot_M:
+abd_sony.cpp:            case SCRSDK::CrFocusArea::CrFocusArea_Flexible_Spot_L:
+abd_sony.cpp:            case SCRSDK::CrFocusArea::CrFocusArea_Expand_Flexible_Spot:
+abd_sony.cpp:            case SCRSDK::CrFocusArea::CrFocusArea_Flexible_Spot:
+abd_sony.cpp:            case SCRSDK::CrFocusArea::CrFocusArea_Tracking_Wide:
+abd_sony.cpp:            case SCRSDK::CrFocusArea::CrFocusArea_Tracking_Zone:
+abd_sony.cpp:            case SCRSDK::CrFocusArea::CrFocusArea_Tracking_Center:
+abd_sony.cpp:            case SCRSDK::CrFocusArea::CrFocusArea_Tracking_Flexible_Spot_S:
+abd_sony.cpp:            case SCRSDK::CrFocusArea::CrFocusArea_Tracking_Flexible_Spot_M:
+abd_sony.cpp:            case SCRSDK::CrFocusArea::CrFocusArea_Tracking_Flexible_Spot_L:
+abd_sony.cpp:            case SCRSDK::CrFocusArea::CrFocusArea_Tracking_Expand_Flexible_Spot:
+abd_sony.cpp:            case SCRSDK::CrFocusArea::CrFocusArea_Tracking_Flexible_Spot:
+abd_sony.cpp:    SCRSDK::CrFocusMode CameraDevice::get_focus_mode_from_cam_vector(std::vector<std::tuple<std::string, std::uint8_t, std::uint32_t>>& vec)
+abd_sony.cpp:                return static_cast<SCRSDK::CrFocusMode>(std::get<2>(tup));
+abd_sony.cpp:        return static_cast<SCRSDK::CrFocusMode>(-1);
+abd_sony.cpp:    void CameraDevice::printCrFocusMode(SCRSDK::CrFocusMode retVal)
+abd_sony.cpp:            case SCRSDK::CrFocusMode::CrFocus_MF:
+abd_sony.cpp:            case SCRSDK::CrFocusMode::CrFocus_AF_S:
+abd_sony.cpp:            case SCRSDK::CrFocusMode::CrFocus_AF_C:
+abd_sony.cpp:            case SCRSDK::CrFocusMode::CrFocus_AF_A:
+abd_sony.cpp:            case SCRSDK::CrFocusMode::CrFocus_AF_D:
+abd_sony.cpp:            case SCRSDK::CrFocusMode::CrFocus_DMF:
+abd_sony.cpp:            case SCRSDK::CrFocusMode::CrFocus_PF:
+abd_sony.cpp:    SCRSDK::CrExposureProgram CameraDevice::get_ex_pro_from_cam_vector(std::vector<std::tuple<std::string, std::uint8_t, std::uint32_t>>& vec)
+abd_sony.cpp:                return static_cast<SCRSDK::CrExposureProgram>(std::get<2>(tup));
+abd_sony.cpp:        return static_cast<SCRSDK::CrExposureProgram>(-1);
+abd_sony.cpp:    void CameraDevice::printCrExposureProgram(SCRSDK::CrExposureProgram retVal)
+abd_sony.cpp:            case SCRSDK::CrExposureProgram::CrExposure_M_Manual:
+abd_sony.cpp:            case SCRSDK::CrExposureProgram::CrExposure_P_Auto:
+abd_sony.cpp:            case SCRSDK::CrExposureProgram::CrExposure_A_AperturePriority:
+abd_sony.cpp:            case SCRSDK::CrExposureProgram::CrExposure_S_ShutterSpeedPriority:
+abd_sony.cpp:            case SCRSDK::CrExposureProgram::CrExposure_Program_Creative:
+abd_sony.cpp:            case SCRSDK::CrExposureProgram::CrExposure_Program_Action:
+abd_sony.cpp:            case SCRSDK::CrExposureProgram::CrExposure_Portrait:
+abd_sony.cpp:            case SCRSDK::CrExposureProgram::CrExposure_Auto:
+abd_sony.cpp:            case SCRSDK::CrExposureProgram::CrExposure_Auto_Plus:
+abd_sony.cpp:            case SCRSDK::CrExposureProgram::CrExposure_P_A:
+abd_sony.cpp:            case SCRSDK::CrExposureProgram::CrExposure_P_S:
+abd_sony.cpp:            case SCRSDK::CrExposureProgram::CrExposure_Sports_Action:
+abd_sony.cpp:            case SCRSDK::CrExposureProgram::CrExposure_Sunset:
+abd_sony.cpp:            case SCRSDK::CrExposureProgram::CrExposure_Night:
+abd_sony.cpp:            case SCRSDK::CrExposureProgram::CrExposure_Landscape:
+abd_sony.cpp:            case SCRSDK::CrExposureProgram::CrExposure_Macro:
+abd_sony.cpp:            case SCRSDK::CrExposureProgram::CrExposure_HandheldTwilight:
+abd_sony.cpp:            case SCRSDK::CrExposureProgram::CrExposure_NightPortrait:
+abd_sony.cpp:            case SCRSDK::CrExposureProgram::CrExposure_AntiMotionBlur:
+abd_sony.cpp:            case SCRSDK::CrExposureProgram::CrExposure_Pet:
+abd_sony.cpp:            case SCRSDK::CrExposureProgram::CrExposure_Gourmet:
+abd_sony.cpp:            case SCRSDK::CrExposureProgram::CrExposure_Fireworks:
+abd_sony.cpp:            case SCRSDK::CrExposureProgram::CrExposure_HighSensitivity:
+abd_sony.cpp:            case SCRSDK::CrExposureProgram::CrExposure_MemoryRecall:
+abd_sony.cpp:            case SCRSDK::CrExposureProgram::CrExposure_ContinuousPriority_AE_8pics:
+abd_sony.cpp:            case SCRSDK::CrExposureProgram::CrExposure_ContinuousPriority_AE_10pics:
+abd_sony.cpp:            case SCRSDK::CrExposureProgram::CrExposure_ContinuousPriority_AE_12pics:
+abd_sony.cpp:            case SCRSDK::CrExposureProgram::CrExposure_3D_SweepPanorama:
+abd_sony.cpp:            case SCRSDK::CrExposureProgram::CrExposure_SweepPanorama:
+abd_sony.cpp:            case SCRSDK::CrExposureProgram::CrExposure_Movie_P:
+abd_sony.cpp:            case SCRSDK::CrExposureProgram::CrExposure_Movie_A:
+abd_sony.cpp:            case SCRSDK::CrExposureProgram::CrExposure_Movie_S:
+abd_sony.cpp:            case SCRSDK::CrExposureProgram::CrExposure_Movie_M:
+abd_sony.cpp:            case SCRSDK::CrExposureProgram::CrExposure_Movie_Auto:
+abd_sony.cpp:            case SCRSDK::CrExposureProgram::CrExposure_Movie_SQMotion_P:
+abd_sony.cpp:            case SCRSDK::CrExposureProgram::CrExposure_Movie_SQMotion_A:
+abd_sony.cpp:            case SCRSDK::CrExposureProgram::CrExposure_Movie_SQMotion_S:
+abd_sony.cpp:            case SCRSDK::CrExposureProgram::CrExposure_Movie_SQMotion_M:
+abd_sony.cpp:            case SCRSDK::CrExposureProgram::CrExposure_Flash_Off:
+abd_sony.cpp:            case SCRSDK::CrExposureProgram::CrExposure_PictureEffect:
+abd_sony.cpp:            case SCRSDK::CrExposureProgram::CrExposure_HiFrameRate_P:
+abd_sony.cpp:            case SCRSDK::CrExposureProgram::CrExposure_HiFrameRate_A:
+abd_sony.cpp:            case SCRSDK::CrExposureProgram::CrExposure_HiFrameRate_S:
+abd_sony.cpp:            case SCRSDK::CrExposureProgram::CrExposure_HiFrameRate_M:
+abd_sony.cpp:            case SCRSDK::CrExposureProgram::CrExposure_SQMotion_P:
+abd_sony.cpp:            case SCRSDK::CrExposureProgram::CrExposure_SQMotion_A:
+abd_sony.cpp:            case SCRSDK::CrExposureProgram::CrExposure_SQMotion_S:
+abd_sony.cpp:            case SCRSDK::CrExposureProgram::CrExposure_SQMotion_M:
+abd_sony.cpp:            case SCRSDK::CrExposureProgram::CrExposure_MOVIE:
+abd_sony.cpp:            case SCRSDK::CrExposureProgram::CrExposure_STILL:
+abd_sony.cpp:    SCRSDK::CrShutterSpeedSet CameraDevice::get_shut_spd_from_cam_vector(std::vector<std::tuple<std::string, std::uint8_t, std::uint32_t>>& vec)
+abd_sony.cpp:                return static_cast<SCRSDK::CrShutterSpeedSet>(std::get<2>(tup));
+abd_sony.cpp:        return static_cast<SCRSDK::CrShutterSpeedSet>(-1);
+abd_sony.cpp:    SCRSDK::CrISOMode CameraDevice::get_iso_from_cam_vector(std::vector<std::tuple<std::string, std::uint8_t, std::uint32_t>>& vec)
+abd_sony.cpp:                return static_cast<SCRSDK::CrISOMode>(std::get<2>(tup));
+abd_sony.cpp:        return static_cast<SCRSDK::CrISOMode>(-1);
+abd_sony.cpp:    SCRSDK::CrFnumberSet CameraDevice::get_aper_from_cam_vector(std::vector<std::tuple<std::string, std::uint8_t, std::uint32_t>>& vec)
+abd_sony.cpp:                return static_cast<SCRSDK::CrFnumberSet>(std::get<2>(tup));
+abd_sony.cpp:        return static_cast<SCRSDK::CrFnumberSet>(-1);
+abd_sony.cpp:    void CameraDevice::printCrFnumberSet(SCRSDK::CrFnumberSet retVal)
+abd_sony.cpp:            case SCRSDK::CrFnumberSet::CrFnumber_Unknown:
+abd_sony.cpp:            case SCRSDK::CrFnumberSet::CrFnumber_Nothing:
+abd_sony.h:    void SetNearFarEnable(SCRSDK::CrCommandParam v);
+abd_sony.h:    void SetFocusMagnifierSetting(SCRSDK::CrCommandParam v);
+abd_sony.h:    CrInt8 printCrMovie_Recording_State(SCRSDK::CrMovie_Recording_State retVal);
+abd_sony.h:    SCRSDK::CrMovie_Recording_State get_rec_state_from_cam_vector(std::vector<std::tuple<std::string, std::uint8_t, std::uint32_t>>& vec);
+abd_sony.h:    SCRSDK::CrWhiteBalanceSetting get_white_bal_from_cam_vector(std::vector<std::tuple<std::string, std::uint8_t, std::uint32_t>>& vec);
+abd_sony.h:    void printCrWhiteBalanceSetting(SCRSDK::CrWhiteBalanceSetting retVal);
+abd_sony.h:    SCRSDK::CrDriveMode get_still_cap_from_cam_vector(std::vector<std::tuple<std::string, std::uint8_t, std::uint32_t>>& vec);
+abd_sony.h:    void printCrDriveMode(SCRSDK::CrDriveMode retVal);
+abd_sony.h:    SCRSDK::CrFocusArea get_focus_area_from_cam_vector(std::vector<std::tuple<std::string, std::uint8_t, std::uint32_t>>& vec);
+abd_sony.h:    void printCrFocusArea(SCRSDK::CrFocusArea retVal);
+abd_sony.h:    SCRSDK::CrFocusMode get_focus_mode_from_cam_vector(std::vector<std::tuple<std::string, std::uint8_t, std::uint32_t>>& vec);
+abd_sony.h:    void printCrFocusMode(SCRSDK::CrFocusMode retVal);
+abd_sony.h:    SCRSDK::CrExposureProgram get_ex_pro_from_cam_vector(std::vector<std::tuple<std::string, std::uint8_t, std::uint32_t>>& vec);
+abd_sony.h:    void printCrExposureProgram(SCRSDK::CrExposureProgram retVal);
+abd_sony.h:    SCRSDK::CrShutterSpeedSet get_shut_spd_from_cam_vector(std::vector<std::tuple<std::string, std::uint8_t, std::uint32_t>>& vec);
+abd_sony.h:    void printCrFnumberSet(SCRSDK::CrFnumberSet retVal);
+abd_sony.h:    SCRSDK::CrFnumberSet get_aper_from_cam_vector(std::vector<std::tuple<std::string, std::uint8_t, std::uint32_t>>& vec);
+abd_sony.h:    SCRSDK::CrISOMode get_iso_from_cam_vector(std::vector<std::tuple<std::string, std::uint8_t, std::uint32_t>>& vec);
+abd_sony.h:    SCRSDK::CrNearFarEnableStatus get_near_far_from_cam_vector(std::vector<std::tuple<std::string, std::uint8_t, std::uint32_t>>& vec);
+CameraDevice.cpp:#include "CRSDK/CrDeviceProperty.h"
+CameraDevice.cpp:namespace SDK = SCRSDK;
+CameraDevice.cpp:CameraDevice::CameraDevice(std::int32_t no, CRLibInterface const* cr_lib, SCRSDK::ICrCameraObjectInfo const* camera_info)
+CameraDevice.cpp:    , m_modeSDK(SCRSDK::CrSdkControlMode_ContentsTransfer)
+CameraDevice.cpp:bool CameraDevice::connect(SCRSDK::CrSdkControlMode openMode)
+CameraDevice.cpp:SCRSDK::CrSdkControlMode CameraDevice::get_sdkmode() 
+CameraDevice.cpp:    for (SCRSDK::CrMtpContentsInfo* pC : m_contentList)
+CameraDevice.h:#include "CRSDK/CameraRemote_SDK.h"
+CameraDevice.h:#include "CRSDK/IDeviceCallback.h"
+CameraDevice.h:    CRFolderInfos(SCRSDK::CrMtpFolderInfo* info, int32_t nums)
+CameraDevice.h:    SCRSDK::CrMtpFolderInfo* pFolder;
+CameraDevice.h:typedef std::vector<SCRSDK::CrMtpContentsInfo*> MtpContentsList;
+CameraDevice.h:class CameraDevice : public SCRSDK::IDeviceCallback
+CameraDevice.h:    CameraDevice(std::int32_t no, CRLibInterface const* cr_lib, SCRSDK::ICrCameraObjectInfo const* camera_info);
+CameraDevice.h:    bool connect(SCRSDK::CrSdkControlMode openMode);
+CameraDevice.h:    void pullContents(SCRSDK::CrContentHandle content);
+CameraDevice.h:    void getScreennail(SCRSDK::CrContentHandle content);
+CameraDevice.h:    void getThumbnail(SCRSDK::CrContentHandle content);
+CameraDevice.h:    SCRSDK::CrSdkControlMode get_sdkmode();
+CameraDevice.h:    virtual void OnConnected(SCRSDK::DeviceConnectionVersioin version) override;
+CameraDevice.h:    virtual void OnNotifyContentsTransfer(CrInt32u notify, SCRSDK::CrContentHandle contentHandle, CrChar* filename) override;
+CameraDevice.h:    void get_property(SCRSDK::CrDeviceProperty& prop) const;
+CameraDevice.h:    bool set_property(SCRSDK::CrDeviceProperty& prop) const;
+CameraDevice.h:    SCRSDK::ICrCameraObjectInfo* m_info;
+CameraDevice.h:    SCRSDK::CrSdkControlMode m_modeSDK;
+ConnectionInfo.cpp:#include "CRSDK/CameraRemote_SDK.h"
+LibManager.h:#include "CRSDK/CameraRemote_SDK.h"
+LibManager.h:using namespace SCRSDK;
+MessageDefine.h:#include "CRSDK/CrTypes.h"
+MessageDefine.h:#include "CRSDK/CrError.h"
+MessageDefine.h:        {SCRSDK::CrError_Generic, TEXT("Generic")},
+MessageDefine.h:        {SCRSDK::CrError_File,    TEXT("File   ")},
+MessageDefine.h:        {SCRSDK::CrError_Connect, TEXT("Connect")},
+MessageDefine.h:        {SCRSDK::CrError_Memory,  TEXT("Memory ")},
+MessageDefine.h:        {SCRSDK::CrError_Api,     TEXT("Api    ")},
+MessageDefine.h:        {SCRSDK::CrError_Polling, TEXT("Polling")},
+MessageDefine.h:        {SCRSDK::CrError_Adaptor, TEXT("Adaptor")},
+MessageDefine.h:        {SCRSDK::CrError_Device,  TEXT("Device ")},
+MessageDefine.h:        {SCRSDK::CrError_Contents,TEXT("Content")},
+MessageDefine.h:        {SCRSDK::CrError_Generic_Unknown, TEXT("Uncategorized errors")},
+MessageDefine.h:        {SCRSDK::CrError_Generic_Notimpl, TEXT("Not implemented")},
+MessageDefine.h:        {SCRSDK::CrError_Generic_Abort, TEXT("Processing was aborted")},
+MessageDefine.h:        {SCRSDK::CrError_Generic_NotSupported, TEXT("Not supported")},
+MessageDefine.h:        {SCRSDK::CrError_Generic_SeriousErrorNotSupported, TEXT("Serious error not supported")},
+MessageDefine.h:        {SCRSDK::CrError_Generic_InvalidHandle, TEXT("Not valid handle")},
+MessageDefine.h:        {SCRSDK::CrError_Generic_InvalidParameter, TEXT("Invalid parameter")},
+MessageDefine.h:        {SCRSDK::CrError_File_Unknown, TEXT("Unknown file errors")},
+MessageDefine.h:        {SCRSDK::CrError_File_IllegalOperation, TEXT("Illegal operation (e.g., loading without opening)")},
+MessageDefine.h:        {SCRSDK::CrError_File_IllegalParameter, TEXT("Illegal parameter")},
+MessageDefine.h:        {SCRSDK::CrError_File_EOF, TEXT("EOF")},
+MessageDefine.h:        {SCRSDK::CrError_File_OutOfRange, TEXT("Operation, such as seek, is out of range")},
+MessageDefine.h:        {SCRSDK::CrError_File_NotFound, TEXT("File not found")},
+MessageDefine.h:        {SCRSDK::CrError_File_DirNotFound, TEXT("Directory not found")},
+MessageDefine.h:        {SCRSDK::CrError_File_AlreadyOpened, TEXT("Already opened")},
+MessageDefine.h:        {SCRSDK::CrError_File_PermissionDenied, TEXT("No access permission")},
+MessageDefine.h:        {SCRSDK::CrError_File_StorageFull, TEXT("Host storage is full")},
+MessageDefine.h:        {SCRSDK::CrError_File_AlreadyExists, TEXT("Already exists")},
+MessageDefine.h:        {SCRSDK::CrError_File_TooManyOpenedFiles, TEXT("Too many open files")},
+MessageDefine.h:        {SCRSDK::CrError_File_ReadOnly, TEXT("Read-Only file")},
+MessageDefine.h:        {SCRSDK::CrError_File_CantOpen, TEXT("Cannot open")},
+MessageDefine.h:        {SCRSDK::CrError_File_CantClose, TEXT("Cannot close")},
+MessageDefine.h:        {SCRSDK::CrError_File_CantDelete, TEXT("Cannot delete")},
+MessageDefine.h:        {SCRSDK::CrError_File_CantRead, TEXT("Cannot read")},
+MessageDefine.h:        {SCRSDK::CrError_File_CantWrite, TEXT("Cannot write")},
+MessageDefine.h:        {SCRSDK::CrError_File_CantCreateDir, TEXT("Cannot create a directory")},
+MessageDefine.h:        {SCRSDK::CrError_File_OperationAbortedByUser, TEXT("Processing was aborted by user")},
+MessageDefine.h:        {SCRSDK::CrError_File_UnsupportedOperation, TEXT("API not supported for the platform was called")},
+MessageDefine.h:        {SCRSDK::CrError_File_NotYetCompleted, TEXT("Operation is not completed")},
+MessageDefine.h:        {SCRSDK::CrError_File_Invalid, TEXT("The file is no longer valid because the volume for the file was altered")},
+MessageDefine.h:        {SCRSDK::CrError_File_StorageNotExist, TEXT("The specified network resource or device is no longer available")},
+MessageDefine.h:        {SCRSDK::CrError_File_SharingViolation, TEXT("Sharing violation")},
+MessageDefine.h:        {SCRSDK::CrError_File_Rotation, TEXT("Invalid file orientation")},
+MessageDefine.h:        {SCRSDK::CrError_File_SameNameFull, TEXT("Too many same-name files")},
+MessageDefine.h:        {SCRSDK::CrError_Connect_Unknown, TEXT("Other errors classified as connection except below")},
+MessageDefine.h:        {SCRSDK::CrError_Connect_Connect, TEXT("A connection request failed through the USB")},
+MessageDefine.h:        {SCRSDK::CrError_Connect_Release, TEXT("Release failed")},
+MessageDefine.h:        {SCRSDK::CrError_Connect_GetProperty, TEXT("Getting property failed")},
+MessageDefine.h:        {SCRSDK::CrError_Connect_SendCommand, TEXT("Sending command failed")},
+MessageDefine.h:        {SCRSDK::CrError_Connect_HandlePlugin, TEXT("Illegal handle plug-in")},
+MessageDefine.h:        {SCRSDK::CrError_Connect_Disconnected, TEXT("A connection disconnected")},
+MessageDefine.h:        {SCRSDK::CrError_Connect_TimeOut, TEXT("A connection operation timed out")},
+MessageDefine.h:        {SCRSDK::CrError_Reconnect_TimeOut, TEXT("Reconnection operations timed out")},
+MessageDefine.h:        {SCRSDK::CrError_Connect_FailRejected, TEXT("Connection rejected and failed")},
+MessageDefine.h:        {SCRSDK::CrError_Connect_FailBusy, TEXT("Connection failed due to processing in progress")},
+MessageDefine.h:        {SCRSDK::CrError_Connect_FailUnspecified, TEXT("Unspecified connection failure")},
+MessageDefine.h:        {SCRSDK::CrError_Connect_Cancel, TEXT("Connection canceled")},
+MessageDefine.h:        {SCRSDK::CrError_Connect_SessionAlreadyOpened, TEXT("A connection failed because camera was not ready")},
+MessageDefine.h:        {SCRSDK::CrError_Connect_ContentsTransfer_NotSupported, TEXT("This camera does not support content transfer")},
+MessageDefine.h:        {SCRSDK::CrError_Memory_Unknown, TEXT("Unknown memory error")},
+MessageDefine.h:        {SCRSDK::CrError_Memory_OutOfMemory, TEXT("Cannot allocate memory")},
+MessageDefine.h:        {SCRSDK::CrError_Memory_InvalidPointer, TEXT("Invalid pointer")},
+MessageDefine.h:        {SCRSDK::CrError_Memory_Insufficient, TEXT("Allocate memory insufficient")},
+MessageDefine.h:        {SCRSDK::CrError_Api_Unknown, TEXT("Unknown API error")},
+MessageDefine.h:        {SCRSDK::CrError_Api_Insufficient, TEXT("Incorrect parameter")},
+MessageDefine.h:        {SCRSDK::CrError_Api_InvalidCalled, TEXT("Invalid API call")},
+MessageDefine.h:        {SCRSDK::CrError_Polling_Unknown, TEXT("Unknown polling error")},
+MessageDefine.h:        {SCRSDK::CrError_Polling_InvalidVal_Intervals, TEXT("Invalid polling interval setting value")},
+MessageDefine.h:        {SCRSDK::CrError_Adaptor_Unknown, TEXT("Unknown adapter error")},
+MessageDefine.h:        {SCRSDK::CrError_Adaptor_InvaildProperty, TEXT("A property that doesn't exist was used")},
+MessageDefine.h:        {SCRSDK::CrError_Adaptor_GetInfo, TEXT("Getting information failed")},
+MessageDefine.h:        {SCRSDK::CrError_Adaptor_Create, TEXT("Creation failed")},
+MessageDefine.h:        {SCRSDK::CrError_Adaptor_SendCommand, TEXT("Sending command failed")},
+MessageDefine.h:        {SCRSDK::CrError_Adaptor_HandlePlugin, TEXT("Illegal handle plug-in")},
+MessageDefine.h:        {SCRSDK::CrError_Adaptor_CreateDevice, TEXT("Device creation failed")},
+MessageDefine.h:        {SCRSDK::CrError_Adaptor_EnumDecvice, TEXT("Enumeration of device information failed")},
+MessageDefine.h:        {SCRSDK::CrError_Adaptor_Reset, TEXT("Reset failed")},
+MessageDefine.h:        {SCRSDK::CrError_Adaptor_Read, TEXT("Read failed")},
+MessageDefine.h:        {SCRSDK::CrError_Adaptor_Phase, TEXT("Parse failed")},
+MessageDefine.h:        {SCRSDK::CrError_Adaptor_DataToWiaItem, TEXT("Failed to set data as WIA item")},
+MessageDefine.h:        {SCRSDK::CrError_Adaptor_DeviceBusy, TEXT("The setting side is busy")},
+MessageDefine.h:        {SCRSDK::CrError_Adaptor_Escape, TEXT("Escape failed")},
+MessageDefine.h:        {SCRSDK::CrError_Contents_Unknown, TEXT("Unknown content transfer error")},
+MessageDefine.h:        {SCRSDK::CrError_Contents_InvalidHandle, TEXT("Not valid content handle")},
+MessageDefine.h:        {SCRSDK::CrError_Contents_DateFolderList_NotRetrieved, TEXT("Date folder list not acquired")},
+MessageDefine.h:        {SCRSDK::CrError_Contents_ContentsList_NotRetrieved, TEXT("Content handle list not acquired")},
+MessageDefine.h:        {SCRSDK::CrError_Contents_Transfer_Unsuccess, TEXT("Content transfer failed")},
+MessageDefine.h:        {SCRSDK::CrError_Contents_Transfer_Cancel,TEXT("Not transferred due to successful content transfer cancel")},
+MessageDefine.h:        {SCRSDK::CrError_Contents_RejectRequest, TEXT("Rejected request")},
+MessageDefine.h:        {SCRSDK::CrError_Device_Unknown, TEXT("Unknown device error")},
+PropertyValueTable.cpp:namespace SDK = SCRSDK;
+RemoteCli.120922:#include "CRSDK/CameraRemote_SDK.h"
+RemoteCli.120922:namespace SDK = SCRSDK;
+RemoteCli.130922:#include "CRSDK/CameraRemote_SDK.h"
+RemoteCli.130922:namespace SDK = SCRSDK;
+RemoteCli.140922also_ok:#include "CRSDK/CameraRemote_SDK.h"
+RemoteCli.140922also_ok:namespace SDK = SCRSDK;
+RemoteCli.140922also_ok:		   camera->printCrWhiteBalanceSetting(static_cast<SCRSDK::CrWhiteBalanceSetting>(sony_white_bal.my_value));
+RemoteCli.140922also_ok:		   camera->printCrFocusArea(static_cast<SCRSDK::CrFocusArea>(sony_foc_area.my_value));
+RemoteCli.140922also_ok:		   camera->printCrFocusMode(static_cast<SCRSDK::CrFocusMode>(sony_foc_mode.my_value));
+RemoteCli.140922also_ok:		   camera->printCrDriveMode(static_cast<SCRSDK::CrDriveMode>(sony_sc.my_value));
+RemoteCli.140922also_ok:		   camera->printCrExposureProgram(static_cast<SCRSDK::CrExposureProgram>(sony_expro.my_value));
+RemoteCli.140922ok:#include "CRSDK/CameraRemote_SDK.h"
+RemoteCli.140922ok:namespace SDK = SCRSDK;
+RemoteCli.140922ok:		   camera->printCrWhiteBalanceSetting(static_cast<SCRSDK::CrWhiteBalanceSetting>(sony_white_bal.my_value));
+RemoteCli.140922ok:		   camera->printCrFocusArea(static_cast<SCRSDK::CrFocusArea>(sony_foc_area.my_value));
+RemoteCli.140922ok:		   camera->printCrFocusMode(static_cast<SCRSDK::CrFocusMode>(sony_foc_mode.my_value));
+RemoteCli.140922ok:		   camera->printCrDriveMode(static_cast<SCRSDK::CrDriveMode>(sony_sc.my_value));
+RemoteCli.140922ok:		   camera->printCrExposureProgram(static_cast<SCRSDK::CrExposureProgram>(sony_expro.my_value));
+RemoteCli.150922ok:#include "CRSDK/CameraRemote_SDK.h"
+RemoteCli.150922ok:namespace SDK = SCRSDK;
+RemoteCli.150922ok:		   camera->printCrWhiteBalanceSetting(static_cast<SCRSDK::CrWhiteBalanceSetting>(sony_white_bal.my_value));
+RemoteCli.150922ok:		   camera->printCrFocusArea(static_cast<SCRSDK::CrFocusArea>(sony_foc_area.my_value));
+RemoteCli.150922ok:		   camera->printCrFocusMode(static_cast<SCRSDK::CrFocusMode>(sony_foc_mode.my_value));
+RemoteCli.150922ok:		   camera->printCrDriveMode(static_cast<SCRSDK::CrDriveMode>(sony_sc.my_value));
+RemoteCli.150922ok:		   camera->printCrExposureProgram(static_cast<SCRSDK::CrExposureProgram>(sony_expro.my_value));
+RemoteCli.150922ok2:#include "CRSDK/CameraRemote_SDK.h"
+RemoteCli.150922ok2:namespace SDK = SCRSDK;
+RemoteCli.150922ok2:		   camera->printCrWhiteBalanceSetting(static_cast<SCRSDK::CrWhiteBalanceSetting>(sony_white_bal.my_value));
+RemoteCli.150922ok2:		   camera->printCrFocusArea(static_cast<SCRSDK::CrFocusArea>(sony_foc_area.my_value));
+RemoteCli.150922ok2:		   camera->printCrFocusMode(static_cast<SCRSDK::CrFocusMode>(sony_foc_mode.my_value));
+RemoteCli.150922ok2:		   camera->printCrDriveMode(static_cast<SCRSDK::CrDriveMode>(sony_sc.my_value));
+RemoteCli.150922ok2:		   camera->printCrExposureProgram(static_cast<SCRSDK::CrExposureProgram>(sony_expro.my_value));
+RemoteCli.150922ok3:#include "CRSDK/CameraRemote_SDK.h"
+RemoteCli.150922ok3:namespace SDK = SCRSDK;
+RemoteCli.150922ok3:		   camera->printCrWhiteBalanceSetting(static_cast<SCRSDK::CrWhiteBalanceSetting>(sony_white_bal.my_value));
+RemoteCli.150922ok3:		   camera->printCrFocusArea(static_cast<SCRSDK::CrFocusArea>(sony_foc_area.my_value));
+RemoteCli.150922ok3:		   camera->printCrFocusMode(static_cast<SCRSDK::CrFocusMode>(sony_foc_mode.my_value));
+RemoteCli.150922ok3:		   camera->printCrDriveMode(static_cast<SCRSDK::CrDriveMode>(sony_sc.my_value));
+RemoteCli.150922ok3:		   camera->printCrExposureProgram(static_cast<SCRSDK::CrExposureProgram>(sony_expro.my_value));
+RemoteCli_2.120922:#include "CRSDK/CameraRemote_SDK.h"
+RemoteCli_2.120922:namespace SDK = SCRSDK;
+RemoteCli.cpp:#include "CRSDK/CameraRemote_SDK.h"
+RemoteCli.cpp:namespace SDK = SCRSDK;
+RemoteCli.cpp:		   camera->printCrWhiteBalanceSetting(static_cast<SCRSDK::CrWhiteBalanceSetting>(sony_white_bal.my_value));
+RemoteCli.cpp:		   camera->printCrFocusArea(static_cast<SCRSDK::CrFocusArea>(sony_foc_area.my_value));
+RemoteCli.cpp:		   camera->printCrFocusMode(static_cast<SCRSDK::CrFocusMode>(sony_foc_mode.my_value));
+RemoteCli.cpp:		   camera->printCrDriveMode(static_cast<SCRSDK::CrDriveMode>(sony_sc.my_value));
+RemoteCli.cpp:		   camera->printCrExposureProgram(static_cast<SCRSDK::CrExposureProgram>(sony_expro.my_value));
+RemoteCli_new.cpp:#include "CRSDK/CameraRemote_SDK.h"
+RemoteCli_new.cpp:namespace SDK = SCRSDK;
+RemoteCli_new.cpp:		   camera->printCrWhiteBalanceSetting(static_cast<SCRSDK::CrWhiteBalanceSetting>(sony_white_bal.my_value));
+RemoteCli_new.cpp:		   camera->printCrFocusArea(static_cast<SCRSDK::CrFocusArea>(sony_foc_area.my_value));
+RemoteCli_new.cpp:		   camera->printCrFocusMode(static_cast<SCRSDK::CrFocusMode>(sony_foc_mode.my_value));
+RemoteCli_new.cpp:		   camera->printCrDriveMode(static_cast<SCRSDK::CrDriveMode>(sony_sc.my_value));
+RemoteCli_new.cpp:		   camera->printCrExposureProgram(static_cast<SCRSDK::CrExposureProgram>(sony_expro.my_value));
+RemoteCli.org:#include "CRSDK/CameraRemote_SDK.h"
+RemoteCli.org:namespace SDK = SCRSDK;
+RemoteCli.strand:#include "CRSDK/CameraRemote_SDK.h"
+RemoteCli.strand:namespace SDK = SCRSDK;
+shutter_speed_adjust.cpp:SCRSDK::CrMovie_Recording_State  get_rec_state_from_cam_vec(std::vector<std::tuple<std::string, std::uint8_t, std::uint32_t>>& vec)
+shutter_speed_adjust.cpp:            return static_cast<SCRSDK::CrMovie_Recording_State>(std::get<2>(tup));
+shutter_speed_adjust.cpp:    return SCRSDK::CrMovie_Recording_State::CrMovie_Recording_State_Recording_Failed;
+shutter_speed_adjust.cpp:SCRSDK::CrMovie_Recording_State get_rec_state_from_cam_vec2(std::vector<std::tuple<std::string, std::uint8_t, std::uint32_t>>& vec)
+shutter_speed_adjust.cpp:            return static_cast<SCRSDK::CrMovie_Recording_State>(std::get<2>(tup));
+shutter_speed_adjust.cpp:    return SCRSDK::CrMovie_Recording_State::CrMovie_Recording_State_Recording_Failed;
