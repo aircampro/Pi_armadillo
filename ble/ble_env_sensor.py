@@ -105,19 +105,19 @@ def decode_env_data_put_in_db(dataRow, sensor_type):
     # unpack the data as returned from the read_gatt_char call on the uuid
     #
     if (sensor_type == "wx"):
-	    (s.seq, s.temp, s.humid, s.light, s.uv, s.press, s.noise, s.discom, s.heat, s.batt) = struct.unpack('<BhhhhhhhhH', dataRow)
-	    MSG(sensor_type, float(s.seq), float(s.temp), float(s.humid), float(s.light), float(s.uv), float(s.press), float(s.noise), float(s.discom), float(s.heat), float(s.batt))
+        (s.seq, s.temp, s.humid, s.light, s.uv, s.press, s.noise, s.discom, s.heat, s.batt) = struct.unpack('<BhhhhhhhhH', dataRow)
+        MSG(sensor_type, float(s.seq), float(s.temp), float(s.humid), float(s.light), float(s.uv), float(s.press), float(s.noise), float(s.discom), float(s.heat), float(s.batt))
         s.batt = float(s.batt) / 100.0
     elif (sensor_type == "ep"):
-	    (s.seq, s.temp, s.humid, s.light, s.uv, s.press, s.noise, s.discom, s.heat, s.ignore1, s.batt) = struct.unpack('<BhhhhhhhhhB', dataRow)
-	    MSG(sensor_type, float(s.seq), float(s.temp), float(s.humid), float(s.light), float(s.uv), float(s.press), float(s.noise), float(s.discom), float(s.heat), float(s.batt))
+        (s.seq, s.temp, s.humid, s.light, s.uv, s.press, s.noise, s.discom, s.heat, s.ignore1, s.batt) = struct.unpack('<BhhhhhhhhhB', dataRow)
+        MSG(sensor_type, float(s.seq), float(s.temp), float(s.humid), float(s.light), float(s.uv), float(s.press), float(s.noise), float(s.discom), float(s.heat), float(s.batt))
         s.batt = 10.0 * (float(s.batt) + 100.0)
     elif (sensor_type == "im"):
         (s.seq, s.temp, s.humid, s.light, s.uv, s.press, s.noise, s.x, s.y, s.z, s.batt) = struct.unpack('<BhhhhhhhhhB', dataRow)
         MSG(sensor_type, s.seq, s.temp, s.humid, s.light, s.uv, s.press, s.noise, s.x, s.y, s.z, s.batt)
         s.batt = 10.0 * (float(s.batt) + 100.0)
     elif (sensor_type == "rbt01"):
-	    (s.seq, s.temp, s.humid, s.light, s.uv, s.press, s.noise, s.etvoc, s.eco) = struct.unpack('<Bhhhhhhhh', dataRow)
+       (s.seq, s.temp, s.humid, s.light, s.uv, s.press, s.noise, s.etvoc, s.eco) = struct.unpack('<Bhhhhhhhh', dataRow)
         MSG(sensor_type, s.seq, s.temp, s.humid, s.light, s.uv, s.press, s.noise, s.etvoc, s.eco)
     elif (sensor_type == "rbt02"):
 	    (s.seq, s.discom, s.heat, s.vib, s.si, s.pga, s.seismic, s.x, s.y, s.z) = struct.unpack('<BhhBhhhhhh', dataRow)
@@ -134,14 +134,14 @@ def decode_env_data_put_in_db(dataRow, sensor_type):
     
     # scaling conversions
     #
-	s.temp = float(s.temp) / 100.0 
-	s.humid = float(s.humid) / 100.0 
-	s.light = float(s.light) 
-	s.uv = float(s.uv) / 100.0
-	s.press = float(s.press) / 10.0
-	s.noise = float(s.noise) / 100.0
-	s.discom = float(s.discom) / 100.0
-	s.heat = float(s.heat) / 100.0
+    s.temp = float(s.temp) / 100.0 
+    s.humid = float(s.humid) / 100.0 
+    s.light = float(s.light) 
+    s.uv = float(s.uv) / 100.0
+    s.press = float(s.press) / 10.0
+    s.noise = float(s.noise) / 100.0
+    s.discom = float(s.discom) / 100.0
+    s.heat = float(s.heat) / 100.0
     s.x = float(s.x) / 10.0
     s.y = float(s.y) / 10.0
     s.z = float(s.z) / 10.0
@@ -156,14 +156,14 @@ def decode_env_data_put_in_db(dataRow, sensor_type):
 			'measurement': measurement,
 			'tags': tags,
 			'fields': {
-				'temp': s.temp,
-				'humi': s.humid,
-				'lux': s.light,
-				'uv': s.uv,
-				'hpa': s.press,
-				'noise': s.noise,
-				'thi': s.discom,
-				'heat': s.heat,
+                'temp': s.temp,
+                'humi': s.humid,
+                'lux': s.light,
+                'uv': s.uv,
+                'hpa': s.press,
+                'noise': s.noise,
+                'thi': s.discom,
+                'heat': s.heat,
                 "accel_x": s.x,
                 "accel_y": s.y,
                 "accel_z": s.z,
@@ -173,7 +173,7 @@ def decode_env_data_put_in_db(dataRow, sensor_type):
                 "pga": s.pga,
                 "seismic": s.seismic,
                 "vibinfo": s.vibinfo,
-				'battery': s.batt,
+                'battery': s.batt,
                 'dia' : s.dia,
                 'wbgt' : s.wbgt,
                 "rssi": s.rssi,
