@@ -184,7 +184,7 @@ def decode_env_data_put_in_db(dataRow, sensor_type):
     
     # upload to the db
     #
-	client.write_points(json_body)
+    client.write_points(json_body)
     
 # makes the UUID from the command bytes passed as arguments
 def _MAKE_UUID(cmd):
