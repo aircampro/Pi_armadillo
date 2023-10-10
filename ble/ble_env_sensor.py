@@ -117,10 +117,10 @@ def decode_env_data_put_in_db(dataRow, sensor_type):
         MSG(sensor_type, s.seq, s.temp, s.humid, s.light, s.uv, s.press, s.noise, s.x, s.y, s.z, s.batt)
         s.batt = 10.0 * (float(s.batt) + 100.0)
     elif (sensor_type == "rbt01"):
-       (s.seq, s.temp, s.humid, s.light, s.uv, s.press, s.noise, s.etvoc, s.eco) = struct.unpack('<Bhhhhhhhh', dataRow)
+        (s.seq, s.temp, s.humid, s.light, s.uv, s.press, s.noise, s.etvoc, s.eco) = struct.unpack('<Bhhhhhhhh', dataRow)
         MSG(sensor_type, s.seq, s.temp, s.humid, s.light, s.uv, s.press, s.noise, s.etvoc, s.eco)
     elif (sensor_type == "rbt02"):
-	    (s.seq, s.discom, s.heat, s.vib, s.si, s.pga, s.seismic, s.x, s.y, s.z) = struct.unpack('<BhhBhhhhhh', dataRow)
+	(s.seq, s.discom, s.heat, s.vib, s.si, s.pga, s.seismic, s.x, s.y, s.z) = struct.unpack('<BhhBhhhhhh', dataRow)
         MSG(sensor_type, s.seq, s.discom, s.heat, s.vib, s.si, s.pga, s.seismic, s.x, s.y, s.z)
         if (s.vib == 0x00):
             s.vibinfo = "NONE"
@@ -149,13 +149,13 @@ def decode_env_data_put_in_db(dataRow, sensor_type):
     s.pga = float(s.pga) / 10.0,
     s.seismic = float(s.seismic) / 1000.0,
                 
-	# create json for the database
+    # create json for the database
     #
-	json_body = [
-		{
-			'measurement': measurement,
-			'tags': tags,
-			'fields': {
+    json_body = [
+        {
+	    'measurement': measurement,
+	    'tags': tags,
+	    'fields': {
                 'temp': s.temp,
                 'humi': s.humid,
                 'lux': s.light,
@@ -178,9 +178,9 @@ def decode_env_data_put_in_db(dataRow, sensor_type):
                 'wbgt' : s.wbgt,
                 "rssi": s.rssi,
                 "distance": s.distance
-			}
-		}
-	]
+            }
+        }
+    ]
     
     # upload to the db
     #
