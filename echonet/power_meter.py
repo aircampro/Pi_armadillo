@@ -10,6 +10,7 @@ import serial
 import time
 import random
 import ctypes #unit32
+import datetime
 
 #-----------------------set-up------------------------
 #influxDB
@@ -51,13 +52,13 @@ scanDuration = 4;   # Scan time.In the sample it is 6, but I can go even 4.(If n
 scanRes = {}        # Container of scan results
 
 # upload to influx database
-def influx_json(field,nowtime=''):
+def influx_json(field, nowtime=''):
 	json_body = [
 		{
 			'measurement': measurement,
 			'tags': tags,
 			'fields': field
-			#'time': nowtime
+			'time': nowtime
 		}
 	]
 	client.write_points(json_body)
@@ -179,7 +180,8 @@ while powers:
 		if seoj == "028801" and ESV == "72" :
 			EPC = res[24:24+2]
 			#print(EPC)
-
+            date_time_now = datetime.datetime.now()
+            
 			if EPC == "D3" :            # Coefficient D304 00000001=1
 				print(EPC)
 			elif EPC == "D7" :          # Integrated energy precision D701 06=6 digits
@@ -191,7 +193,7 @@ while powers:
 				print(EPC)
 				print(u"sekisan{0}[kWh]".format(intPower))
 				field = {'E0': float(intPower)}
-				influx_json(field)
+				influx_json(field, date_time_now)
 
 			elif EPC == "E1" :          # Integrated energy unit (positive, reverse measurement) E10101=0.1kWh
 				hexPower = line[-4:]	# last 4 bytes
@@ -199,7 +201,7 @@ while powers:
 				print(EPC)
 				print(u"sekisan seigyaku{0}[kWh]".format(intPower))
 				field = {'E1': float(intPower)}
-				influx_json(field)
+				influx_json(field, date_time_now)
 
 			elif EPC == "E2" :          # Accumulated energy measurement history 1 (positive measurement)
 				print(EPC)
@@ -210,7 +212,7 @@ while powers:
 				print(EPC)
 				print(u"sekisan Reverse{0}[kWh]".format(intPower))
 				field = {'E3': float(intPower)}
-				influx_json(field)
+				influx_json(field, date_time_now)
 
 			elif EPC == "E4" :          # Total energy measurement history 1 (reverse measurement
 				print(EPC)
@@ -223,7 +225,7 @@ while powers:
 				print(EPC)
 				print(u"power:{0}[W]".format(intPower))
 				field = {'power': float(intPower) }
-				influx_json(field)
+				influx_json(field, date_time_now)
 
 				# write the data to a text file
 				with open(TXT_FL, 'w') as f:
@@ -244,7 +246,7 @@ while powers:
 				print(u"R:{0}[A]".format(intCurR)) 
 				print(u"T:{0}[A]".format(intCurT)) 
 				field = {'E8_R': intCurR , 'E8_T': intCurT }
-				influx_json(field)
+				influx_json(field, date_time_now)
 
 			elif EPC == "EA" :          # Fixed time accumulated energy positive direction meter number EA0B 07E3=2019 year 0C=12 month 06=6 day 0A=10 hour 00=0 minute 00=0 second 0002276C=14116
 				hexYearKW = line[-22:-18]
@@ -258,8 +260,8 @@ while powers:
 				print(EPC)
 				print(u"teizi{0}[kWh]".format(intTimeKW))
 				field = {'EA': float(intTimeKW) }
-				#influx_json(field,nowtime)
-				influx_json(field)
+				influx_json(field, nowtime)
+				#influx_json(field)
 
 			elif EPC == "EB" :  # Accumulation history collection date 1:EB0B07E30C050B1E00FFFFFFFE
 				print(EPC)
