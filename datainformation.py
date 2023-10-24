@@ -59,28 +59,28 @@ class getExternalDataFromREST():
 		# format specifiers for the date time strings returned 
         DATE_PART=0
         TIME_PART=1
-		HOUR_PART=0
-		MIN_PART=1
-		SEC_PART=2
-		YR_PART=0
-		MON_PART=1
-		DAY_PART=2
+	HOUR_PART=0
+	MIN_PART=1
+	SEC_PART=2
+	YR_PART=0
+	MON_PART=1
+	DAY_PART=2
         date_time_string = json_returned['items']['measures']['latestReading']['dateTime'].split("T")
         date_string = date_time_string[DATE_PART].split("-")
         time_string = date_time_string[TIME_PART].split(":")
-		current_ts = str(datetime.datetime.now(pytz.timezone('Europe/Moscow'))) 
-		current_yr = int(current_ts[YR_PART])
-		current_mo = int(current_ts[MON_PART])		
-		current_tmp = current_ts[DAY_PART].split(" ")
-		current_day = int(current_tmp[0])
-		current_time = current_tmp[1].split("+")[0].split(":")
-		current_hr = int(current_time[HOUR_PART])
-		current_min = int(current_time[MIN_PART])		
-		current_sec = int(current_time[SEC_PART])
-		if (((current_yr == int(date_string[YR_PART])) && (current_mo == int(date_string[MON_PART]))) && (current_day == int(date_string[DAY_PART]))):
-		    if ((current_hr == int(time_string[HOUR_PART])) && (abs(current_min - int(time_string[MIN_PART])) < data_good_mins)):                   # data is current within (data_good) mins
-			    current_flood_value = flood_value
-		return current_flood_value
+	current_ts = str(datetime.datetime.now(pytz.timezone('Europe/Moscow'))) 
+	current_yr = int(current_ts[YR_PART])
+	current_mo = int(current_ts[MON_PART])		
+	current_tmp = current_ts[DAY_PART].split(" ")
+	current_day = int(current_tmp[0])
+	current_time = current_tmp[1].split("+")[0].split(":")
+	current_hr = int(current_time[HOUR_PART])
+	current_min = int(current_time[MIN_PART])		
+	current_sec = int(current_time[SEC_PART])
+	if (((current_yr == int(date_string[YR_PART])) && (current_mo == int(date_string[MON_PART]))) && (current_day == int(date_string[DAY_PART]))):
+	    if ((current_hr == int(time_string[HOUR_PART])) && (abs(current_min - int(time_string[MIN_PART])) < data_good_mins)):                   # data is current within (data_good) mins
+	        current_flood_value = flood_value
+	return current_flood_value
 
     def getOpenWeather(city_name="Larne",api_key="your key"):				
         api = "http://api.openweathermap.org/data/2.5/weather?units=metric&q={city}&APPID={key}"
