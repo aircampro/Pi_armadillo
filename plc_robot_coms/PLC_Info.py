@@ -1,10 +1,20 @@
 #!/usr/bin/env python
 #
 
+# check the version of python for compatibility purposes should run under either unless no support for library anymore
+import sys
+import platform
+if (sys.version_info.major == 3):
+    MY_PY = 3
+elif (sys.version_info.major == 2):    
+    MY_PY = 2
+else:
+    print("unknown python version detected ", sys.version_info.major)
+    
 # ========================================= tools for showing and packing data ===================================================
 
 import numpy as np
-
+    
 # make a numpy array byte by byte 
 # this can be useful if you need to patch a particular part of the message 
 # i.e use the i number which is the position of the byte in the string 
@@ -150,7 +160,7 @@ def readCoilModbus(client,addr=1,num=1):
     try:
         rr = client.read_coils(addr, num)
     except Exception as e:
-        print(f"Exception in read_coils = {e}")    
+        print("Exception in read_coils = ",e)    
 	return rr.bits[0]
 
 def readDiscreteInputModbus(client,addr=1,num=1):
@@ -158,7 +168,7 @@ def readDiscreteInputModbus(client,addr=1,num=1):
     try:
         rr = client.read_discrete_inputs(addr, num)
     except Exception as e:
-        print(f"Exception in read_discrete_inputs = {e}")  
+        print("Exception in read_discrete_inputs = ",e)  
 	return rr.bits[0]
 	
 def readCoilsModbus(client,addr,number):
@@ -166,7 +176,7 @@ def readCoilsModbus(client,addr,number):
     try:
         rr = client.read_coils(addr, number)
     except Exception as e:
-        print(f"Exception in read_coils = {e}")  
+        print("Exception in read_coils = ",e)  
 	return rr.bits
 	
 def readDiscreteInputsModbus(client,addr,number):
@@ -174,42 +184,42 @@ def readDiscreteInputsModbus(client,addr,number):
     try:
         rr = client.read_discrete_inputs(addr, number)
     except Exception as e:
-        print(f"Exception in read_discrete_inputs = {e}") 
+        print("Exception in read_discrete_inputs = ",e) 
 	return rr.bits
 
 def readHoldingRegistersModbus(client,addr,number):
     try:
         rr = client.read_holding_registers(addr, number)
     except Exception as e:
-        print(f"Exception in read_holding_registers = {e}") 
+        print("Exception in read_holding_registers = ",e) 
 	return rr.registers	
 
 def writeCoilModbus(client,addr,boolValue):
     try:
         rr = client.write_coil(addr, boolValue)          # example True or False
     except Exception as e:
-        print(f"Exception in write_coil = {e}")     
+        print("Exception in write_coil = ",e)     
     return readCoilModbus(addr)	
 
 def writeCoilsModbus(client,addr,boolValueList):
     try:
         rr = client.write_coil(addr, boolValueList)          # example boolValueList=[True,False]
     except Exception as e:
-        print(f"Exception in write_coil = {e}")  
+        print("Exception in write_coil = ",e)  
     return readCoilsModbus(addr,len(boolValueList))	
     
 def writeHoldingRegisterModbus(client,addr,value): 
     try:
         rr = client.write_holding_register(addr, value)
     except Exception as e:
-        print(f"Exception in write_holding_register = {e}")  
+        print("Exception in write_holding_register = ",e)  
     return readHoldingRegistersModbus(addr,1)	
 
 def writeHoldingRegistersModbus(client,addr,valuesList):
     try:
         rr = client.write_holding_registers(addr, valuesList)          # example set starting at 9 values = [ 1, 3, 5, 8 ]
     except Exception as e:
-        print(f"Exception in write_holding_register = {e}")  
+        print("Exception in write_holding_register = ",e)  
     return readHoldingRegistersModbus(addr,len(valuesList))	
 
 def readHRegs(self, addr, count, unit=1):
@@ -219,7 +229,7 @@ def readHRegs(self, addr, count, unit=1):
         # e.g. res.registers=[1,1,2,0,1,0,0,0] --> [65537, 2, 1, 0] or d=[3,1,0,4,0,1,0,0] --> [65539, 262144, 65536, 0]
         regs = [x + y * 0x10000 for (x, y) in zip(res.registers[::2], res.registers[1::2])]
     except Exception as e:
-        print(f'Exceptio in read_holding_registers = {e}')
+        print('Exceptio in read_holding_registers = ',e)
 
     return regs
 
@@ -230,7 +240,7 @@ def readHRegs2JsonList(self, addr, count, unit=1):
         # e.g. res.registers=[1,1,2,0,1,0,0,0] --> [65537, 2, 1, 0] or d=[3,1,0,4,0,1,0,0] --> [65539, 262144, 65536, 0]
         regs = [x + y * 0x10000 for (x, y) in zip(res.registers[::2], res.registers[1::2])]
     except Exception as e:
-        print(f'Exceptio in read_holding_registers = {e}')
+        print('Exceptio in read_holding_registers = ',e)
 
     # create the json list
     l = { list : "H registers" }
@@ -245,12 +255,50 @@ def readInputRegistersModbus(client,addr,number):
     try:
         rr = client.read_input_registers(addr, number)
     except Exception as e:
-        print(f"Exception in read_input_registers = {e}")  
+        print("Exception in read_input_registers = ",e)  
 	return rr.registers	
 	
 def disconnectModbusTCP(client):
     client.close()
-	
+
+# siemens s7-1500 PLC using snap7 library
+#
+def connectS7PLC(host='192.168.0.14'):
+    import snap7
+    from snap7 import util
+
+    client = snap7,client.Client()
+    client.connect(host,0,1)
+    client.get_connected()
+
+# read a real 4 bytes long
+#
+def readReal(s7db=2, s7offset=0, s7real=4):
+    db = client.db_read(s7db,s7offset,s7real)
+    val = util.get_real(db,0)
+    return val
+
+# read a int 2 bytes long
+#
+def readInt(s7db=2, s7offset=0, s7int=2):
+    db = client.db_read(s7db,s7offset,s7int)
+    val = util.get_int(db,0)
+    return val
+
+# write a int 2 bytes long
+#    
+def writeInt(s7db=2, s7offset=10, s7int=2, val=987):
+    db = client.db_read(s7db, s7offset, s7int)
+    db2 = util.set_int(db,val)
+    client.db_write(s7db,s7offset,db2)
+
+# write a real 4 bytes long
+#
+def writeReal(s7db=2,s7offset=10, s7real=4, val=98.7):
+    db = client.db_read(s7db, s7offset, s7real)
+    db2 = util.set_real(db,val)
+    client.db_write(s7db,s7offset,db2)    
+    
 #
 #                          Network communication using UDP TCP Socket - use these for mitsubishi and omron communication
 #
@@ -263,23 +311,35 @@ def connectTCP(host, port):
     import socket
     TCP_client = socket.socket(socket.AF_INET,socket.SOCK_STREAM)   
     TCP_client.settimeout(10)
-    TCP_client.connect((host, port))
-    return TCP_client
+    try:
+        TCP_client.connect((host, port))
+        return TCP_client
+    except socket.error:
+        TCP_client.close()
+        return -1
     
-def coonectUDP(host, port):
+def connectUDP(host, port):
     import socket
     UDP_client = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)   
-    UDP_client.settimeout(10)
-    UDP_client.connect((host, port))
-    return UDP_client
-
+    UDP_client.settimeout(10)   
+    try:
+        UDP_client.connect((host, port))
+        return UDP_client
+    except socket.error:
+        UDP_client.close()
+        return -1
+    
 SCTP_PORT=36413
 def connectSCTP(host, port):
     import socket
     import sctp
-    sk = sctp.sctpsocket_tcp(socket.AF_INET)
-    sk.connect((host, SCTP_PORT))
-    return sk
+    sk = sctp.sctpsocket_tcp(socket.AF_INET)   
+    try:
+        sk.connect((host, SCTP_PORT))
+        return sk
+    except socket.error:
+        sk.close()
+        return -1
     
 def diconnectTCP(TCP_client):
     TCP_client.close()
@@ -317,22 +377,28 @@ data_omron_cj = [
 ]
 
 def omronCJReadUDP(UDP_client,data_omron_cj_msg):                          # uses UDP Client connected as above
+    if (MY_PY == 2):
+        sendmsg = bytes(data_omron_cj_msg)
+    elif (MY_PY == 3):
+        sendmsg = data_omron_cj_msg.encode('utf-8')
     try:                                                                   # in this example if cant send it will attempt re-connection once
-        UDP_client.send(bytes(data_omron_cj_msg))
+        UDP_client.send(sendmsg))
     except Exception as e:
-        print(f'omron CJ series UDP send error try reconnect: {e}')
+        print('omron CJ series series send error try reconnect: ',e)
         try:
             UDP_client.close()   
         except Exception as e:
-            print(f'omron CJ series UDP socket close error try reconnect: {e}') 
+            print('omron CJ series series send error try reconnect: ',e) 
         try:
             UDP_client=connectUDP(OMRON_HOST, OMRON_PORT) 
             time.sleep(2)
             UDP_client.send(bytes(data_omron_cj_msg))       
         except Exception as e:
-            print(f'omron CJ series UDP socket close error try reconnect: {e}') 
+            print('omron CJ series series send error try reconnect: ',e) 
             exit(1)            
     response = UDP_client.recv(1024)
+    if (MY_PY == 3):
+        response = response.decode('utf-8')
     data1 = [format(i,'02X') for i in response]
     return_data = [0] * 6
     data1 = data1[14:]
@@ -386,8 +452,20 @@ def omronCJReadTCP(TCP_client,data_cj_readprotocol):                            
         # FINS node address  0x00 = auto recieve
         0x00, 0x00, 0x00, 0x00,
     ]
-    TCP_client.send(bytes(shakehand_protocol))
+    if (MY_PY == 2):
+        sendmsg = bytes(shakehand_protocol)
+    elif (MY_PY == 3):
+        sendmsg = shakehand_protocol.encode('utf-8')
+    TCP_client.send(sendmsg)
+    try:
+        TCP_client.send(sendmsg)
+    except Exception as e:
+        print('omron CJ read error try reconnect: ',e)
+        TCP_client.close()
+        exit(1)
     response = TCP_client.recv(1024)
+    if (MY_PY == 3):
+        response = response.decode('utf-8')
     data1 = [format(i,'02X') for i in response]
     print("shakehandPLC Result is : ", data1)
     pc_node = int(data1[19], 16)
@@ -404,10 +482,20 @@ def omronCJReadTCP(TCP_client,data_cj_readprotocol):                            
         0x00, 0x00, 0x00, 0x00,  # Error Code
     ]
     # standby
-    TCP_client.send(bytes(standby_protocol))
+    if (MY_PY == 2):
+        sendmsg = bytes(standby_protocol)
+    elif (MY_PY == 3):
+        sendmsg = standby_protocol.encode('utf-8')
+    TCP_client.send(sendmsg)
+    if (MY_PY == 2):
+        sendmsg = bytes(data_cj_readprotocol)
+    elif (MY_PY == 3):
+        sendmsg = data_cj_readprotocol.encode('utf-8')
     TCP_client.send(bytes(data_cj_readprotocol))
     # wait and read reply
     response = TCP_client.recv(1024)
+    if (MY_PY == 3):
+        response = response.decode('utf-8')
     data1 = [format(i,'02X') for i in response]
     data1 = data1[30:]
     # Convert base 16 to base 10
@@ -422,6 +510,137 @@ def omronCJReadTCP(TCP_client,data_cj_readprotocol):                            
     return_data[5] = int(data1[2] + data1[3] + data1[0] + data1[1], 16) 
     return return_data
 
+# ================= yokogawa EA-MS ==========================
+# Read 1 word with 16-bit code
+YO_HOST, YO_PORT = '192.168.1.4', 12289
+
+def connectYoEaMs(host=YO_HOST, port=YO_PORT):
+    return connectTCP(host, port)
+
+def getStartAddressYoEaMs(add='D00001'):
+    start_addr=int(add[5])+(10*int(add[4]))+(100*int(add[3]))+(1000*int(add[2])) 
+    return start_addr
+    
+def readYoEaMs(tcp_udp_connect_obj, add='D00001', blen='04', sign="unsigned", bit=16):										
+    cmd='01WRD'	
+    abval=add + "," + blen 
+    msg=cmd+abval+'\r\n'  
+    if (MY_PY == 2):
+        sendmsg = bytes(msg)
+    elif (MY_PY == 3):
+        sendmsg = msg.encode('utf-8')
+    try:    
+        tcp_udp_connect_obj.send(sendmsg)	
+    except Exception as e:
+        print('yogogawa EA MS Q series send error try reconnect: ',e)
+        tcp_udp_connect_obj.close()
+        exit(1)    
+    count=int(blen)
+    start_addr=getStartAddressYoEaMs(add)        
+    ret=[]
+    anser=[]	
+    response = tcp_udp_connect_obj.recv(1024)   
+    if (MY_PY == 3):    
+        ret=response.decode('utf-8')
+    else:
+        ret=response    
+    print(ret)						
+    datanum=[]						
+    anser=ret[2:4]						
+    if anser=='OK':	
+        if (bit == 16):
+            #1 word read 16 bit    
+            for i in range(start_addr, count+1):				
+                start=4*i						
+                end=4*i+4					
+                data=(int(ret[start:end],16))	
+                if (sign == "signed"):			
+                    if data>=32767:					
+                        data=data-65536					
+                datanum.append(data)				
+                print(datanum[i-1]) 
+        else:                
+            #1 word read 32 bit unsigned
+            for i in range(start_addr, count, 2):					
+                start=4*i+4						
+                end=4+4*i+4					
+                hstart=4+4*i+4					
+                hend=4*i+8+4					
+                datalow=(int(ret[start:end],16))				
+                datahigh=(int(ret[hstart:hend],16))				
+                data=datahigh*65536+datalow		                
+                datanum.append(data)					
+                print(data)	
+    return datanum            
+
+# ======================= KEYENCE KV5000 ethernet superior protocol ======================================
+# 
+KV_HOST, KV_PORT = '192.168.1.5', 8501
+
+def connectYoEaMs(host=KV_HOST, port=KV_PORT):
+    return connectTCP(host, port)
+
+# example add=D0000.D 2 is 32 bit unsigned, 
+#         add=DM00000.S 4 is word with 16-bit code
+#         add=DM0000.U 4 is 16bit unsigned
+#   
+def readKV5000(tcp_udp_connect_obj, add="DM00000.S 4", sign="unsigned", bit=16):										
+    cmd='RDS '	
+    msg=cmd+add+'\r'  
+    if (MY_PY == 2):
+        sendmsg = bytes(msg)
+    elif (MY_PY == 3):
+        sendmsg = msg.encode('utf-8')
+    try:    
+        tcp_udp_connect_obj.send(sendmsg)	
+    except Exception as e:
+        print('keyence KV5000 series send error try reconnect: ',e)
+        tcp_udp_connect_obj.close()
+        exit(1)    
+    count=4    
+    s=add.split(".")          # split address passed to find start_addr
+    a_len=len(s[0])
+    start_add=int(add[a_len-1])+(10*int(add[a_len-2]))+(100*int(add[a_len-3]))+(1000*int(add[a_len-4]))    
+    ret=[]
+    anser=[]	
+    response = tcp_udp_connect_obj.recv(1024)   
+    if (MY_PY == 3):    
+        ret=response.decode('utf-8')
+    else:
+        ret=response    
+    print(ret)						
+    datanum=[]						
+    anser=ret[0:2]						
+    if anser!='E1':	
+        if (bit == 16):
+            if (sign=="signed"):
+                # Read 1 word with 16-bit code    
+                for i in range(start_add,count):
+                    start=7*i
+                    end=7*i+6
+                    data=(int(ret[start:end],10))
+                    if data>=32767:
+                        data=data-65536
+                    datanum.append(data)
+                    print(str(datanum[i]))
+            else:
+                #1 word read 16 bit unsigned
+                for i in range(start_add,count):
+                    start=6*i
+                    end=6*i+5
+                    data=(int(ret[start:end],10))
+                    datanum.append(data)
+                    print(str(datanum[i]))           
+        else:                
+            #1 word read 32 bit unsigned
+            for i in range(start_add,count):
+                start=11*i
+                end=11*i+10           
+                data=(int(ret[start:end],10))           
+                datanum.append(data)
+                print(data)	
+    return datanum            
+    
 # ================= mitsi ===================================
 mitsi_host, mitsi_port = "192.168.1.2", 1026
 
@@ -444,13 +663,19 @@ dataQ = [
 def readQSeries(tcp_udp_connect_obj,dataQmsg):
     dataQmsg[7] = len(dataQmsg[9:]) & 0xFF
     dataQmsg[8] = (len(dataQmsg[9:]) >> 16) & 0xFF
+    if (MY_PY == 2):
+        sendmsg = bytes(dataQmsg)
+    elif (MY_PY == 3):
+        sendmsg = dataQmsg.encode('utf-8')
     try:
-        tcp_udp_connect_obj.send(bytes(dataQmsg))
+        tcp_udp_connect_obj.send(sendmsg)
     except Exception as e:
-        print(f'mitsi Q series send error try reconnect: {e}')
+        print('mitsi Q series send error try reconnect: ',e)
         tcp_udp_connect_obj.close()
         exit(1)
     response = tcp_udp_connect_obj.recv(1024)
+    if (MY_PY == 3):    
+        response=response.decode('utf-8')
     data1 = [format(i,'02X') for i in response]
     return_data = [0] * 6
     return_data[5] = data1[15]
@@ -474,8 +699,19 @@ dataFX = [
 ]
 # mitsubishi FX Series
 def readFXSeries(tcp_udp_connect_obj,dataFXmsg):
-    tcp_udp_connect_obj.send(bytes(dataFXmsg))
+    if (MY_PY == 2):
+        sendmsg = bytes(dataFXmsg)
+    elif (MY_PY == 3):
+        sendmsg = dataFXmsg.encode('utf-8')
+    try:
+        tcp_udp_connect_obj.send(sendmsg)
+    except Exception as e:
+        print('mitsi FX series send error try reconnect: ',e)
+        tcp_udp_connect_obj.close()
+        exit(1)        
     response = tcp_udp_connect_obj.recv(1024)
+    if (MY_PY == 3):    
+        response=response.decode('utf-8')
     data1 = [format(i,'02X') for i in response]
     return_data = [0] * 6
     return_data[0] = data1[6]
@@ -505,8 +741,19 @@ def readFXSeries(tcp_udp_connect_obj,dataFXmsg):
 # ================= communication function ================= #
 def readKVSeries(client):
     kvCommand = b"RDS\x20DM008000.U\x200002\x0D"
-    client.send(bytes(kvCommand))
+    if (MY_PY == 2):
+        sendmsg = bytes(kvCommand)
+    elif (MY_PY == 3):
+        sendmsg = kvCommand.encode('utf-8')
+    try:
+        client.send(sendmsg)
+    except Exception as e:
+        print('mitsi KV series send error try reconnect: ',e)
+        client.close()
+        exit(1)    
     response = client.recv(1024)
+    if (MY_PY == 3):    
+        response=response.decode('utf-8')
     data_sum = ""
     for dt in response[:-2]:
         temp = chr(int(format(dt, "02X"), 16))
@@ -515,8 +762,19 @@ def readKVSeries(client):
     
 def writeKVSeries(client):
     kvCommand = b"WRS\x20DM008000.U\x200002\x20AA\x20BB\x0D"
-    client.send(bytes(kvCommand))
+    if (MY_PY == 2):
+        sendmsg = bytes(kvCommand)
+    elif (MY_PY == 3):
+        sendmsg = kvCommand.encode('utf-8')
+    try:
+        client.send(sendmsg)
+    except Exception as e:
+        print('mitsi KV series send error try reconnect: ',e)
+        client.close()
+        exit(1)         
     response = client.recv(1024)
+    if (MY_PY == 3):    
+        response=response.decode('utf-8')
     return response
 
 
@@ -539,8 +797,19 @@ dataIQR = [
 def readIQRSeries(tcp_udp_connect_obj, dataIQRmsg):
     dataIQRmsg[7] = len(dataIQRmsg[9:]) & 0xFF
     dataIQRmsg[8] = (len(dataIQRmsg[9:]) >> 16) & 0xFF
-    tcp_udp_connect_obj.send(bytes(dataIQRmsg))
+    if (MY_PY == 2):
+        sendmsg = bytes(dataIQRmsg)
+    elif (MY_PY == 3):
+        sendmsg = dataIQRmsg.encode('utf-8')    
+    try:
+        tcp_udp_connect_obj.send(sendmsg))
+    except Exception as e:
+        print('mitsi IQR series send error try reconnect: ',e)
+        tcp_udp_connect_obj.close()
+        exit(1) 
     response = tcp_udp_connect_obj.recv(1024)
+    if (MY_PY == 3):    
+        response=response.decode('utf-8')
     data1 = [format(i,'02X') for i in response]
     return_data = data1[-4:]
     return_data = [int(s) for s in return_data]
@@ -558,11 +827,11 @@ data1 = [
     0x20,0x00,      # Monitoring timer
     0x01,0x04,      # command
     0x00,0x00,      # subcommands
-    0x01,0x00,0x00, # Leading device number
-    0xA8,           # Device code
-    0x03,0x00       # Device count
+    0x01,0x00,0x00, # Leading device number shows as 1 for 3 it would be 0x03 0x00 0x00
+    0xA8,           # Device code D
+    0x03,0x00       # Device count (number of points)
 ]
-
+   
 data2 = [
     0x50,0x00,      # sub-header
     0x00,           # Requesting network number
@@ -590,13 +859,24 @@ def connectMitsiTCP(MIT_HOST = '192.168.1.1', MIT_PORT = 1026):
     return sock
     
 def sendDataSlmpMitsi(tcp_udp_connect_obj,data,BUFSIZE=4096):
-   # set the data lenght in the message
-   data[7] = len(data[9:]) & 0xFF
-   data[8] = (len(data[9:]) >> 16) & 0xFF
-   tcp_udp_connect_obj.send(bytes(data))
-   res = tcp_udp_connect_obj.recv(BUFSIZE)
-   print (*[format(i,'02X') for i in res])
-   return res
+    # set the data lenght in the message
+    data[7] = len(data[9:]) & 0xFF
+    data[8] = (len(data[9:]) >> 16) & 0xFF
+    if (MY_PY == 2):
+        sendmsg = bytes(data)
+    elif (MY_PY == 3):
+        sendmsg = data.encode('utf-8')
+    try:
+        tcp_udp_connect_obj.send(sendmsg))
+    except Exception as e:
+        print('mitsi SLMP send error try reconnect: ',e)
+        tcp_udp_connect_obj.close()
+        exit(1)
+    res = tcp_udp_connect_obj.recv(BUFSIZE)
+    if (MY_PY == 3):    
+        res=res.decode('utf-8')   
+    print (*[format(i,'02X') for i in res])
+    return res
 
 def disconnectMitsiTCP(tcp_udp_connect_obj):
     tcp_udp_connect_obj.close()
@@ -616,10 +896,17 @@ def connectSiemensS7_1500():
     sock.connect((DESTINATION_ADDR, DESTINATION_PORT))
     return sock
     
-def readSiemensS7_1500(sock):
-    sock.send(b'\x11\x00\x19\x29\x30\x30\x30\x30\x21\x28')
+def readSiemensS7_1500(sock):   
+    try:
+        sock.send(b'\x11\x00\x19\x29\x30\x30\x30\x30\x21\x28')
+    except Exception as e:
+        print('Siemens S7 send error try reconnect: ',e)
+        sock.close()
+        exit(1)
     data = sock.recv(1024)
-    print(repr(data))
+    if (MY_PY == 3):    
+        data=data.decode('utf-8') 
+    print(data)
     return data
     
 def disconnectSiemensS7_1500(sock):    
@@ -930,8 +1217,10 @@ YAMAHA_HOST, YAMAHA_PORT = "192.168.100.1", 11111    # AS PER LUA SCRIPT
 
 def readYamahaRouterTemp(tcp_connect_obj):
     datamsg = b"$send_temp$"
-    tcp_connect_obj.send(bytes(datamsg))
+    tcp_connect_obj.send(datamsg)
     response = tcp_connect_obj.recv(1024)
+    if (MY_PY == 3):    
+        response=response.decode('utf-8') 
     return int(response)
 
 # ==================================================== TITAN_ASCII SERIAL USB ================================================================
@@ -969,7 +1258,10 @@ def readTitan(ser):
     # ['FLT=0x0', 'MST=0x3', 'EX=9999', 'CURQA=-0.0379776', 'CURDA=0.0160128']
     for x in line.decode()[0:-2].split(';'):
         k, v = x.split('=')
-        print(f"k={v} v={k}")
+        if (MY_PY == 3):
+            print(f"k={v} v={k}")
+        elif (MY_PY == 2):
+            print("k=%d v=%d" % (v,k))
         d = (k,v)
         a.append(d)    
     return a
