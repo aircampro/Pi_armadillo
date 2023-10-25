@@ -2,7 +2,7 @@
 #
 # client is publishing enocean sensors to various listed iOt telemetry or email or sms text message or to databases
 # subscriber sister application is to read this from the mosquito broker for example if you are doing the mqtt internally on raspberry pi 4
-# or you can use one of the SSL server examples to communicate internally or load a database to a server.
+# or you can use one of the SSL server examples to communicate internally or load a database to a server, or choose one from cloud
 #
 # import neccessary libraries 
 import paho.mqtt.client as mqtt
@@ -104,7 +104,7 @@ channelID = 100
 writeKey = 'writeKey'
         
 # ------------ here list the choices and options for iOt or monitoring -----------------      
-TELEM_CHOICES=[ "soracom", "beebotte", "mosquito", "ubidots", "machinist", "aws", "azure", "yandex", "twillio", "smtp_email", "ssl_tls_server", "ssl_23_server", "cloud_mqtt", "gcs_blob", "splunk", "gcs_spread", "ambient", "influxdb", "redis" ]
+TELEM_CHOICES=[ "soracom", "beebotte", "mosquito", "ubidots", "machinist", "aws", "azure", "yandex", "twillio", "smtp_email", "ssl_tls_server", "ssl_23_server", "cloud_mqtt", "gcs_blob", "splunk", "gcs_spread", "ambient", "influxdb", "redis", "mongo" ]
 SORACOM=0
 BEEBOTTE=1
 MOSQUITO=2
@@ -124,6 +124,7 @@ SPREAD_GCS=15
 AMBIENT=16
 INFLUXDB=17
 REDIS=18
+MONGO=19
 # ============= make your choice of cloud service here from list above ================== 
 MY_CURRENT_TELEM=TELEM_CHOICES[SORACOM]
 
@@ -143,10 +144,65 @@ def on_disconnect(client, userdata, rc):
 # publish processes when publish done
 def on_publish(client, userdata, mid):
     print("publish Done")
-  
+
+# ============================== mongo DB Classes *perhaps make seperate include and import when option active) =======================================
+import pandas as pd
+import pymongo
+
+# define globals here you could default them as parameters to class if preferred
+
+# remote / online
+USER_NAME = "1_MongoDB Atlas"
+CLUSTER_NAME = "1_MongoDB Atlas Cluster"
+PASSWORD = "DB_pass1"
+# database structure
+DB_NAME = "1_MongoDB Atlas DB"                      # online or offline
+COLLECTION_NAME="enocean_temps"                     # name of your collection
+   
+class Mongo_Database_Class(object):
+
+    def __init__(self, dbName, collectionName, rem="local"):
+        self.clint = self.connect_to_mongodb(rem)
+        self.db = self.clint[dbName]
+        self.collection = self.db.get_collection(collectionName)
+
+    def connect_to_mongodb(rem="online"):
+        """ connect to the mongo db either online or local """
+        if rem == "online":
+            client = pymongo.MongoClient(f"mongodb+srv://{USER_NAME}:{PASSWORD}@{CLUSTER_NAME}.jipvx.mongodb.net/{DB_NAME}?retryWrites=true&w=majority")
+        else:
+            client = pymongo.MongoClient()	
+        return client
+    
+    def add_record(self,sd1,st1,sd2,st2):
+        """ adds the record to the open mongo database """
+        post = {
+            'sensor1_desc1': sd1,
+            'sensor1_temp1': st1,
+            'sensor1_desc2': sd2,
+            'sensor1_temp2': st2,
+            'created_at': datetime.datetime.now()
+        }
+        return self.collection.insert_one(post)
+		
+    def get_collection_to_df(self, filter=None, projection=None):
+        """ get the collection and return a pandas data frame """
+        #  collection = self.clint[dbName][collectionName] 
+        cursor = self.collection.find(filter=None, projection=None)
+        df = pd.DataFrame(list(cursor))	
+	    return df
+		
+    def insert_many(self, documents):
+        """ insert many records example :- mongo.insert_many([{'name':'mark','salary':40},{'name':'andy','salary':500000}]) """
+        return self.collection.insert_many(documents)
+		
+    def find(self, projection=None,filter=None, sort=None):
+        """ print collection """
+        return self.collection.find(projection=projection,filter=filter,sort=sort)
+        
 # This function reads 1 byte of data from the serial port and parses the EnOcean telegram. After analyzing 
-# Telegram, data is sent to the chosen iOt system
-def Enocean2Telemetry(s_port,telem_opt):
+# Telegram, data is sent to the chosen iOt (telemetry/database) system
+def Enocean2Telemetry(s_port, telem_opt):
 
     # SORACOM Harvest。
     def sendDataSoraCom(string1, temp_data1, string2, temp_data2):
@@ -258,6 +314,11 @@ def Enocean2Telemetry(s_port,telem_opt):
         client.publish(CTOPIC,msg,0)
         client.disconnect()
 
+    # MONGO DATABASE
+    def addMongoRecord(string1, enO_temp_value1, string2, enO_temp_value2):
+        rest = mongo_obj.add_record(string1, enO_temp_value1, string2, enO_temp_value2)
+        print(rest)
+    
     # AMBIENT
     def sendDataAmbient(string1, enO_temp_value1, string2, enO_temp_value2):
         ret = am.send({'created': datetime.datetime.now(), string1: enO_temp_value1, string2: enO_temp_value2})
@@ -377,17 +438,16 @@ def Enocean2Telemetry(s_port,telem_opt):
 
     def sendCreateYandexTable(my_query):
 	
-		timestamp = datetime.datetime.now(pytz.timezone(MY_TZ)).timestamp()  # set the timezone as you wish for your location
+	timestamp = datetime.datetime.now(pytz.timezone(MY_TZ)).timestamp()  # set the timezone as you wish for your location
         event_ts=round(timestamp)
         insert=  my_query	
 	
         data = {
             'ca': YCERTNAME,
-
             'path': '/myHome/', {
                 'database': 'pxc_cloud_db',
                 'query': insert,
-			},
+		},
             'port': YPORT,
             'hostname': YHOST,
         }
@@ -416,8 +476,8 @@ def Enocean2Telemetry(s_port,telem_opt):
 	
         #msg = json.loads(payload_json)
         #msg_str = json.dumps(msg)
-	    msg_str = temp_data1
-		timestamp = datetime.datetime.now(pytz.timezone(MY_TZ)).timestamp()  # set the timezone as you wish for your location
+	msg_str = temp_data1
+	timestamp = datetime.datetime.now(pytz.timezone(MY_TZ)).timestamp()  # set the timezone as you wish for your location
         event_ts=round(timestamp)
         insert=  f"""INSERT INTO pxc_cloud_db.timeseries_example (telemetry_timestamp , device_nm , payload) VALUES ('{event_ts}','{descrip1}', '{msg_str}')"""	
 	
@@ -427,7 +487,7 @@ def Enocean2Telemetry(s_port,telem_opt):
             'path': '/myHome/', {
                 'database': 'pxc_cloud_db',
                 'query': insert,
-			},
+		},
             'port': YPORT,
             'hostname': YHOST,
         }
@@ -451,8 +511,8 @@ def Enocean2Telemetry(s_port,telem_opt):
         except requests.exceptions.RequestException as err:
             print ("OOps: Something Else",err)
 
-	    msg_str = temp_data2
-		timestamp = datetime.datetime.now(pytz.timezone(MY_TZ)).timestamp()  # set the timezone as you wish for your location
+	msg_str = temp_data2
+	timestamp = datetime.datetime.now(pytz.timezone(MY_TZ)).timestamp()  # set the timezone as you wish for your location
         event_ts=round(timestamp)
         insert=  f"""INSERT INTO pxc_cloud_db.timeseries_example (telemetry_timestamp , device_nm , payload) VALUES ('{event_ts}','{descrip2}', '{msg_str}')"""	
 	
@@ -462,7 +522,7 @@ def Enocean2Telemetry(s_port,telem_opt):
             'path': '/myHome/', {
                 'database': 'pxc_cloud_db',
                 'query': insert,
-			},
+		},
             'port': YPORT,
             'hostname': YHOST,
         }
@@ -680,7 +740,7 @@ def Enocean2Telemetry(s_port,telem_opt):
         tw_to_number = "Destination phone number"
         tw_from_number = "Twilio phone number for the trial obtained"
         client = Client(account_sid, auth_teoken)
-		ts = round(datetime.datetime.now(pytz.timezone(MY_TZ)).timestamp())  # set the timezone as you wish for your location
+	ts = round(datetime.datetime.now(pytz.timezone(MY_TZ)).timestamp())  # set the timezone as you wish for your location
         bodytext=" got the data at " + ts + " " + descrip1 + " : " + str(temp_data1) + " " + descrip2 + " : " + str(temp_data2)
         message = client.messages.create(body=bodytext,from_=from_number,to=to_number)
         print(message.sid)   
@@ -703,7 +763,7 @@ def Enocean2Telemetry(s_port,telem_opt):
             login_password ="Enter password"
             server.login(login_address, login_password)
             #message = MIMEMultipart()
-		    ts = round(datetime.datetime.now(pytz.timezone(MY_TZ)).timestamp())  # set the timezone as you wish for your location
+            ts = round(datetime.datetime.now(pytz.timezone(MY_TZ)).timestamp())  # set the timezone as you wish for your location
             bodytext=" got the data at " + ts + " " + descrip1 + " : " + str(temp_data1) + " " + descrip2 + " : " + str(temp_data2)
             message = MIMEText(bodytext, "plain", 'utf-8')
             #text = MIMEText(bodytext)
@@ -871,7 +931,7 @@ def Enocean2Telemetry(s_port,telem_opt):
         conn.connect((SSL_URL, SSL_PORT))
         cert = conn.getpeercert()
         pprint.pprint(cert)
-		ts = round(datetime.datetime.now(pytz.timezone(MY_TZ)).timestamp())  # set the timezone as you wish for your location
+        ts = round(datetime.datetime.now(pytz.timezone(MY_TZ)).timestamp())  # set the timezone as you wish for your location
         msgdata = b" got the data at " + str(ts).encode('UTF-8') + b" " + descrip1.encode('UTF-8') + b" : " + str(temp_data1).encode('UTF-8') + b" " + descrip2.encode('UTF-8') + b" : " + str(temp_data2).encode('UTF-8') + b"\r\n\r\n"
         #conn.sendall(b"HEAD / HTTP/1.0\r\nHost: linuxfr.org\r\n\r\n")
         if AES_ENCRYPT == 1:
@@ -953,6 +1013,9 @@ def Enocean2Telemetry(s_port,telem_opt):
         sendData=sendSSL23Client
     elif telem_opt == "gcs_blob":
         sendData=uploadBlobGcs
+    elif telem_opt == "mongo":
+        mongo_obj = Mongo_Database_Class(DB_NAME, COLLECTION_NAME, "online")     # make database class instance in this example it is online
+        sendData=addMongoRecord
     elif telem_opt = "cloud_mqtt":            
         client = mqtt.Client(protocol=mqtt.MQTTv311)
         client.tls_set(CCACERT)
