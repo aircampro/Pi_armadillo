@@ -65,7 +65,7 @@ class Erp2Thread(threading.Thread):
                     door_status = 'close'
                 else:
                     door_status = 'non'
-                print( 'センサーID：%sは%s' % (originator_id , door_status) )
+                print( 'CS-EO429JーID：%sは%s' % (originator_id , door_status) )
             elif originator_id == 'XX:XX:XX:XX': # SID for the unit which is Open/close sensor: STM429J
                 if status_code == ord(b'\x06'):
                     door_status = 'open'
