@@ -5,6 +5,6 @@ then there is a series of mechanisms to transfer than information via telemetry 
 databases such as influx, mongo or cloud storage like GCS Blob/spreadsheet, redis, or dedicated iot like ubidots, ambient or machinst
 it controls and reads periferals such as PLC/Robot, Camera, Motor Drives, and has inbuilt picture manipulation and picture tracking facilities
 various PLC support, mitsubishi, omron, allen bradley, yokogawa, keyence, siemens, Robots yasakawa, kawasaki etc
-Also has interface to GPS for position and interface to periferals such as OLEAD 2 line display.
+Also has interface to GPS for position and interface to periferals such as OLED 2 line display.
 
 have fun it is still in development.....
