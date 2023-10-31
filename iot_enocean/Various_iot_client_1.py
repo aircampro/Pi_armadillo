@@ -104,7 +104,7 @@ channelID = 100
 writeKey = 'writeKey'
         
 # ------------ here list the choices and options for iOt or monitoring -----------------      
-TELEM_CHOICES=[ "soracom", "beebotte", "mosquito", "ubidots", "machinist", "aws", "azure", "yandex", "twillio", "smtp_email", "ssl_tls_server", "ssl_23_server", "cloud_mqtt", "gcs_blob", "splunk", "gcs_spread", "ambient", "influxdb", "redis", "mongo", "mysql" ]
+TELEM_CHOICES=[ "soracom", "beebotte", "mosquito", "ubidots", "machinist", "aws", "azure", "yandex", "twillio", "smtp_email", "ssl_tls_server", "ssl_23_server", "cloud_mqtt", "gcs_blob", "splunk", "gcs_spread", "ambient", "influxdb", "redis", "mongo", "mysql", "sybase" ]
 SORACOM=0
 BEEBOTTE=1
 MOSQUITO=2
@@ -126,6 +126,7 @@ INFLUXDB=17
 REDIS=18
 MONGO=19
 MYSQL=20
+SYBASE=21
 # ============= make your choice of cloud service here from list above ================== 
 MY_CURRENT_TELEM=TELEM_CHOICES[SORACOM]
 
@@ -1030,7 +1031,38 @@ def Enocean2Telemetry(s_port, telem_opt):
 
         # commit the changes
         connection.commit()
-    
+
+
+    # sybase database
+    #
+    SY_SQL_TAB="Temperatures"
+    def putValueSybase(descrip1, temp_data1, descrip2, temp_data2):
+
+        # insert values
+        sql = """INSERT INTO SY_SQL_TAB (description, value, timestamp)
+            VALUES ('{d1}', '{t1}', '{ts}' ),
+            ('{d2}', '{t2}', '{ts}' ),
+            """.format(d1=descrip1,t1=temp_data1,d2=descrip2,t2=temp_data2, ts=datetime.datetime.now())
+        table1 = etl.fromdb(cnxn,sql)
+        
+        # fetch the data
+        query="SELECT * FROM "+MY_SQL_TAB
+        table2 = etl.fromdb(cnxn,query)
+        df = pd.DataFrame(table2)
+        print(df)
+
+        # connection close
+        cnxn.close()
+
+
+    def sySQLConnect():
+
+        import petl as etl 
+        import pandas as pd
+        import cdata.sybase as mod 
+        cnxn = mod.connect("User=myuser;Password=mypassword;Server=localhost;Database=mydatabase;Charset=iso_1;")
+        return cnxn
+        
     # Choose the iOt you want to use according to the define in top section        
     if telem_opt == "soracom":
         sendData=sendDataSoraCom
@@ -1098,6 +1130,9 @@ def Enocean2Telemetry(s_port, telem_opt):
     elif telem_opt == "mongo":
         mongo_obj = Mongo_Database_Class(DB_NAME, COLLECTION_NAME, "online")     # make database class instance in this example it is online
         sendData=addMongoRecord
+    elif telem_opt == "sybase":
+        cnxn = sySQLConnect()
+        sendData=putValueSybase
     elif telem_opt = "cloud_mqtt":            
         client = mqtt.Client(protocol=mqtt.MQTTv311)
         client.tls_set(CCACERT)
