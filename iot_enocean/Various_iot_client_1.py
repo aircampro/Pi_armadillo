@@ -1046,7 +1046,7 @@ def Enocean2Telemetry(s_port, telem_opt):
         table1 = etl.fromdb(cnxn,sql)
         
         # fetch the data
-        query="SELECT * FROM "+MY_SQL_TAB
+        query="SELECT * FROM "+SY_SQL_TAB
         table2 = etl.fromdb(cnxn,query)
         df = pd.DataFrame(table2)
         print(df)
