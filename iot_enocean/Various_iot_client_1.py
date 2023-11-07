@@ -104,7 +104,7 @@ channelID = 100
 writeKey = 'writeKey'
         
 # ------------ here list the choices and options for iOt or monitoring -----------------      
-TELEM_CHOICES=[ "soracom", "beebotte", "mosquito", "ubidots", "machinist", "aws", "azure", "yandex", "twillio", "smtp_email", "ssl_tls_server", "ssl_23_server", "cloud_mqtt", "gcs_blob", "splunk", "gcs_spread", "ambient", "influxdb", "redis", "mongo", "mysql", "sybase" ]
+TELEM_CHOICES=[ "soracom", "beebotte", "mosquito", "ubidots", "machinist", "aws", "azure", "yandex", "twillio", "smtp_email", "ssl_tls_server", "ssl_23_server", "cloud_mqtt", "gcs_blob", "splunk", "gcs_spread", "ambient", "influxdb", "redis", "mongo", "mysql", "sybase", "oracle", "sqllite" ]
 SORACOM=0
 BEEBOTTE=1
 MOSQUITO=2
@@ -127,6 +127,8 @@ REDIS=18
 MONGO=19
 MYSQL=20
 SYBASE=21
+ORACLE=22
+SQLITE=23
 # ============= make your choice of cloud service here from list above ================== 
 MY_CURRENT_TELEM=TELEM_CHOICES[SORACOM]
 
@@ -1032,7 +1034,6 @@ def Enocean2Telemetry(s_port, telem_opt):
         # commit the changes
         connection.commit()
 
-
     # sybase database
     #
     SY_SQL_TAB="Temperatures"
@@ -1054,7 +1055,7 @@ def Enocean2Telemetry(s_port, telem_opt):
         # connection close
         cnxn.close()
 
-
+    # connect to the given sybase database
     def sySQLConnect():
 
         import petl as etl 
@@ -1062,6 +1063,104 @@ def Enocean2Telemetry(s_port, telem_opt):
         import cdata.sybase as mod 
         cnxn = mod.connect("User=myuser;Password=mypassword;Server=localhost;Database=mydatabase;Charset=iso_1;")
         return cnxn
+
+    # Oracle database
+    def putValueOracle(descrip1, temp_data1, descrip2, temp_data2):
+
+        # insert values
+        cursor.execute("""INSERT INTO ENO_TABLE (DESCRIPTION, TEMPERATURE, TS) VALUES ('{d1}', {t1}, {ts});
+            """.format(d1=descrip1,t1=temp_data1,ts=datetime.datetime.now()))
+
+        cursor.execute("""INSERT INTO ENO_TABLE (DESCRIPTION, TEMPERATURE, TS) VALUES ('{d2}', {t2}, {ts});
+            """.format(d2=descrip2,t2=temp_data2, ts=datetime.datetime.now()))
+            
+        # fetch the data
+        query="SELECT * FROM ENO_TABLE"
+        cursor.execute(query)
+        rows = cursor.fetchall()
+        for row in rows:
+            print(row)
+
+        # cursor and connection close
+        cursor.close()
+        connection.close()
+
+        # set pointers to nulls
+        cursor = None
+        connection = None
+
+    def oracleConnect():
+
+        # python3 -m pip install ipykernel; python3 -m pip install oracledb --upgrade
+        import oracledb
+
+        # connect to oracle database
+        params = oracledb.ConnectParams(host="localhost", port=1521, service_name="XE")
+        connection = oracledb.connect(user="system", password="your_PassWord", dsn="localhost/XE", params=params)
+
+        if not connection.is_connected():
+            raise Exception("Oracle - database will not connect")
+            sys.exit(6) 
+    
+        # now get the cursor
+        cursor = connection.cursor()
+
+        # drop table if already exist
+        query="DROP TABLE IF EXISTS ENO_TABLE"
+        cursor.execute(query)
+
+        # create table
+        cursor.execute("""CREATE TABLE ENO_TABLE (DESCRIPTION VARCHAR(255),TEMPERATURE FLOAT, TS VARCHAR(255) );
+            """)
+
+    # SQLite database
+    def putValueSQLite(descrip1, temp_data1, descrip2, temp_data2):
+
+        # insert values
+        c.execute("""INSERT INTO ENO_TABLE (DESCRIPTION, TEMPERATURE, TS) VALUES ('{d1}', {t1}, {ts});
+            """.format(d1=descrip1,t1=temp_data1,ts=datetime.datetime.now()))
+        conn.commit()
+        c.execute("""INSERT INTO ENO_TABLE (DESCRIPTION, TEMPERATURE, TS) VALUES ('{d2}', {t2}, {ts});
+            """.format(d2=descrip2,t2=temp_data2, ts=datetime.datetime.now()))
+        conn.commit()
+        
+        # fetch the data
+        query="SELECT * FROM ENO_TABLE"
+        c.execute(query)
+        rows = cursor.fetchall()
+        for row in rows:
+            print(row)
+
+        # cursor and connection close
+        c.close()
+        conn.close()
+
+        # set pointers to nulls
+        cursor = None
+        connection = None
+
+    def sQLiteConnect():
+
+        # python3 -m pip install ipykernel; python3 -m pip install oracledb --upgrade
+        import sqlite3
+
+        # connect to database
+        dbname = 'trains.db'
+        conn=sqlite3.connect(dbname)
+
+        if not conn.is_connected():
+            raise Exception("SQLite - database will not connect")
+            sys.exit(6) 
+    
+        # now get the cursor
+        c = conn.cursor()
+
+        # drop table if already exist then
+        # create table
+        c.execute("""DROP TABLE IF EXISTS ENO_TABLE; CREATE TABLE ENO_TABLE (DESCRIPTION VARCHAR(255),TEMPERATURE FLOAT, TS VARCHAR(255) );
+            """)
+
+        conn.commit()
         
     # Choose the iOt you want to use according to the define in top section        
     if telem_opt == "soracom":
@@ -1163,9 +1262,15 @@ def Enocean2Telemetry(s_port, telem_opt):
         redis_client = redis.Redis(host = '172.17.0.2', port = 6379, decode_responses = True)
         sendData=put_data_redis
     elif telem_opt == "mysql":
-        mySQLConnect()                                       # connects and creates clean database
+        mySQLConnect()                                       # connects and creates clean new table
         sendData=putValueMySQL
-    else:                                                    # we assume its for mosquito broker internally running on host e.g. raspberry pi 4
+    elif telem_opt == "oracle":
+        oracleConnect()                                      # connects and creates clean new table
+        sendData=putValueOracle
+    elif telem_opt == "sqllite":
+        sQLiteConnect()                                      # connects and creates clean new table
+        sendData=putValueSQLite
+    else:                                                    # we asume its for mosquito broker internally running on host e.g. raspberry pi 4
         client = mqtt.Client()
         client.on_connect = on_connect
         client.on_disconnect = on_disconnect
