@@ -299,6 +299,25 @@ class Mcp3002:
         volts = (adc*5.0)/1024                         # scale counts value to volts
         return adc,volts
 
+# KY018 light sensor
+class Ky018:
+
+    def __init__(self):
+        self.spi = spidev.SpiDev()
+        self.spi.open(0, 0) 
+        self.spi.max_speed_hz = 1000000 
+      
+    def spi_close(self):
+        self.spi.close()
+    
+    # Channel must be an integer 0-7        
+    def read_light(self,channel=0):
+        adc = self.spi.xfer2([1,(8+channel)<<4,0])              
+        data = ((adc[1]&3) << 8) + adc[2]              # calc light quantity
+        volts = (data * 3.3) / float(1023)             # scale light value to volts
+        volts = round(volts,2)
+        return adc,volts
+ 
 # The MAX6675 is an IC that performs cold-junction compensation and digitizes the signals from type K thermocouples.The data is 
 # connected via SPI with a 12-bit resolution (resolution: 0.25°C).The SPI uses a read-only format of 3-wire (CS, SCK, SO) to read data.
 class Max6675:
