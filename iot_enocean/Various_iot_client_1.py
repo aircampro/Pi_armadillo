@@ -104,7 +104,7 @@ channelID = 100
 writeKey = 'writeKey'
         
 # ------------ here list the choices and options for iOt or monitoring -----------------      
-TELEM_CHOICES=[ "soracom", "beebotte", "mosquito", "ubidots", "machinist", "aws", "azure", "yandex", "twillio", "smtp_email", "ssl_tls_server", "ssl_23_server", "cloud_mqtt", "gcs_blob", "splunk", "gcs_spread", "ambient", "influxdb", "redis", "mongo", "mysql", "sybase", "oracle", "sqllite" ]
+TELEM_CHOICES=[ "soracom", "beebotte", "mosquito", "ubidots", "machinist", "aws", "azure", "yandex", "twillio", "smtp_email", "ssl_tls_server", "ssl_23_server", "cloud_mqtt", "gcs_blob", "splunk", "gcs_spread", "ambient", "influxdb", "redis", "mongo", "mysql", "sybase", "oracle", "sqllite", "pg" ]
 SORACOM=0
 BEEBOTTE=1
 MOSQUITO=2
@@ -129,6 +129,7 @@ MYSQL=20
 SYBASE=21
 ORACLE=22
 SQLITE=23
+POSTGR=24
 # ============= make your choice of cloud service here from list above ================== 
 MY_CURRENT_TELEM=TELEM_CHOICES[SORACOM]
 
@@ -1161,7 +1162,43 @@ def Enocean2Telemetry(s_port, telem_opt):
             """)
 
         conn.commit()
-        
+
+    # PostGres SQL database
+    POSTG_DB='database'
+    POSTG_USER='db_user'
+    POSTG_PASS='mypassword'
+    POSTG_HOST='localhost'   
+    def getValuePostGr():
+        with closing(psycopg2.connect(dbname=POSTG_DB, user=POSTG_USER, password=POSTG_PASS, host=POSTG_HOST)) as conn:
+            with conn.cursor() as cursor:
+                cursor.execute('SELECT * FROM enotemp LIMIT 5')                       # shows 5 entries
+                for row in cursor:
+                    print(row)
+
+    def putValuePostGr(desc1, temper1, desc2, temper2):			
+        with closing(psycopg2.connect(dbname=POSTG_DB, user=POSTG_USER, password=POSTG_PASS, host=POSTG_HOST)) as conn:
+            with conn.cursor() as cursor:
+                conn.autocommit = True
+                values = [
+                    (desc1, temper1, str(datetime.datetime.now())),
+                    (desc2, temper2, str(datetime.datetime.now())),
+                ]
+                insert = sql.SQL('INSERT INTO enotemp (description, temperature, time_stamp) VALUES {}').format(
+                    sql.SQL(',').join(map(sql.Literal, values))
+                )
+                cursor.execute(insert)
+
+    def initPostGr():		
+        import psycopg2
+        from contextlib import closing	
+        from psycopg2 import sql
+        with closing(psycopg2.connect(dbname=POSTG_DB, user=POSTG_USER, password=POSTG_PASS, host=POSTG_HOST)) as conn:
+            with conn.cursor() as cursor:
+                conn.autocommit = True
+                drop = sql.SQL('DROP TABLE IF EXISTS ENO_TABLE; CREATE TABLE ENO_TABLE (description VARCHAR(255),temperature FLOAT, time_stamp VARCHAR(255));')
+                )
+                cursor.execute(drop)
+    
     # Choose the iOt you want to use according to the define in top section        
     if telem_opt == "soracom":
         sendData=sendDataSoraCom
@@ -1270,6 +1307,9 @@ def Enocean2Telemetry(s_port, telem_opt):
     elif telem_opt == "sqllite":
         sQLiteConnect()                                      # connects and creates clean new table
         sendData=putValueSQLite
+    elif telem_opt == "pg":
+        initPostGr()
+        sendData=putValuePostGr        
     else:                                                    # we asume its for mosquito broker internally running on host e.g. raspberry pi 4
         client = mqtt.Client()
         client.on_connect = on_connect
