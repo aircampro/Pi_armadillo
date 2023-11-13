@@ -104,7 +104,7 @@ channelID = 100
 writeKey = 'writeKey'
         
 # ------------ here list the choices and options for iOt or monitoring -----------------      
-TELEM_CHOICES=[ "soracom", "beebotte", "mosquito", "ubidots", "machinist", "aws", "azure", "yandex", "twillio", "smtp_email", "ssl_tls_server", "ssl_23_server", "cloud_mqtt", "gcs_blob", "splunk", "gcs_spread", "ambient", "influxdb", "redis", "mongo", "mysql", "sybase", "oracle", "sqllite", "pg" ]
+TELEM_CHOICES=[ "soracom", "beebotte", "mosquito", "ubidots", "machinist", "aws", "azure", "yandex", "twillio", "smtp_email", "ssl_tls_server", "ssl_23_server", "cloud_mqtt", "gcs_blob", "splunk", "gcs_spread", "ambient", "influxdb", "redis", "mongo", "mysql", "sybase", "oracle", "sqllite", "pg", "fluvio", "scyllia", "rocks"  ]
 SORACOM=0
 BEEBOTTE=1
 MOSQUITO=2
@@ -130,6 +130,9 @@ SYBASE=21
 ORACLE=22
 SQLITE=23
 POSTGR=24
+FLUVIO=25
+SCYLLIA=26
+ROCKS=27
 # ============= make your choice of cloud service here from list above ================== 
 MY_CURRENT_TELEM=TELEM_CHOICES[SORACOM]
 
@@ -752,7 +755,7 @@ def Enocean2Telemetry(s_port, telem_opt):
         tw_to_number = "Destination phone number"
         tw_from_number = "Twilio phone number for the trial obtained"
         client = Client(account_sid, auth_teoken)
-	ts = round(datetime.datetime.now(pytz.timezone(MY_TZ)).timestamp())  # set the timezone as you wish for your location
+        ts = round(datetime.datetime.now(pytz.timezone(MY_TZ)).timestamp())  # set the timezone as you wish for your location
         bodytext=" got the data at " + ts + " " + descrip1 + " : " + str(temp_data1) + " " + descrip2 + " : " + str(temp_data2)
         message = client.messages.create(body=bodytext,from_=from_number,to=to_number)
         print(message.sid)   
@@ -1164,6 +1167,7 @@ def Enocean2Telemetry(s_port, telem_opt):
         conn.commit()
 
     # PostGres SQL database
+    #
     POSTG_DB='database'
     POSTG_USER='db_user'
     POSTG_PASS='mypassword'
@@ -1198,7 +1202,98 @@ def Enocean2Telemetry(s_port, telem_opt):
                 drop = sql.SQL('DROP TABLE IF EXISTS ENO_TABLE; CREATE TABLE ENO_TABLE (description VARCHAR(255),temperature FLOAT, time_stamp VARCHAR(255));')
                 )
                 cursor.execute(drop)
-    
+
+    # rocks DB
+    #
+    # sudo apt install python3-dev librocksdb-dev
+    # sudo apt install libsnappy-dev libbz2-dev liblz4-dev
+    # pip3 install Cython python-rocksdb
+    # pip3 install pytest
+    #
+    def connectRocks(dbnm="my_enOcean-db"):
+        import rocksdb
+        db = rocksdb.DB(dbnm, rocksdb.Options(create_if_missing=True))    
+        
+    def putToRocks(d1, t1, d2, t2):
+        batch = rocksdb.WriteBatch()
+        key=d1.encode('utf-8')
+        value=str(t1).encode('utf-8')
+        batch.put(key, value)
+        key=d2.encode('utf-8')
+        value=str(t2).encode('utf-8')
+        batch.put(key, value)
+        db.write(batch)
+        
+    def getFromRocks(d1, d2):
+        k1 = d1.encode('utf-8')
+        k2 = d2.encode('utf-8')
+        values = db.multi_get([k1, k2])
+        return values
+
+    # fluvio
+    #
+    F_TOPIC_NAME = "enocean-temps-smartmodule"
+    F_PARTITION = 0
+    def connectTopicFluvio():
+        from fluvio import Fluvio, Offset, ConsumerCoonfig
+        # Connect to cluster
+        fluvio = Fluvio.connect()
+        
+    def sendSmartFluvio(d1,t1,d2,t2):
+        # Produce to topic
+        producer = fluvio.topic_producer(F_TOPIC_NAME)
+        producer.send_string("EnOcean Temperatures # { {} : {}, {} : {}, Time {}}".format(d1,t1,d2,t2,datetime.datetime.now()))
+
+    def getSmartFluvio():
+        # Consume from topic
+        # We're just going to get the last record
+        consumer = fluvio.partition_consumer(F_TOPIC_NAME, F_PARTITION)
+
+        # Create a ConsumerConfig using your "uppercase-map" smartmodule
+        config = ConsumerConfig()
+        config.smartmodule(name="uppercase-map")
+
+        for record in consumer.stream_with_config(Offset.from_end(0), config):
+            print("{}".format(record.value_string()))
+            break
+
+    # apache cassandra / scyllia 
+    #
+    # pip install cassandra-driver
+    def connectScyllia(userid='myusername', pss='mypassword'):
+        from cassandra.cluster import Cluster
+        from cassandra.auth import PlainTextAuthProvider
+        # Connect to the Scylla cluster
+        cluster = Cluster(['127.0.0.1'], auth_provider=PlainTextAuthProvider(username=userid, password=pss))
+        session = cluster.connect()
+        session.execute("""
+            CREATE KEYSPACE IF NOT EXISTS mykeyspace
+            WITH replication = {'class': 'SimpleStrategy', 'replication_factor': '1'}
+        """)
+        session.execute("""
+            CREATE TABLE IF NOT EXISTS mykeyspace.eno_temps_table (
+                desc TEXT,
+                temp FLOAT,
+                time TEXT
+            )
+        """)
+        
+    def send2Scyllia(d1,t1,d2,t2):
+        session = cluster.connect('mykeyspace')
+        # Insert 2 rows into the eno_temps_table
+        query = "INSERT INTO eno_temps_table (desc, temp, time) VALUES (%s, %s, %s)"
+        session.execute(query, (d1, t1, datetime.datetime.now()))
+        session.execute(query, (d2, t2, datetime.datetime.now()))
+
+    def getSensorFromScyllia(desc_of_sensor_print):
+        session = cluster.connect('mykeyspace')
+        select_query = """
+            SELECT * FROM mykeyspace.eno_temps_table WHERE desc = %s
+        """
+        result = session.execute(select_query, (desc_of_sensor_print,))
+        for row in result:
+            print(row.desc, row.temp, row.time)
+        
     # Choose the iOt you want to use according to the define in top section        
     if telem_opt == "soracom":
         sendData=sendDataSoraCom
@@ -1269,6 +1364,15 @@ def Enocean2Telemetry(s_port, telem_opt):
     elif telem_opt == "sybase":
         cnxn = sySQLConnect()
         sendData=putValueSybase
+    elif telem_opt == "rocks":
+        connectRocks()
+        sendData=putToRocks
+    elif telem_opt == "fluvio":        
+        connectTopicFluvio()
+        sendData=sendSmartFluvio
+    elif telem_opt == "scyllia":        
+        connectScyllia()        
+        sendData=send2Scyllia
     elif telem_opt = "cloud_mqtt":            
         client = mqtt.Client(protocol=mqtt.MQTTv311)
         client.tls_set(CCACERT)
