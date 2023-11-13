@@ -1242,7 +1242,7 @@ def Enocean2Telemetry(s_port, telem_opt):
     def sendSmartFluvio(d1,t1,d2,t2):
         # Produce to topic
         producer = fluvio.topic_producer(F_TOPIC_NAME)
-        producer.send_string("EnOcean Temperatures # { {} : {}, {} : {}, Time {}}".format(d1,t1,d2,t2,datetime.datetime.now()))
+        producer.send_string("EnOcean Temperatures # { {} : {}, {} : {}, Time : {}}".format(d1,t1,d2,t2,datetime.datetime.now()))
 
     def getSmartFluvio():
         # Consume from topic
