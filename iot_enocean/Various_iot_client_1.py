@@ -69,7 +69,7 @@ YCERTNAME="your_cert_name"
 YUrl=r'https://api.iot.yandex.net/v1.0/devices/actions'	
 YAPI_KEY="xxxxxx"
 
-# time
+# time please set your timezone here
 import datetime
 import pytz
 MY_TZ='Europe/Moscow'
@@ -104,7 +104,7 @@ channelID = 100
 writeKey = 'writeKey'
         
 # ------------ here list the choices and options for iOt or monitoring -----------------      
-TELEM_CHOICES=[ "soracom", "beebotte", "mosquito", "ubidots", "machinist", "aws", "azure", "yandex", "twillio", "smtp_email", "ssl_tls_server", "ssl_23_server", "cloud_mqtt", "gcs_blob", "splunk", "gcs_spread", "ambient", "influxdb", "redis", "mongo", "mysql", "sybase", "oracle", "sqllite", "pg", "fluvio", "scyllia", "rocks"  ]
+TELEM_CHOICES=[ "soracom", "beebotte", "mosquito", "ubidots", "machinist", "aws", "azure", "yandex", "twillio", "smtp_email", "ssl_tls_server", "ssl_23_server", "cloud_mqtt", "gcs_blob", "splunk", "gcs_spread", "ambient", "influxdb", "redis", "mongo", "mysql", "sybase", "oracle", "sqllite", "pg", "fluvio", "scyllia", "rocks". "ali"  ]
 SORACOM=0
 BEEBOTTE=1
 MOSQUITO=2
@@ -133,6 +133,7 @@ POSTGR=24
 FLUVIO=25
 SCYLLIA=26
 ROCKS=27
+ALIBABA=28
 # ============= make your choice of cloud service here from list above ================== 
 MY_CURRENT_TELEM=TELEM_CHOICES[SORACOM]
 
@@ -189,7 +190,7 @@ class Mongo_Database_Class(object):
             'sensor1_temp1': st1,
             'sensor1_desc2': sd2,
             'sensor1_temp2': st2,
-            'created_at': datetime.datetime.now()
+            'created_at': datetime.datetime.now(pytz.timezone(MY_TZ))
         }
         return self.collection.insert_one(post)
 		
@@ -336,7 +337,8 @@ def Enocean2Telemetry(s_port, telem_opt):
     
     # AMBIENT
     def sendDataAmbient(string1, enO_temp_value1, string2, enO_temp_value2):
-        ret = am.send({'created': datetime.datetime.now(), string1: enO_temp_value1, string2: enO_temp_value2})
+        t=datetime.datetime.now(pytz.timezone(MY_TZ))
+        ret = am.send({'created': str(t), string1: enO_temp_value1, string2: enO_temp_value2})
         # not sure if we have it ?? am.disconnect()
         
     # AWS
@@ -453,7 +455,7 @@ def Enocean2Telemetry(s_port, telem_opt):
 
     def sendCreateYandexTable(my_query):
 	
-	timestamp = datetime.datetime.now(pytz.timezone(MY_TZ)).timestamp()  # set the timezone as you wish for your location
+        timestamp = datetime.datetime.now(pytz.timezone(MY_TZ)).timestamp()  # set the timezone as you wish for your location
         event_ts=round(timestamp)
         insert=  my_query	
 	
@@ -491,8 +493,8 @@ def Enocean2Telemetry(s_port, telem_opt):
 	
         #msg = json.loads(payload_json)
         #msg_str = json.dumps(msg)
-	msg_str = temp_data1
-	timestamp = datetime.datetime.now(pytz.timezone(MY_TZ)).timestamp()  # set the timezone as you wish for your location
+        msg_str = temp_data1
+        timestamp = datetime.datetime.now(pytz.timezone(MY_TZ)).timestamp()  # set the timezone as you wish for your location
         event_ts=round(timestamp)
         insert=  f"""INSERT INTO pxc_cloud_db.timeseries_example (telemetry_timestamp , device_nm , payload) VALUES ('{event_ts}','{descrip1}', '{msg_str}')"""	
 	
@@ -526,8 +528,8 @@ def Enocean2Telemetry(s_port, telem_opt):
         except requests.exceptions.RequestException as err:
             print ("OOps: Something Else",err)
 
-	msg_str = temp_data2
-	timestamp = datetime.datetime.now(pytz.timezone(MY_TZ)).timestamp()  # set the timezone as you wish for your location
+        msg_str = temp_data2
+        timestamp = datetime.datetime.now(pytz.timezone(MY_TZ)).timestamp()  # set the timezone as you wish for your location
         event_ts=round(timestamp)
         insert=  f"""INSERT INTO pxc_cloud_db.timeseries_example (telemetry_timestamp , device_nm , payload) VALUES ('{event_ts}','{descrip2}', '{msg_str}')"""	
 	
@@ -968,10 +970,11 @@ def Enocean2Telemetry(s_port, telem_opt):
     def putValueMySQL(descrip1, temp_data1, descrip2, temp_data2):
 
         # insert values
+        t=datetime.datetime.now(pytz.timezone(MY_TZ))
         cursor.execute("""INSERT INTO MY_SQL_TAB (description, value, timestamp)
             VALUES ('{d1}', '{t1}', '{ts}' ),
             ('{d2}', '{t2}', '{ts}' ),
-            """.format(d1=descrip1,t1=temp_data1,d2=descrip2,t2=temp_data2, ts=datetime.datetime.now()))
+            """.format(d1=descrip1,t1=temp_data1,d2=descrip2,t2=temp_data2, ts=str(t)))
 
         # fetch the data
         query="SELECT * FROM "+MY_SQL_TAB
@@ -1044,10 +1047,11 @@ def Enocean2Telemetry(s_port, telem_opt):
     def putValueSybase(descrip1, temp_data1, descrip2, temp_data2):
 
         # insert values
+        t=datetime.datetime.now(pytz.timezone(MY_TZ))
         sql = """INSERT INTO SY_SQL_TAB (description, value, timestamp)
             VALUES ('{d1}', '{t1}', '{ts}' ),
             ('{d2}', '{t2}', '{ts}' ),
-            """.format(d1=descrip1,t1=temp_data1,d2=descrip2,t2=temp_data2, ts=datetime.datetime.now())
+            """.format(d1=descrip1,t1=temp_data1,d2=descrip2,t2=temp_data2, ts=str(t))
         table1 = etl.fromdb(cnxn,sql)
         
         # fetch the data
@@ -1072,11 +1076,13 @@ def Enocean2Telemetry(s_port, telem_opt):
     def putValueOracle(descrip1, temp_data1, descrip2, temp_data2):
 
         # insert values
+        t=datetime.datetime.now(pytz.timezone(MY_TZ))
         cursor.execute("""INSERT INTO ENO_TABLE (DESCRIPTION, TEMPERATURE, TS) VALUES ('{d1}', {t1}, {ts});
-            """.format(d1=descrip1,t1=temp_data1,ts=datetime.datetime.now()))
+            """.format(d1=descrip1,t1=temp_data1,ts=str(t))))
 
+        t=datetime.datetime.now(pytz.timezone(MY_TZ))
         cursor.execute("""INSERT INTO ENO_TABLE (DESCRIPTION, TEMPERATURE, TS) VALUES ('{d2}', {t2}, {ts});
-            """.format(d2=descrip2,t2=temp_data2, ts=datetime.datetime.now()))
+            """.format(d2=descrip2,t2=temp_data2, ts=str(t)))
             
         # fetch the data
         query="SELECT * FROM ENO_TABLE"
@@ -1121,11 +1127,12 @@ def Enocean2Telemetry(s_port, telem_opt):
     def putValueSQLite(descrip1, temp_data1, descrip2, temp_data2):
 
         # insert values
+        t=datetime.datetime.now(pytz.timezone(MY_TZ))
         c.execute("""INSERT INTO ENO_TABLE (DESCRIPTION, TEMPERATURE, TS) VALUES ('{d1}', {t1}, {ts});
-            """.format(d1=descrip1,t1=temp_data1,ts=datetime.datetime.now()))
+            """.format(d1=descrip1,t1=temp_data1,ts=str(t)))
         conn.commit()
         c.execute("""INSERT INTO ENO_TABLE (DESCRIPTION, TEMPERATURE, TS) VALUES ('{d2}', {t2}, {ts});
-            """.format(d2=descrip2,t2=temp_data2, ts=datetime.datetime.now()))
+            """.format(d2=descrip2,t2=temp_data2, ts=str(t)))
         conn.commit()
         
         # fetch the data
@@ -1184,8 +1191,8 @@ def Enocean2Telemetry(s_port, telem_opt):
             with conn.cursor() as cursor:
                 conn.autocommit = True
                 values = [
-                    (desc1, temper1, str(datetime.datetime.now())),
-                    (desc2, temper2, str(datetime.datetime.now())),
+                    (desc1, temper1, str(datetime.datetime.now(pytz.timezone(MY_TZ)))),
+                    (desc2, temper2, str(datetime.datetime.now(pytz.timezone(MY_TZ)))),
                 ]
                 insert = sql.SQL('INSERT INTO enotemp (description, temperature, time_stamp) VALUES {}').format(
                     sql.SQL(',').join(map(sql.Literal, values))
@@ -1242,7 +1249,8 @@ def Enocean2Telemetry(s_port, telem_opt):
     def sendSmartFluvio(d1,t1,d2,t2):
         # Produce to topic
         producer = fluvio.topic_producer(F_TOPIC_NAME)
-        producer.send_string("EnOcean Temperatures # { {} : {}, {} : {}, Time : {}}".format(d1,t1,d2,t2,datetime.datetime.now()))
+        t=datetime.datetime.now(pytz.timezone(MY_TZ))
+        producer.send_string("EnOcean Temperatures # { {} : {}, {} : {}, Time : {}}".format(d1,t1,d2,t2,str(t)))
 
     def getSmartFluvio():
         # Consume from topic
@@ -1282,8 +1290,9 @@ def Enocean2Telemetry(s_port, telem_opt):
         session = cluster.connect('mykeyspace')
         # Insert 2 rows into the eno_temps_table
         query = "INSERT INTO eno_temps_table (desc, temp, time) VALUES (%s, %s, %s)"
-        session.execute(query, (d1, t1, datetime.datetime.now()))
-        session.execute(query, (d2, t2, datetime.datetime.now()))
+        t=datetime.datetime.now(pytz.timezone(MY_TZ))
+        session.execute(query, (d1, t1, str(t)))
+        session.execute(query, (d2, t2, str(t)))
 
     def getSensorFromScyllia(desc_of_sensor_print):
         session = cluster.connect('mykeyspace')
@@ -1293,6 +1302,41 @@ def Enocean2Telemetry(s_port, telem_opt):
         result = session.execute(select_query, (desc_of_sensor_print,))
         for row in result:
             print(row.desc, row.temp, row.time)
+
+    # put to alibaba iOt cloud a jsone message 
+    #
+    # sudo pip install aliyun-python-sdk-core
+    # sudo pip install aliyun-python-sdk-iot
+    #
+    def conn2AliB():
+        from aliyunsdkcore import client
+        from aliyunsdkiot.request.v20180120 import RegisterDeviceRequest
+        from aliyunsdkiot.request.v20180120 import PubRequest
+        import base64
+        import binascii
+
+        import os
+        accessKeyId = os.getenv('ACCESS_KEY_ID')
+        accessKeySecret = os.getenv('ACCESS_KEY_SECRET')
+        clt = client.AcsClient(accessKeyId, accessKeySecret, 'cn-shanghai')
+
+    def send2AliB(d1, t1, d2, t2):
+        request = PubRequest.PubRequest()
+        request.set_accept_format('json')  # The format in which the response is returned. By default, the XML format is used. In this example, the JSON format is used.
+        request.set_IotInstanceId('iotInstanceId') 
+        request.set_ProductKey('productKey')
+        request.set_TopicFullName('/productKey/deviceName/get')             # The full name of the topic that is used to publish the message.
+        t=datetime.datetime.now(pytz.timezone(MY_TZ))
+        d="{ "+d1+" : "+str(t1)+" , "+d2+" : "+str(t2)+" , time : "+str(t)+" }"
+        try:
+            b64msg2iot = base64.urlsafe_b64encode(d.encode())
+        except binascii.Error as e:
+            b64msg2iot = base64.urlsafe_b64encode("error in encoding... ".encode())        
+            print("error with base64 encoding : ",e)			
+        request.set_MessageContent(b64msg2iot)                                # Base64 String
+        request.set_Qos(0)
+        result = clt.do_action_with_exception(request)
+        print('result : ' + result)
         
     # Choose the iOt you want to use according to the define in top section        
     if telem_opt == "soracom":
@@ -1402,6 +1446,9 @@ def Enocean2Telemetry(s_port, telem_opt):
         import redis
         redis_client = redis.Redis(host = '172.17.0.2', port = 6379, decode_responses = True)
         sendData=put_data_redis
+    elif telem_opt == "ali":
+        conn2AliB()                                   
+        sendData=send2AliB
     elif telem_opt == "mysql":
         mySQLConnect()                                       # connects and creates clean new table
         sendData=putValueMySQL
@@ -1465,7 +1512,7 @@ def Enocean2Telemetry(s_port, telem_opt):
         if cnt == (6+dataLen+optLen+1): # Telegram end
             ready = True
             sensorId = ':'.join(dataList[1:5]) # Sensor ID
-            timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            timestamp = datetime.datetime.now(pytz.timezone(MY_TZ)).strftime('%Y-%m-%d %H:%M:%S')
 
             # The data is displayed for debugging purposes.
             print "========"
