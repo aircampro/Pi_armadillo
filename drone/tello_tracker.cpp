@@ -1,7 +1,7 @@
 // ==================================================================
 //
 // Simple example of openCV tracker on video from a DJI Tello drone
-//
+// uses https://github.com/herrnamenlos123/tello library for DJI Drone
 //
 // ==================================================================
 #include "link_opencv.h"
