@@ -163,8 +163,8 @@ int main(int argc, char** argv)
 
 	cv::String tracker_algorithm = parser.get<cv::String>(0);
 	//cv::String video_name = parser.get<cv::String>(1);
-    cv::String video_name = parser.get<cv::String>("video_name");
-    bool use_tello_stream = parser.has("tello_cam");
+        cv::String video_name = parser.get<cv::String>("video_name");
+        bool use_tello_stream = parser.has("tello_cam");
 	
 	parser.about("OpenCV Tracker API Test");
 	if (parser.has("help"))
@@ -181,35 +181,37 @@ int main(int argc, char** argv)
 
     // enable the tello drone and enable the video camera stream
 	//
-	if (use_tello_stream==1) {
-        cv::VideoCapture capture{"udp://0.0.0.0:11111", cv::CAP_FFMPEG};
-        Tello tello;
-        if (!tello.connect()) return 0;
-        tello.enable_video_stream();
+	if (use_tello_stream==1) 
+	{
+            cv::VideoCapture capture{"udp://0.0.0.0:11111", cv::CAP_FFMPEG};
+            Tello tello;
+            if (!tello.connect()) return 0;
+            tello.enable_video_stream();
 	}
-	
 	CheckTrackerAlgType(tracker_algorithm);
 
 	//open the capture
 	cv::VideoCapture cap;
-    if (!video_name.empty()) {
+	cv::Mat frame;
+        if (!video_name.empty()) {
 	    cap.open(video_name);   	
 	    if (!cap.isOpened())
 	    {
 		   Help();
-           std::cout << "***Could not initialize capturing...***\n";
+                   std::cout << "***Could not initialize capturing...***\n";
 		   std::cout << "Current parameter's value: \n";
 		   parser.printMessage();
 		   return -1;
 	    }
+	    //get the first frame
+	    cap >> frame;
 	} else if (use_tello_stream==1) {
-		capture >> cap;                              // we are now getting the video capture from the dji drone
+	     capture >> frame;                              // we are now getting the video capture from the dji drone
 	} else {
-		std::cout << "\033[31m No video file or tello_cam 1 argument supplied\n \033[0m" << std::endl;
-		return -2;
+	     std::cout << "\033[31m No video file or tello_cam 1 argument supplied\n \033[0m" << std::endl;
+	     return -2;
 	}
 
-	cv::Mat frame;
 	Paused = true;
 	WindowName = "Tracking API: " + tracker_algorithm;
 	cv::namedWindow(WindowName, 0);
@@ -234,8 +236,6 @@ int main(int argc, char** argv)
 		"\tq - quit the program\n"
 		"\tp - pause video\n";
 
-	//get the first frame
-	cap >> frame;
 	frame.copyTo(Image);
 	cv::imshow(WindowName, Image);
 	bool initialized = false;
@@ -269,9 +269,9 @@ int main(int argc, char** argv)
 		}
 		char c = static_cast<char>(cv::waitKey(2));
 		if (c == 'q')
-			break;
+		    break;
 		if (c == 'p')
-			Paused = !Paused;
+		    Paused = !Paused;
 	}
 
 	return 0;
