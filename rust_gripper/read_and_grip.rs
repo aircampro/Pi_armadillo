@@ -124,7 +124,10 @@ fn main() -> Result<(), Box<std::error::Error>>) {
         match result {
             Ok(response) => {
                 println!("{}", response.status());
-				// if result >= 0 exit the for loop !!!!!!!!!!!!!!!!!!!!!!!!!!!
+	        // if result >= 0 exit the for loop !!!!!!!!!!!!!!!!!!!!!!!!!!!
+		if result >= 0 {
+	            break;
+		}
             },
             Err(err) => {
                 println!("NG");
