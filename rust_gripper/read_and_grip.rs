@@ -16,7 +16,7 @@
 // configparser = "3.0.0"
 // async-std = { version = "1.7", features = ["attributes", "tokio1", "unstable"] }
 // rusty-tesseract = "1.1.4"
-//
+// regex = "0.1"
 // =====================================================================================================================
 use std::time::Instant;
 use async_std::task;
@@ -29,6 +29,14 @@ use std::path::Path;
 use rusty_tesseract::{LepTess, Image};
 
 use std::process::Command;
+
+// sudo apt install espeak 
+//
+use arci::Speaker;
+use arci_speak_cmd::LocalCommand;
+use std::time::Instant;
+
+use regex::Regex;
 
 // JSON sends position to get object name from server { "lat" : "23.4", "lon" : "0.032", "userId" : 1 } 
 // receives back json { "obj_name" : "unknown", "width" : 0 } or { "obj_name" : "small_box_3", "width" : 23.2 }
@@ -124,10 +132,10 @@ fn main() -> Result<(), Box<std::error::Error>>) {
         match result {
             Ok(response) => {
                 println!("{}", response.status());
-	        // if result >= 0 exit the for loop !!!!!!!!!!!!!!!!!!!!!!!!!!!
-		if result >= 0 {
-	            break;
-		}
+				// if result > 0 exit the for loop 
+				if result > 0 { 
+				    break;
+				}
             },
             Err(err) => {
                 println!("NG");
@@ -142,30 +150,53 @@ fn main() -> Result<(), Box<std::error::Error>>) {
     println!("{}: {}.{:03} [sec]", "Process time".blue().bold(), end1.as_secs(), end1.subsec_nanos() / 1_000_000);
 
     // ====== alert via speech and wait for a reply ? =========
+    // https://github.com/openrr/openrr/blob/main/arci-speak-cmd/examples/local_command.rs
+	//
+    let start_time = Instant::now();
+    let speaker = LocalCommand::default();
+	let mes = "about to grip the object";
+    let wait = speaker.speak(mes)?;
+    wait.await
+	let elapsed = start_time.elapsed().as_secs_f64();
+	while (elapsed < 5.0) {
+        elapsed = start_time.elapsed().as_secs_f64();
+    }		
 
     // now grip the object
     //	
 	if ( result >= 0 ) {                                   // else it didnt find that object
-	    let width_from_server: [f64; N] = result;
-	
-	    // call the rust gripper controller program with the given width try 3 times as its in rust it might be just as easy to add it here
-	    // this is for flexible example purpose
-	    //
-        let output = Command::new("/bin/cd")
-        .args(&["/home/robots/franka/rust/src"])
-        .spawn()
-        .expect("failed to start `ls`");	
-        println!("status: {}", output.status);
-        println!("stdout: {}", String::from_utf8_lossy(&output.stdout));
-        println!("stderr: {}", String::from_utf8_lossy(&output.stderr));
-        let output2 = Command::new("cargo")
-        .args(&["run", "--gripper_hostname", "my_gripper1", "--homing", 1, "--object_width", width_from_server])
-        .spawn()
-        .expect("failed to start `ls`");	
-        println!("status: {}", output2.status);
-        println!("stdout: {}", String::from_utf8_lossy(&output2.stdout));
-        println!("stderr: {}", String::from_utf8_lossy(&output2.stderr));
+	        let width_from_server: [f64; N] = result;
+		let re = Regex::new(r"(?i)Object lost").unwrap();  // if we failed to grip try up to 3 times
+		let rep_cnt = 0;
+		
+	       // call the rust gripper controller program with the given width try 3 times as its in rust it might be just as easy to add it here
+	       // this is for flexible example purpose that we can change the gripper to one without a rust driver and use a shell to run it.
+	       //
+                let output = Command::new("/bin/cd")
+                .args(&["/home/robots/franka/rust/src"])
+                .spawn()
+                .expect("failed to change directory");	
+                println!("status: {}", output.status);
+                println!("stdout: {}", String::from_utf8_lossy(&output.stdout));
+                println!("stderr: {}", String::from_utf8_lossy(&output.stderr));
+		while (rep_cnt < 3) {
+                   output = Command::new("/home/mark/.cargo/bin/cargo")
+                   .args(&["run", "--gripper_hostname", "my_gripper1", "--homing", 1, "--object_width", width_from_server])
+                   .spawn()
+                   .expect("failed to start gripper program`");	
+                   println!("status: {}", output.status);
+                   println!("stdout: {}", String::from_utf8_lossy(&output.stdout));
+                   println!("stderr: {}", String::from_utf8_lossy(&output.stderr));
+	           wait = speaker.speak(&output.stdout)?;
+                   wait.await
+                   if re.is_match(&output.stdout) {
+		        rep_cnt = rep_cnt + 1;
+		    } else {
+		        rep_cnt = 3;
+		    }
+		}
     } else {
-	    println!("{} {}",".....object label read not found in database is it a ".red().bold(),text_label);
+	    println!("{} {}",".....object label read not found in database is it a ".red().bold(), text_label);
 	}
+
 }
