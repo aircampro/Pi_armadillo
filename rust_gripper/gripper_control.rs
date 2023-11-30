@@ -61,6 +61,7 @@ fn main() -> FrankaResult<()> {
     let state = gripper.read_once()?;
     if !state.is_grasped {
         eprintln!("Object lost");
+        println!("Object lost - unable to grip !");
         std::process::exit(-1);
     }
     println!("Grasped object, will release it now.");
