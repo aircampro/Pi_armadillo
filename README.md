@@ -7,5 +7,5 @@ databases such as influx, mongo or cloud storage like GCS Blob/spreadsheet, redi
 it controls and reads periferals such as PLC/Robot, Camera, Motor Drives, and has inbuilt picture manipulation and picture tracking facilities
 various PLC support, mitsubishi, omron, allen bradley, yokogawa, keyence, siemens, Robots yasakawa, kawasaki etc
 Also has interface to GPS for position and interface to periferals such as OLED 2 line display.
-
+Client - Server in rust with the client reading the width for an object it has read the label for and queries the MySQL db for the objects width before gripping it wqith a franka emika robot
 have fun it is still in development.....
