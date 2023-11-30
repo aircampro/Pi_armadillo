@@ -113,6 +113,7 @@ async fn post_json_request(url: &str, v1: &str, v2: &str) -> std::io::Result<ser
     println!("{:#?}", echo_json);
     Ok(echo_json)
 }
+
 async fn call_json2_request(url: &str) -> std::io::Result<()> {
     let new_post = Post_json {
         id: None,
@@ -123,7 +124,38 @@ async fn call_json2_request(url: &str) -> std::io::Result<()> {
 	post_json2_request(url, &new_post);
     Ok(())
 }
-	
+
+async fn call_spotify_artist_request(url: &str) -> std::io::Result<()> {
+    let url = format!(
+        "https://api.spotify.com/v1/search?q={query}&type=track,artist",
+        // go check out her latest album. It's 🔥
+        query = "Little Simz"
+    );
+    // the rest is the same as before!
+    let client = reqwest::Client::new();
+    let response = client
+        .get(url)
+        .header(AUTHORIZATION, "Bearer [AUTH_TOKEN]")
+        .header(CONTENT_TYPE, "application/json")
+        .header(ACCEPT, "application/json")
+        .send()
+       .await
+       .unwrap();
+        println!("Success! {:?}", response)
+    Ok(())
+}
+
+async fn get_jpg_file_request(url: &str) -> std::io::Result<()> {
+    let url = "https://pbs.twimg.com/profile_images/1058802892415455233/_Fat5vje_400x400.jpg";
+    let filename = url.split("/").last().unwrap();
+    let response: reqwest::Response = reqwest::get(url).await?;
+    let bytes = response.bytes().await?;
+    let mut out = File::create(filename)?;
+    io::copy(&mut bytes.as_ref(), &mut out)?;
+
+    Ok(())
+}
+   	
 async fn post_json2_request(url: &str, new_post: &Post_json) -> std::io::Result<Post_json> {
 
     let new_rep: Post_json = reqwest::Client::new()
