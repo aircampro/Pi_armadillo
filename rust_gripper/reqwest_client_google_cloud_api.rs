@@ -486,20 +486,20 @@ fn extract_main_text(val: &Value) -> Result<(String, String), CloudVisionError> 
 fn extract_face(val: &Value) -> Result<String, CloudVisionError> {
     let mut txt_full = String::from("joy = ");
     txt_full.push_str(&val["responses"][0]["faceAnnotations"]["joyLikelihood"]);
-	txt_full.push_str(" | sorrow = ");
+    txt_full.push_str(" | sorrow = ");
     txt_full.push_str(&val["responses"][0]["faceAnnotations"]["sorrowLikelihood"]);
-	txt_full.push_str(" | anger = ");
+    txt_full.push_str(" | anger = ");
     txt_full.push_str(&val["responses"][0]["faceAnnotations"]["angerLikelihood"]);
-	txt_full.push_str(" | surprise = ");	
+    txt_full.push_str(" | surprise = ");	
     txt_full.push_str(&val["responses"][0]["faceAnnotations"]["surpriseLikelihood"]);
-	txt_full.push_str(" | exposed = ");		
+    txt_full.push_str(" | exposed = ");		
     txt_full.push_str(&val["responses"][0]["faceAnnotations"]["underExposedLikelihood"]);
-	txt_full.push_str(" | blurred = ");		
+    txt_full.push_str(" | blurred = ");		
     txt_full.push_str(&val["responses"][0]["faceAnnotations"]["blurredLikelihood"]);
-	txt_full.push_str(" | headwaear = ");
+    txt_full.push_str(" | headwaear = ");
     txt_full.push_str(&val["responses"][0]["faceAnnotations"]["headwearLikelihood"]);
-	txt_full.push_str(" | ");
-	Ok(txt_full)
+    txt_full.push_str(" | ");
+    Ok(txt_full)
 }
 
 /// Extract list of landmark from given `val``- didnt check yet dummy stub
@@ -560,7 +560,7 @@ fn to_label(value: &Value) -> Option<LabelObj> {
     let obj_struct = LabelObj {
         mid,
         description,
-		score,
+	score,
         topicality,		
     };
 		  
