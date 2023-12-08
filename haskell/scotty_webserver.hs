@@ -93,19 +93,19 @@ main = do
     post "/msg" $ do
       m <- jsonData
       -- b <- message m or below is alternative
-	  -- let (Msg a b) = m
-	  -- let messge = T.pack b
-	  (Msg a b) <- m
-	  messge <- T.pack b
-	  mm <- T.map (\c -> if c == '.' then '!' else c) messge
-	  ll <- T.length messge
+      -- let (Msg a b) = m
+      -- let messge = T.pack b
+      (Msg a b) <- m
+      messge <- T.pack b
+      mm <- T.map (\c -> if c == '.' then '!' else c) messge
+      ll <- T.length messge
       status status200
       text ("length" <> ll <> " original message " <> b <> " changed " <> mm))
     -- curl -X POST http://localhost:3000/fileshow 
     post "/fileshow" $ do
       bs <- L.hGetContents =<< openBinaryFile "/home/mark/haskell/my_file.txt" ReadMode
       status status200
-	  text ($ T.replace "\r\n" "\n" (T.decodeUtf8 $ L.toStrict bs))
+      text ($ T.replace "\r\n" "\n" (T.decodeUtf8 $ L.toStrict bs))
     -- curl -D - http://localhost:8080/redirect/to/root
     get "/redirect/to/root" $ do
       status status302
