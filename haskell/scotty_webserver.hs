@@ -6,9 +6,12 @@
 -- aeson
 -- scotty
 
+-- stack ghc scotty_webserver.hs
+-- stack runghc scotty_webserver.hs
+
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DeriveGeneric #-}
-
+-- include to use multiway-if do branches {-# LANGUAGE MultiWayIf #-}
 module UserAPI where
 
 import Web.Scotty
@@ -76,15 +79,22 @@ main = do
     get "/width/:uid" $ do
       us <- liftIO (readIORef users)
       i <- param "uid"
-      res <- findUser us (read i)
+	  res <- findUser us (read i)
       matched_user = do_case res
-      if (matched_user /= -99)
-          then (User { width = c }) = matched_user
-          status status200
-          text T.pack (show c)
-       else
-          status status404
-          json (Error ("Not Found uid = " <> i))		  
+	  if (matched_user /= -99) then (User { width = c }) <- matched_user 
+      else status status404
+	  if (matched_user /= -99) then status status200 
+      else json (Error ("Not Found uid = " <> i))	        		    
+      if (matched_user /= -99) then text ("" <> c <> "")  
+--      alternatively with multiway-if included
+--      if
+--        | (matched_user /= -99) -> do
+--          (User { width = c }) <- matched_user
+--          status status200	
+--          text ("" <> c <> "")		  
+--        | otherwise -> do
+--          status status404
+--          json (Error ("Not Found uid = " <> i))		  
     -- curl -X POST http://localhost:3000/users -d '{ "uid": 1, "name": "mid_size_box", "width": 34.67, "height": 12.9, "len": 1.12 }'
     post "/users" $ do
       u <- jsonData
@@ -96,9 +106,9 @@ main = do
     post "/users_modified" $ do
       u <- jsonData
       us <- liftIO $ readIORef users
-	    -- in this example we will add 0.5 to the width
-      w <- width u                                     
-      g <- u { width = (w + 0.5) }
+	  -- in this example we will add 0.5 to the width
+	  w <- width u                                     
+	  g <- u { width = (w + 0.5) }
       liftIO $ writeIORef users $ addUser us g
       status status201
       json g
@@ -122,12 +132,12 @@ main = do
     post "/msg" $ do
       m <- jsonData
       -- b <- message m or below is alternative
-      -- let (Msg a b) = m
-      -- let messge = T.pack b
-      (Msg a b) <- m
-      messge <- T.pack b
-      mm <- T.map (\c -> if c == '.' then '!' else c) messge
-      ll <- T.length messge
+	  -- let (Msg a b) = m
+	  -- let messge = T.pack b
+	  (Msg a b) <- m
+	  messge <- T.pack b
+	  mm <- T.map (\c -> if c == '.' then '!' else c) messge
+	  ll <- T.length messge
       status status200
       text ("length" <> ll <> " original message " <> b <> " changed " <> mm))
     -- curl -X POST http://localhost:3000/fileshow 
