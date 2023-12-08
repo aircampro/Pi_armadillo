@@ -76,12 +76,12 @@ main = do
     get "/width/:uid" $ do
       us <- liftIO (readIORef users)
       i <- param "uid"
-  	  res <- findUser us (read i)
+      res <- findUser us (read i)
       matched_user = do_case res
-  	  if (matched_user /= -99)
-          (User { width = c }) = matched_user
+      if (matched_user /= -99)
+          then (User { width = c }) = matched_user
           status status200
-	        text T.pack (show c)
+          text T.pack (show c)
        else
           status status404
           json (Error ("Not Found uid = " <> i))		  
