@@ -79,11 +79,11 @@ main = do
     get "/width/:uid" $ do
       let us = liftIO (readIORef users)
       let i = param "uid"
-	  let res = findUser us (read i)
+      let res = findUser us (read i)
       matched_user = do_case res
-	  if (matched_user /= -99) then (User { width = c }) = matched_user 
+      if (matched_user /= -99) then (User { width = c }) = matched_user 
       else status status404
-	  if (matched_user /= -99) then status status200 
+      if (matched_user /= -99) then status status200 
       else json (Error ("Not Found uid = " <> i))	        		    
       if (matched_user /= -99) then text ("" <> c <> "")        
     -- curl -X POST http://localhost:3000/users -d '{ "uid": 1, "name": "mid_size_box", "width": 34.67, "height": 12.9, "len": 1.12 }'
@@ -97,9 +97,9 @@ main = do
     post "/users_modified" $ do
       let u = jsonData
       let us = liftIO $ readIORef users
-	  -- in this example we will add 0.5 to the width
-	  let w = width u                                     
-	  let g = u { width = (w + 0.5) }
+      -- in this example we will add 0.5 to the width
+      let w = width u                                     
+      let g = u { width = (w + 0.5) }
       liftIO $ writeIORef users $ addUser us g
       status status201
       json g
@@ -123,19 +123,19 @@ main = do
     post "/msg" $ do
       let m = jsonData
       -- b <- message m or below is alternative
-	  -- let (Msg a b) = m
-	  -- let messge = T.pack b
-	  let (Msg a b) = m
-	  let messge = T.pack b
-	  let mm = T.map (\c -> if c == '.' then '!' else c) messge
-	  let ll = T.length messge
+      -- let (Msg a b) = m
+      -- let messge = T.pack b
+      let (Msg a b) = m
+      let messge = T.pack b
+      let mm = T.map (\c -> if c == '.' then '!' else c) messge
+      let ll = T.length messge
       status status200
       text ("length" <> ll <> " original message " <> b <> " changed " <> mm))
     -- curl -X POST http://localhost:3000/fileshow 
     post "/fileshow" $ do
       let bs = L.hGetContents =<< openBinaryFile "/home/mark/haskell/my_file.txt" ReadMode
       status status200
-	  text bs
+      text bs
     -- curl -D - http://localhost:8080/redirect/to/root
     get "/redirect/to/root" $ do
       status status302
