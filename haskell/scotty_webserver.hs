@@ -1,0 +1,113 @@
+-- Haskell webserver using scotty
+-- add users to the system and query them from the uid number 
+
+-- add to package yaml
+-- http-types
+-- aeson
+-- scotty
+
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DeriveGeneric #-}
+
+module UserAPI where
+
+import Web.Scotty
+import Data.Aeson (FromJSON, ToJSON)
+import GHC.Generics
+import Data.IORef
+import Control.Monad.Reader
+import Network.HTTP.Types.Status
+import Data.List (find)
+import System.Environment (lookupEnv)
+import System.IO
+import qualified Data.Text as T
+import qualified Data.Text.Encoding as T
+import qualified Codec.Text.IConv as I
+import qualified Data.ByteString.Lazy as L
+
+-- the users of this server have a id, a name and a width, length & height, this can be used by the gripper
+data User = User { uid :: Integer, name :: String, width :: Double, height :: Double, len :: Double} deriving (Generic, Show)
+instance ToJSON User
+instance FromJSON User
+
+-- this is a message which is relayed back after a characture substitute of . for !
+data Msg = Msg { uid :: Integer, message :: String} deriving (Generic, Show)
+instance ToJSON Msg
+instance FromJSON Msg
+
+data Error = Error { message :: String } deriving (Generic, Show)
+instance ToJSON Error
+instance FromJSON Error
+
+addUser :: [User] -> User -> [User]
+addUser users user = user:users
+
+deleteUser :: [User] -> Integer -> [User]
+deleteUser users i = filter (\user -> uid user /= i) users
+
+findUser :: [User] -> Integer -> Maybe User
+findUser users i = find (\u -> uid u == i) users
+
+main :: IO ()
+main = do
+  users <- newIORef [] :: IO (IORef [User])
+  -- get the PORT from the port environment e.g. PORT=3000 ; export PORT
+  port <- maybe 3000 read <$> lookupEnv "PORT" :: IO Int
+  scotty (read port::Int) $ do
+    -- $ curl -X GET http://localhost:3000/users
+    get "/users" $ do
+      us <- liftIO (readIORef users)
+      status status200
+      json us
+    -- $ curl -X GET http://localhost:3000/users/1
+    get "/users/:uid" $ do
+      us <- liftIO (readIORef users)
+      i <- param "uid"
+      case findUser us (read i) of
+        Just u -> status status200 >> json u
+        Nothing -> status status404 >> json (Error ("Not Found uid = " <> i))
+    -- curl -X POST http://localhost:3000/users -d '{ "uid": 1, "name": "mid_size_box", "width": 34.67, "height": 12.9, "len": 1.12 }'
+    post "/users" $ do
+      u <- jsonData
+      us <- liftIO $ readIORef users
+      liftIO $ writeIORef users $ addUser us u
+      status status201
+      json u
+    -- curl -v -X DELETE http://localhost:3000/users/1
+    delete "/users/:uid" $ do
+      i <- param "uid"
+      us <- liftIO $ readIORef users
+      liftIO $ writeIORef users $ deleteUser us i
+      status status204
+    -- $ curl -X GET http://localhost:3000/html
+    get "/html" $ do
+      status status200
+      html "<h1>This is the scotty webserver! <br> writing some html........</h1>"
+    -- $ curl -X GET http://localhost:3000/text/charlie
+    get "/text/:you" $ do
+      you <- param "you"
+      us <- liftIO (readIORef users)
+      status status200
+      text ("Hello " <> you <> ", json is " <> (json us))
+    -- curl -X POST http://localhost:3000/msg -d '{ "uid": 1, "message": "this. is the message..." }' changes all . to ! before print
+    post "/msg" $ do
+      m <- jsonData
+      -- b <- message m or below is alternative
+	  -- let (Msg a b) = m
+	  -- let messge = T.pack b
+	  (Msg a b) <- m
+	  messge <- T.pack b
+	  mm <- T.map (\c -> if c == '.' then '!' else c) messge
+	  ll <- T.length messge
+      status status200
+      text ("length" <> ll <> " original message " <> b <> " changed " <> mm))
+    -- curl -X POST http://localhost:3000/fileshow 
+    post "/fileshow" $ do
+      bs <- L.hGetContents =<< openBinaryFile "/home/mark/haskell/my_file.txt" ReadMode
+      status status200
+	  text ($ T.replace "\r\n" "\n" (T.decodeUtf8 $ L.toStrict bs))
+    -- curl -D - http://localhost:8080/redirect/to/root
+    get "/redirect/to/root" $ do
+      status status302
+      setHeader "Haskell" "scotty"
+      redirect "/"
