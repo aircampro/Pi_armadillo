@@ -48,6 +48,12 @@ deleteUser users i = filter (\user -> uid user /= i) users
 findUser :: [User] -> Integer -> Maybe User
 findUser users i = find (\u -> uid u == i) users
 
+-- check the result was valid
+do_case res =
+    case res of
+        (Just x) -> return x
+        Nothing  -> return -99
+		
 main :: IO ()
 main = do
   users <- newIORef [] :: IO (IORef [User])
@@ -66,6 +72,19 @@ main = do
       case findUser us (read i) of
         Just u -> status status200 >> json u
         Nothing -> status status404 >> json (Error ("Not Found uid = " <> i))
+    -- $ curl -X GET http://localhost:3000/width/1
+    get "/width/:uid" $ do
+      us <- liftIO (readIORef users)
+      i <- param "uid"
+  	  res <- findUser us (read i)
+      matched_user = do_case res
+  	  if (matched_user /= -99)
+          (User { width = c }) = matched_user
+          status status200
+	        text T.pack (show c)
+       else
+          status status404
+          json (Error ("Not Found uid = " <> i))		  
     -- curl -X POST http://localhost:3000/users -d '{ "uid": 1, "name": "mid_size_box", "width": 34.67, "height": 12.9, "len": 1.12 }'
     post "/users" $ do
       u <- jsonData
@@ -73,6 +92,16 @@ main = do
       liftIO $ writeIORef users $ addUser us u
       status status201
       json u
+    -- curl -X POST http://localhost:3000/users_modified -d '{ "uid": 1, "name": "mid_size_box", "width": 34.67, "height": 12.9, "len": 1.12 }'
+    post "/users_modified" $ do
+      u <- jsonData
+      us <- liftIO $ readIORef users
+	    -- in this example we will add 0.5 to the width
+      w <- width u                                     
+      g <- u { width = (w + 0.5) }
+      liftIO $ writeIORef users $ addUser us g
+      status status201
+      json g
     -- curl -v -X DELETE http://localhost:3000/users/1
     delete "/users/:uid" $ do
       i <- param "uid"
@@ -93,19 +122,19 @@ main = do
     post "/msg" $ do
       m <- jsonData
       -- b <- message m or below is alternative
-      -- let (Msg a b) = m
-      -- let messge = T.pack b
-      (Msg a b) <- m
-      messge <- T.pack b
-      mm <- T.map (\c -> if c == '.' then '!' else c) messge
-      ll <- T.length messge
+  	  -- let (Msg a b) = m
+  	  -- let messge = T.pack b
+	   (Msg a b) <- m
+  	  messge <- T.pack b
+  	  mm <- T.map (\c -> if c == '.' then '!' else c) messge
+  	  ll <- T.length messge
       status status200
       text ("length" <> ll <> " original message " <> b <> " changed " <> mm))
     -- curl -X POST http://localhost:3000/fileshow 
     post "/fileshow" $ do
       bs <- L.hGetContents =<< openBinaryFile "/home/mark/haskell/my_file.txt" ReadMode
       status status200
-      text ($ T.replace "\r\n" "\n" (T.decodeUtf8 $ L.toStrict bs))
+	  text ($ T.replace "\r\n" "\n" (T.decodeUtf8 $ L.toStrict bs))
     -- curl -D - http://localhost:8080/redirect/to/root
     get "/redirect/to/root" $ do
       status status302
