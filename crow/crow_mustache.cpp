@@ -122,7 +122,7 @@ main() {
       ctx["posts"][n]["text"] = res->getString("text");
       n++;
     } 
-    return crow::mustache::load("bbs.html").render(ctx);
+    return crow::mustache::load("bbs.htm").render(ctx);
   });
 
   CROW_ROUTE(app, "/post")
