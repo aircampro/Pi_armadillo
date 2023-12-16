@@ -1,0 +1,6 @@
+.b3-2 h2, .b3-2 h3, .b3-2 p { border: solid; border-width: 2px 4px 4px 2px;
+padding: 5px; margin: 0px 0px 4px; }
+.b3-2 h2 { border-color: blue; }
+.b3-2 h3 { border-top-color: lightgreen; border-right-color: darkgreen;
+border-bottom-color: darkblue; border-left-color: lightblue; }
+.b3-2 p { border-color: mediumpurple transparent; }

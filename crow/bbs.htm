@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>This is the ACP BBS</title>
+      <style type="text/css" media="screen, handheld, print, tv" >
+      <!--
+      .b3-2 h2, .b3-2 h3, .b3-2 p { border: solid; border-width: 2px 4px 4px 2px;
+      padding: 5px; margin: 0px 0px 4px; }
+      .b3-2 h2 { border-color: blue; border-style: dashed; }
+      .b3-2 h3 { border-top-color: lightgreen; border-right-color: plum;
+      border-bottom-color: plum; border-left-color: lightgreen; border-style: double; border-top-style: solid; border-width: thick }
+      .b3-2 p { border-color: mediumpurple transparent;  }
+      -->
+      </style>
+  </head>
+  <body>
+    <div class=b3-2>
+    <h3><center>ACP Builitin Board</center></h3>
+    <ul>
+      {{# posts}}
+      <li>{{id}}: {{text}}</li>
+      {{/ posts}}
+    </ul>
+    <p>Type you're message here</p>
+    <form action="/post" method="post">
+      <input type="text" name="text"><input type="submit">
+    </form>
+	</div>
+  </body>
+</html>
