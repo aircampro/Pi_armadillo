@@ -8,5 +8,7 @@ it controls and reads periferals such as PLC/Robot, Camera, Motor Drives, and ha
 various PLC support, mitsubishi, omron, allen bradley, yokogawa, keyence, siemens, Robots yasakawa, kawasaki universal robots UR3, UR5 and UR10 etc
 Also has interface to GPS for position and interface to periferals such as OLED 2 line display.
 Client - Server in rust with the client reading the width for an object it has read the label for and queries the MySQL db for the objects width before gripping it wqith a franka emika robot
-controls a mitsubishi FX or Q series with modbus TCP over discord. Can query resnet from a picture or get information from Google Cloud API, haskell webserver examples for scotty and spock.
+controls a mitsubishi FX or Q series with modbus TCP over discord. UR Robot to Omron FINS TCP in rust. a little bit of erlang for queueing.
+radio links BLE EnOcean LoRa etc, usb interfaces, serial.
+Can query resnet from a picture or get information from Google Cloud API, haskell webserver examples for scotty and spock.
 .................have fun it is still in development.....
