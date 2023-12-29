@@ -81,7 +81,7 @@ permutation(N, Xs) when N > 0 ->
                               permutation(N - 1, lists:delete(X, Xs))) end,
           Xs).
 
-% 高階関数版
+% Higher order function version
 permutation(F, 0, _, A) -> F(lists:reverse(A));
 permutation(F, N, Xs, A) ->
   lists:foreach(fun(X) -> permutation(F, N - 1, lists:delete(X, Xs), [X | A]) end, Xs).
@@ -99,7 +99,7 @@ repeat_perm(N, Xs) when N > 0 ->
                               repeat_perm(N - 1, Xs)) end,
           Xs).
 
-% 高階関数版
+% Higher order function version
 repeat_perm(F, 0, _, A) -> F(lists:reverse(A));
 repeat_perm(F, N, Xs, A) ->
   lists:foreach(fun(X) -> repeat_perm(F, N - 1, Xs, [X | A]) end, Xs).
@@ -116,7 +116,7 @@ combination(N, Xs) when length(Xs) =:= N -> [Xs];
 combination(N, [Y | Ys]) ->
   lists:map(fun(X) -> [Y | X] end, combination(N - 1, Ys)) ++ combination(N, Ys).
 
-% 高階関数版
+% Higher order function version
 combination(F, 0, _, A) -> F(lists:reverse(A));
 combination(F, N, Xs, A) when length(Xs) =:= N -> F(lists:reverse(A) ++ Xs);
 combination(F, N, [X | Xs], A) ->
@@ -142,7 +142,7 @@ repeat_comb(N, [Y | Ys]) ->
   lists:map(fun(X) -> [Y | X] end,
             repeat_comb(N - 1, [Y | Ys])) ++ repeat_comb(N, Ys).
 
-% 高階関数版
+% Higher order function version
 repeat_comb(F, 0, _, A) -> F(lists:reverse(A));
 repeat_comb(F, N, [X], A) -> F(lists:reverse(A) ++ make_list(X, N));
 repeat_comb(F, N, [X | Xs], A) ->
@@ -195,7 +195,7 @@ partition(Pred, [X | Xs]) ->
     false -> {A, [X | B]}
   end.
 
-% 別解
+% Another interpretation
 partition1(Pred, Xs) -> {[X || X <- Xs, Pred(X)], [X || X <- Xs, not Pred(X)]}.
 
 partition2(Pred, Xs) ->
