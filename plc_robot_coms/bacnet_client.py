@@ -16,17 +16,17 @@ from bacpypes.service.device
 import LocalDeviceObject  
 import random                                                                                     # # RandomValueProperty # 
 
-class RandomValueProperty(Property):                                                              #     # コンストラクタ     #     
+class RandomValueProperty(Property):                                                              #     # constructor     #     
     def __init__(self, identifier):         
-    Property.__init__(self, identifier, Real, default=0.0, optional=True, mutable=False)          #     # 読み込み     #     
+    Property.__init__(self, identifier, Real, default=0.0, optional=True, mutable=False)          #    read    #     
 
     def ReadProperty(self, obj, arrayIndex=None):         #         
         # access an array         #         
         print arrayIndex         
         if arrayIndex is not None:             
-            raise ExecutionError(errorClass='property', errorCode='propertyIsNotAnArray')          #         # return a random value         #         
+            raise ExecutionError(errorClass='property', errorCode='propertyIsNotAnArray')          #    return a random value         #         
         value = random.random() * 100.0         
-        return value                                                                               #     # 書き込み     #     
+        return value                                                                               #    return value    #     
 
     def WriteProperty(self, obj, value, arrayIndex=None, priority=None, direct=False):         
         raise ExecutionError(errorClass='property', errorCode='writeAccessDenied')  
@@ -35,22 +35,22 @@ class RandomValueProperty(Property):                                            
 class RandomAnalogValueObject(AnalogValueObject):     
     properties = [         RandomValueProperty('presentValue'),     ]      
     def __init__(self, **kwargs):         
-        AnalogValueObject.__init__(self, **kwargs)                                                 # # オブジェクトを登録 # 
+        AnalogValueObject.__init__(self, **kwargs)                                                 
         register_object_type(RandomAnalogValueObject)                                              # # Entry Point # 
         
-if __name__ == '__main__':                                                                         #     # デバイスの設定情報の定義     #     
+if __name__ == '__main__':                                                                         #    main     #     
     device_name  = 'my_bacnet_device'     
     device_id    = 1234     
     vendor_id    = 1234     
     maxApduLengthAccepted = 1024     
-    segmentationSupported = 'segmentedBoth'                                                         #     # ネットワークの定義     #    
-    address = '10.2.10.17/24'                                                                       #     # デバイスの定義     #     
+    segmentationSupported = 'segmentedBoth'                                                         #     # Defining the network     #    
+    address = '10.2.10.17/24'                                                                       #     # ip     #     
     device = LocalDeviceObject( objectName = device_name, objectIdentifier = ('device', device_id), maxApduLengthAccepted=maxApduLengthAccepted,  segmentationSupported=segmentationSupported, vendorIdentifier=vendor_id, vendorName="ACP",)
-    app = BIPSimpleApplication(device, address)                                                     #     # アプリケーションがサポートするサービスをデバイスに設定     #    
+    app = BIPSimpleApplication(device, address)                                                     #     Configure services supported by the application on the device     #    
     services_supported = app.get_services_supported()     
-    device.protocolServicesSupported = services_supported.value                                     #     # デバイスにオブジェクトを追加     #    
+    device.protocolServicesSupported = services_supported.value                                     #      add object to device     #    
     my_values = { 1, 2, 3, 4, 5 }    
-    for i in my_values:                                                                             #         # オブジェクト の 定義         #         
+    for i in my_values:                                                                             #      Object definition        #         
         ravo = RandomAnalogValueObject( objectName ='Random-%d' % (i,), objectIdentifier =('analogValue', i),  )  # オブジェクト の 登録         #         
         app.add_object(ravo)                                                                                      #     # サーバの起動     #     
     run()
