@@ -658,7 +658,8 @@ dataQ = [
     0x96,0x00,0x00, # Leading device number (000096=150)
     0xB0,           # Device code (ZR register =0xB0, D register =0xa8)
     0x07,0x00       # Device number ZR150 to ZR156
-]    
+] 
+   
 # mitsubishi Q Series
 def readQSeries(tcp_udp_connect_obj,dataQmsg):
     dataQmsg[7] = len(dataQmsg[9:]) & 0xFF
@@ -911,6 +912,143 @@ def readSiemensS7_1500(sock):
     
 def disconnectSiemensS7_1500(sock):    
     return sock.close()    
+
+# =================================== OMRON CJ FINS commands ==============================================================
+# https://github.com/OkitaSystemDesign/FinsCommand/blob/main/finsudp.py
+#
+# use of above omron FINS object class for UDP is wrapped in the functions below
+# further up i have included the protocol messages in a more raw manner over TCP
+
+# connects and returns connection handle
+#
+def omron_fins_connect(ip='192.168.250.1',plc_ad='0.1.0',pc_ad='0.10.0'):
+    import finsudp
+    finsudp = fins(ip, plc_ad, pc_ad) # ip addr plc addr pc addr
+    return finsudp
+    
+# read E0_30000 10 bytes default 
+def read_fins_data_reg(finsudp, reg='E0_30000', byt=10):
+    data = finsudp.read(reg, byt)
+    return data    
+
+# write data1 to E0_0 by default 
+def write_fins_data_reg(finsudp, reg='E0_0', data1):    
+    rcv = finsudp.write(reg, data1)
+    return rcv
+    
+# D110 10 bytes (D110-119)
+def fill_fins_data_reg(finsudp, reg='D110', byts=10, data1=55):   
+    rcv = finsudp.fill(reg, byts, data1)
+    return rcv
+    
+# set mode (0x02=Monitor 0x04=Run)
+def set_plc_mode(finsudp, mod=0x04):
+    rcv = finsudp.run(mod)
+    return rcv
+
+# stop the plc
+def set_plc_stop(finsudp):
+    rcv = finsudp.stop()
+    return rcv
+
+def read_unit_data(finsudp):
+    rcv = finsudp.ReadUnitData()
+    return rcv
+
+def read_unit_status(finsudp):
+    rcv = finsudp.ReadUnitStatus()
+    return rcv
+
+def read_cycle_tm(finsudp):
+    rcv = finsudp.ReadCycletime()
+    return rcv
+
+# read PLC clock
+def read_plc_clock(finsudp):
+    rcv = finsudp.Clock()
+    return rcv
+
+# set the plc clock to my current time
+def set_plc_clock_mytime(finsudp):
+    rcv = finsudp.SetClock(datetime.now())
+    return rcv
+    
+# clear the plc error
+def clear_plc_error(finsudp):
+    rcv = finsudp.ErrorClear()
+    return rcv
+
+# read error log
+def read_plc_errorlog(finsudp):
+    rcv = finsudp.ErrorLogRead()
+    return rcv
+
+# clear error log data
+def clear_plc_errorlog(finsudp):
+    rcv = finsudp.ErrorLogClear()
+    return rcv
+
+def send_command(finsudp):
+    cmd = bytearray([0x05,0x01])
+    rcv = finsudp.SendCommand(cmd)    
+    return rcv
+
+# display data as bits
+def display_bit_data(finsudp, reg='W0', num=2, opt=2):
+    data = finsudp.read(reg, num)
+    if (opt == 0):
+        print(finsudp.toBin(data))                # out> 100010000000000010010
+    elif (opt == 1):
+        print(finsudp.WordToBin(data))            # out> 00000000000100010000000000010010
+    elif (opt == 2):
+        print(list(finsudp.WordToBin(data)))      # out> ['0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '1', '0', '0', '0', '1', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '1', '0', '0', '1', '0']
+    else:
+        print("valid options are :- 0=bit 1=word_in_bits 2=word_list")
+
+# D1001 as INT
+def display_INT_data(finsudp, reg='D1001'):
+    data = finsudp.read(reg, 1)
+    print(finsudp.toInt16(data))                #out> [2229]
+
+# D1002 as DINT
+def display_DINT_data(finsudp, reg='D1002'):
+    data = finsudp.read(reg, 2)
+    print(finsudp.toInt32(data))                # out> [-99694]
+
+# D1002 as LINT
+def display_LINT_data(finsudp, reg='D1002'):
+    data = finsudp.read(reg, 4)
+    print(finsudp.toInt64(data))                # out> [-19999999694]
+
+# D1001 as UINT
+def display_UINT_data(finsudp, reg='D1001'):
+    data = finsudp.read(reg, 1)
+    print(finsudp.toUInt16(data))                #out> [2229]
+
+# D1002 as UDINT
+def display_UDINT_data(finsudp, reg='D1002'):
+    data = finsudp.read(reg, 2)
+    print(finsudp.toUInt32(data))                # out> [100217]
+
+# D1002 as ULINT
+def display_ULINT_data(finsudp, reg='D1002'):
+    data = finsudp.read(reg, 4)
+    print(finsudp.toUInt64(data))                # out> [2000000149]
+
+# D1015 as FLOAT
+def display_FLOAT_data(finsudp, reg='D1015'):
+    data = finsudp.read(reg, 2)
+    print(finsudp.toFloat(data))                # out> [229.90484619140625]
+
+# D1017 as DOUBLE
+def display_DOUBLE_data(finsudp, reg='D1017'):
+    data = finsudp.read(reg, 4)
+    print(finsudp.toDouble(data))                # out> [230.89999999999117]
+
+# D1021-D1025 as STRING
+def display_STRING_data(finsudp, reg='D1021', n=5):
+    data = finsudp.read(reg, n)
+    print(finsudp.toString(data))                # out> ABCD2
     
 # ==========================================allen bradley==================================================================
 # ---- AB ------ controlLogix
