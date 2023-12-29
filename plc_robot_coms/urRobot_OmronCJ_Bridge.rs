@@ -91,9 +91,9 @@ fn main() {
         if v > 0 {
             //View Response and set the addresses from the reply
             println!("response:{}",recv_response);
-			let data1 = String::from(format!("{}",recv_response)).into_bytes();
-	        let plc_node = data1[19];                 
-	        let pc_node = data1[23];                                  
+	    let data1 = String::from(format!("{}",recv_response)).into_bytes();
+	    let plc_node = data1[19];                 
+	    let pc_node = data1[23];                                  
         }
     }
 	
@@ -168,18 +168,18 @@ fn main() {
             }
             Ok(stream) => {
                println!("Connection Ok.");
-			   stream.set_nonblocking(false).expect("out of service");
+	       stream.set_nonblocking(false).expect("out of service");
                let mut reader = BufReader::new(&stream);
                let mut writer = BufWriter::new(&stream);
 			   
-			   // send the chosen x y values from the PLC to the robot
-			   let x_coord = x3 / 10.0;
-			   let y_coord = x4 / 10.0;
-			   let msg = format!("track_conveyor_circular(p[{},{},0,0,0,0],500.0, false) \n", x_coord, y_coord);
+	       // send the chosen x y values from the PLC to the robot
+	       let x_coord = x3 / 10.0;
+	       let y_coord = x4 / 10.0;
+	       let msg = format!("track_conveyor_circular(p[{},{},0,0,0,0],500.0, false) \n", x_coord, y_coord);
                ur_write_something(&mut writer, msg);
 			   
-			   // get the pose from the robot and print it.
-			   let msg_pos = "get_actual_tcp_pose() \n";
+		// get the pose from the robot and print it.
+	       let msg_pos = "get_actual_tcp_pose() \n";
                ur_write_something(&mut writer, msg_pos);
                ur_read_something(&mut reader);
           }
