@@ -104,7 +104,7 @@ channelID = 100
 writeKey = 'writeKey'
         
 # ------------ here list the choices and options for iOt or monitoring -----------------      
-TELEM_CHOICES=[ "soracom", "beebotte", "mosquito", "ubidots", "machinist", "aws", "azure", "yandex", "twillio", "smtp_email", "ssl_tls_server", "ssl_23_server", "cloud_mqtt", "gcs_blob", "splunk", "gcs_spread", "ambient", "influxdb", "redis", "mongo", "mysql", "sybase", "oracle", "sqllite", "pg", "fluvio", "scyllia", "rocks". "ali"  ]
+TELEM_CHOICES=[ "soracom", "beebotte", "mosquito", "ubidots", "machinist", "aws", "azure", "yandex", "twillio", "smtp_email", "ssl_tls_server", "ssl_23_server", "cloud_mqtt", "gcs_blob", "splunk", "gcs_spread", "ambient", "influxdb", "redis", "mongo", "mysql", "sybase", "oracle", "sqllite", "pg", "fluvio", "scyllia", "rocks". "ali", "taiga"  ]
 SORACOM=0
 BEEBOTTE=1
 MOSQUITO=2
@@ -134,6 +134,7 @@ FLUVIO=25
 SCYLLIA=26
 ROCKS=27
 ALIBABA=28
+TAIGA=29
 # ============= make your choice of cloud service here from list above ================== 
 MY_CURRENT_TELEM=TELEM_CHOICES[SORACOM]
 
@@ -1325,18 +1326,113 @@ def Enocean2Telemetry(s_port, telem_opt):
         request.set_accept_format('json')  # The format in which the response is returned. By default, the XML format is used. In this example, the JSON format is used.
         request.set_IotInstanceId('iotInstanceId') 
         request.set_ProductKey('productKey')
-        request.set_TopicFullName('/productKey/deviceName/get')             # The full name of the topic that is used to publish the message.
+        request.set_TopicFullName('/productKey/deviceName/get')  # The full name of the topic that is used to publish the message.
         t=datetime.datetime.now(pytz.timezone(MY_TZ))
         d="{ "+d1+" : "+str(t1)+" , "+d2+" : "+str(t2)+" , time : "+str(t)+" }"
         try:
             b64msg2iot = base64.urlsafe_b64encode(d.encode())
         except binascii.Error as e:
             b64msg2iot = base64.urlsafe_b64encode("error in encoding... ".encode())        
-            print("error with base64 encoding : ",e)			
-        request.set_MessageContent(b64msg2iot)                                # Base64 String
+            print("error with base64 encoding",e)			
+        request.set_MessageContent(b64msg2iot)  # Base64 String
         request.set_Qos(0)
         result = clt.do_action_with_exception(request)
         print('result : ' + result)
+
+    # taiga kanban board
+    TAIGA_USER="my_tiger"
+    TAIGA_PW="tim"
+    x1 = 12.5          # temperature trigger below this will enter the job on the board unassigned
+	
+    # Send to Taiga Kanban to project 1 user story 17 if temperature is below the specified low limits
+    #
+    def sendDataTaigaKanban(descrip1, temp_data1, descrip2, temp_data2):
+	
+        if (temp_data1 < x1) and (temp_data2 < x1):
+            descrip_temp = descrip1 + " " + descrip2
+            temp_val = (float(temp_data1) + float(temp_data2))/2.0
+        elif (temp_data1 < x1):
+            descrip_temp = descrip1
+            temp_val = float(temp_data2) 
+        elif (temp_data2 < x1):
+            descrip_temp = descrip2
+            temp_val = float(temp_data2)
+        else:
+            return	
+
+        # get the authorization then create the task for it			
+        #msg = json.loads(payload_json)
+        #msg_str = json.dumps(msg)
+        msg_str = temp_data1
+        timestamp = datetime.datetime.now(pytz.timezone(MY_TZ)).timestamp()  # set the timezone as you wish for your location
+        event_ts=round(timestamp)
+	
+        data = {
+            'username': TAIGA_USER,
+            'password': TAIGA_PW,
+        }
+		
+        headers = {
+            "Content-Type": "application/json",
+            "User-Agent": "Python3"
+        }
+ 
+        senddatajson = json.dumps(data).encode("ascii")
+        try:
+            req = requests.post("https://localhost:8000/api/v1/auth", data=senddatajson, headers=headers)
+            req.raise_for_status()
+        except requests.exceptions.HTTPError as errh:
+            print ("Http Error:",errh)
+        except requests.exceptions.ConnectionError as errc:
+            print ("Error Connecting:",errc)
+        except requests.exceptions.Timeout as errt:
+            print ("Timeout Error:",errt)
+        except requests.exceptions.RequestException as err:
+            print ("OOps: Something Else",err)
+
+        # create task in existing kanban board project 1/17 - you could auto assign it to someone here if you wanted to   
+        taiga_auth_token=req['auth_token']
+        alert_msg="please alert clearance of runway"
+        data = {
+            "assigned_to": 'null',
+            "blocked_note": "blocking reason",
+            "description": f"Temperature value {temp_val} DegC @ {event_ts} - {alert_msg}",
+            "external_reference": 'null',
+            "is_blocked": 'false',
+            "is_closed": 'true',
+            "is_iocaine": 'false',
+            "milestone": 'null',
+            "project": 1,
+            "status": 1,
+            "subject": f"Temp Low for enOcean sensor {descrip_temp}",
+            "tags": [
+                "service catalog",
+                "customer"
+            ],
+            "taskboard_order": 1,
+            "us_order": 1,
+            "user_story": 17,
+            "watchers": []
+        }
+		
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {taiga_auth_token}",
+            "User-Agent": "Python3"
+        }
+ 
+        senddatajson = json.dumps(data).encode("ascii")
+        try:
+            req = requests.post("http://localhost:8000/api/v1/tasks", data=senddatajson, headers=headers)
+            req.raise_for_status()
+        except requests.exceptions.HTTPError as errh:
+            print ("Http Error:",errh)
+        except requests.exceptions.ConnectionError as errc:
+            print ("Error Connecting:",errc)
+        except requests.exceptions.Timeout as errt:
+            print ("Timeout Error:",errt)
+        except requests.exceptions.RequestException as err:
+            print ("OOps: Something Else",err)
         
     # Choose the iOt you want to use according to the define in top section        
     if telem_opt == "soracom":
@@ -1461,6 +1557,8 @@ def Enocean2Telemetry(s_port, telem_opt):
     elif telem_opt == "pg":
         initPostGr()
         sendData=putValuePostGr        
+    elif telem_opt == "taiga":                               # enter a job card on the taiga kanban
+        sendData=sendDataTaigaKanban    
     else:                                                    # we asume its for mosquito broker internally running on host e.g. raspberry pi 4
         client = mqtt.Client()
         client.on_connect = on_connect
