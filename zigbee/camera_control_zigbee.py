@@ -13,7 +13,8 @@ import sys
 
 CHUNK_SZ=1024                               # default chunk size will warn and change if network does not support
 HOME_ROOT='/usr/mark/zigbeecam'
-CAM_PIC_FILE=‘sony_camera.ARW’
+CAM_PIC_FILE=‘sony_camera.ARW’              # default name if the cxmera allows it to be set otherwise it reads what appears
+CAM_PHOTO_APP="sony_take_picture"           # name of application that is taking a photo
 
 # PL (transmission power level)] <XBee3><S2C><S2>
 # Set or view the power level at which the device transmits conducted power.
@@ -161,7 +162,7 @@ def set_api_options_encrypt(api=0, ao=0, ro=0xFF, to=5):
 # further reducing the maximum payload size.
 # (Note: NP returns a hexadecimal value. For example, if NP returns 0x54, this corresponds to 84 bytes
 def get_max_packet_sz():
-    return int(xbee.atcmd('NP'))   
+    return int(xbee.atcmd('NP'),16)   
 
 # (10) FS INFO
 #　Reports on the size of the file system,
@@ -196,35 +197,62 @@ def take_pictures_and_chunk():
     # change dir to the home
     os.chdir(HOME_ROOT)
 
-    # take a picture and create ARW file
+    # remove any old ARW raw image files before we create a new one
+    #
+    dir_1=os.listdir()
+    for fil in dir_1:
+        if not fil.find(".ARW") == -1:
+            os.remove(fil) 
+    
+    # take a picture and create a new ARW file for that image
     # example here i will call a picture take on the sony alpha
-    CMD = "/home/mark/sony/sony_take_picture"
+    CMD = HOME_ROOT + CAM_PHOTO_APP
     proc = subprocess.run(CMD, shell=True, stdout=PIPE, stderr=PIPE)
     print(proc.stdout)
-    
-    # check handshake value
-    # if reading ... wait
-    loop = 1
-    while (loop == 1):
-        file_names = os.listdir(‘status/’) 
-        if not read_status.find("reading") == -1:
-            loop = 0
-        time.sleep_us(100)
-    
-    # if ready
-    # set handshake value to writing
-    output="writing"
-    with open(‘writing.txt’, ‘w’) as f: 
-        f.write(output)
 
-    # take the sony camera ARW image and split it into manageable packets to transmit of the radio
-    with open(CAM_PIC_FILE, ‘rb’) as f:
-        for i, piece in enumerate(chunk.read(f, CHUNK_SZ)):
-            with open(‘chunks/out.{}’. format(i), ‘wb’) as inner:
-                inner.write(piece)
+    # get the current name of the picture file
+    #
+    dir_2=os.listdir()
+    for fil in dir_2:
+        if not fil.find(".ARW") == -1:
+            CAM_PIC_FILE=fil
+            
+    # ensure we have enough free space to chunk
+    #
+    free_space = get_local_free_space()
+    needed_space = get_file_size(CAM_PIC_FILE)*1.5
+    if (round(needed_space) >= int(free_space)):
+        print("\033[31m NOT ENOUGH SPACE ON DISK only has {}: needs at least {} \033[0m".format(free_space, round(needed_space)))
+    else:        
+        # check handshake value
+        # if reading ... wait
+        loop = 1
+        while (loop == 1):
+            file_names = os.listdir(‘status/’) 
+            if not file_names.find("reading") == -1:
+                loop = 0
+            time.sleep_us(100)
 
-    # set handshake to ready
-    os.remove(‘status/writing.txt’) 
+        # if ready
+        # set handshake value to writing
+        output="writing"
+        with open(‘status/writing.txt’, ‘w’) as f: 
+            f.write(output)
+
+        # remove any previous chunk files (out.num) first
+        dir_3=os.listdir('chunks/')
+        for fil in dir_3:
+            if not fil.find("out.") == -1:
+                os.remove(fil)   
+                
+        # take the sony camera ARW image and split it into manageable packets to transmit of the radio
+        with open(CAM_PIC_FILE, ‘rb’) as f:
+            for i, piece in enumerate(chunk.read(f, CHUNK_SZ)):
+                with open(‘chunks/out.{}’. format(i), ‘wb’) as inner:
+                    inner.write(piece)
+
+        # set handshake to ready
+        os.remove(‘status/writing.txt’)     
 
 # Display PAN ID, extended PAN ID, and channel number when connected
 #
@@ -272,11 +300,16 @@ file_names = os.listdir(‘status/’)
 if not read_status.find("writing") == -1:       # just in case this process terminated abnormally look for a left lock file
     os.remove(‘status/writing.txt’)             # clear the locked handshake
     time.sleep_us(int(DELTA_TM/1.5))            # sleep sometime to allow clear up from remote end
+    
 fsp = get_local_free_space()                    # ensure there is enough disk space to chunk it for sending
-fsz = get_file_size(CAM_PIC_FILE)
+try:
+    fsz = get_file_size(CAM_PIC_FILE)
+except:
+    fsz = CHUNK_SZ*1024*5                       # set this to a value that indicates free space on drive
 if (fsp <= fsz):
     print("\033[31m filesize {}: exceeds free {} \n ---- aborted ---- \033[0m".format(fsz, fsp))
     sys.exit(-2)    
+    
 take_pictures_and_chunk()
 start = time.ticks_ms()                         # Get value from millisecond counter
 time.sleep_us(int(DELTA_TM/1.2))                # wait a reasonable time
