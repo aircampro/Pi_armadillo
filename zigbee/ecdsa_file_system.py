@@ -29,7 +29,7 @@ def set_ecdsa_key():
     print("generated secret key = "+secret_key)
     public_key = secret_key.verifying_key
     print("generated public key = "+public_key)
-	pk=int(public_key.to_string().hex(), 16)                            # convert it to a hexidecimal string
+    pk=int(public_key.to_string().hex(), 16)                            # convert it to a hexidecimal string
     ecdsa_settings = {"aFK": 0, "aaFK": pk}                             # clear the key then set it to the one we generated
     ll=0
     for command, value in ecdsa_settings.items():
