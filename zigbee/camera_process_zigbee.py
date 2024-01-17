@@ -13,6 +13,7 @@ import time
 # 'sha384', 'md5-sha1', 'sha3_384', 'mdc2', 'ripemd160', 'sha256', 'sha224', 'shake_128', 'sha3_224', 
 # 'sha1', 'shake_256', 'blake2b512'}
 import hashlib
+import sys
 
 HOME_ROOT='/usr/mark/zigbeecam'
 NUM_RETRY=3
@@ -186,7 +187,7 @@ def set_api_options_encrypt(api=0, ao=0, ro=0xFF, to=5):
 # further reducing the maximum payload size.
 # (Note: NP returns a hexadecimal value. For example, if NP returns 0x54, this corresponds to 84 bytes
 def get_max_packet_sz():
-    return int(xbee.atcmd('NP'))   
+    return int(xbee.atcmd('NP'),16)   
 
 # (10) FS INFO
 #　Reports on the size of the file system,
@@ -249,13 +250,14 @@ def calc_local_sha256(file_num):
 # get the picture file in chunks from the camera controller
 #
 def get_picture_file():
-    # change dir to the home
+    # change local and remote dir to the home one
     os.chdir(HOME_ROOT)
- 
+    xbee.atcmd('FS CD '+HOME_ROOT)
+    
     # wait if we are writing on the picture taking robot / drone
     loop = 1
     while (loop == 1):
-        read_status=xbee.atcmd(FS LS status/)
+        read_status=xbee.atcmd('FS LS status/')
         if not read_status.find("writing") == -1:
             loop = 0
         time.sleep_us(100)
@@ -266,16 +268,19 @@ def get_picture_file():
         set_led_high()
     with open(‘reading.txt’, ‘w’) as f: 
         f.write(output)
-    xbee.atcmd('FS CD status/')
+    xbee.atcmd('FS CD status')
     xbee.atcmd('FS PUT reading.txt')
    
     # change directory and list the files in it.
-    xbee.atcmd('FS CD chunks/')
-    file_list=xbee.atcmd('FS LS chunks/')
+    xbee.atcmd('FS CD ../chunks')
+    file_list=xbee.atcmd('FS LS')
     digits=r"\d+"
     file_ext=re.findall(digits, file_list))
 
     #does GET on each file out.<list> strip the extension to clean the output from the DIR
+    # make the output folder if not existing
+    if !os.path.exists('chunks/'):
+        os.mkdir('chunks/')
     os.chdir('chunks/')
     fail_get=0                  # set flag to 1 if we get a file with wrong sha retry number of times
     file_ok=-2                  # indicate the file has correcr checksum
@@ -283,20 +288,26 @@ def get_picture_file():
         # FS GET filename and verify the SHA256 checksum
         retry=NUM_RETRY
         while ( retry > 0 ) and (fail_get == 0):
-            xbee.atcmd('FS GET out.'+fnum)
-            # check SHA-256 of the file
-            remote_sha256=xbee.atcmd('FS HASH out.'+fnum)
-            time.sleep_us(10)
-            local_sha256=calc_local_sha256(fnum)
-            if (remote_sha256 == local_sha256):
-                retry = file_ok
+            free_sp = get_local_free_space()                                   # check we got enough space to upload the file
+            if not (free_sp >= (int(BLOCK_SZ,16)*3)):                          # ensure chunk file size plus 1 block
+                print("\033[31m NO SPACE ON DISK got {} need {} \033[0m".format(free_sp,(int(BLOCK_SZ,16)*3)))
             else:
-                retry = retry - 1
-                time.sleep_us(100)
+                xbee.atcmd('FS GET out.'+fnum)
+                # check SHA-256 of the file
+                remote_sha256=xbee.atcmd('FS HASH out.'+fnum)
+                time.sleep_us(10)
+                local_sha256=calc_local_sha256(fnum)
+                if (remote_sha256 == local_sha256):
+                    retry = file_ok
+                else:
+                    retry = retry - 1
+                    time.sleep_us(100)
         if (retry != file_ok):
             fail_get=1                              # set fail if we re-tryed enough on one file
    
     # remove the lock file to say we are no longer reading - if you dont to loose data then dont do this alarm and move and try again
+    #
+    xbee.atcmd('FS CD ../status')
     xbee.atcmd('FS RM reading.txt')
     if (REMOTE_LED_ACTIVE == 1):
         set_led_low()
@@ -325,6 +336,14 @@ def get_pan_id():
     print("Operating network parameters:")
     for cmd in operating_network:
         print("{}: {}".format(cmd, xbee.atcmd(cmd)))
+
+# check we have enough space to get the files
+#
+fsp = get_local_free_space()                    # ensure there is enough disk space to chunk it for sending
+fsz = 1024*1024*6                               # set this to a value that indicates free space on drive
+if (fsp <= fsz):
+    print("\033[31m filesize {}: exceeds free {} \n ---- aborted ---- \033[0m".format(fsz, fsp))
+    sys.exit(-2)  
     
 # set up zigbee
 #
@@ -333,7 +352,7 @@ set_comms_params()
 # form network (SM must be set to 0 to set CE to 1): coordinator setting
 # set BT : 1 if you want to enable bluetooth
 # FK = 0 clear public key
-network_settings = {"SM": 0, "CE": 1, "ID": 0x777, "EE": 0, "NJ": 0xFF, "BT": 0, "FK":0}
+network_settings = {"SM": 0, "CE": 1, "ID": 0x777, "EE": 0, "NJ": 0xFF, "BT": 0, "FK": 0}
 for command, value in network_settings.items():
     xbee.atcmd(command, value)
 xbee.atcmd("AC")                                 # write changes
@@ -351,10 +370,10 @@ while True:
 print('\n \033[33m ==============Joined================= \033[0m')
 
 get_pan_id() # print network info
-
+    
 # check packet size of network and adjust sha256 block size
 act_pkt_sz = get_max_packet_sz()
-if ( int(BLOCK_SZ) > act_pkt_sz ):
+if ( int(BLOCK_SZ, 16) > act_pkt_sz ):
     print("\033[31m max packet size read is {}: you need at least {} \033[0m".format(act_pkt_sz, BLOCK_SZ))
     BLOCK_SZ=hex(act_pkt_sz/2)                  # set the block size half the maximum tx packet size
     
