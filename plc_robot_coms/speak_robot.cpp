@@ -177,10 +177,10 @@ void naoMoveHead(const std::string& robotIp, AL::ALValue move_time, double rando
    int pose_id = 0;   
    for (auto& item: activeFunctions)                                       // select the joint acording to the activeFuncrions map and random number passed 
    {
-	   if (item.first < random_selection) {
+	if (item.first < random_selection) {
            jointName = item.second;                                       // select the joint from the random number generated
-		   break;
-       } else { pose_id++; }	   		
+	   break;
+        } else { pose_id++; }	   		
    }
    if (pose_id < activePoseAngles.size() ) {                              // select the pose for that random number passed
        std::tie(target_angle_x, target_angle_y, target_angle_z) = activePoseAngles[pose_id]; 
