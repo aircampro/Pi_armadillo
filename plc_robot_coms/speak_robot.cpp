@@ -46,6 +46,7 @@
 //make gpt3_client 
 //./gpt3_client 10.249.229.225
 
+// for the GPT3 client requests
 #include <boost/asio.hpp>
 #include <boost/beast.hpp>
 #include <boost/beast/ssl.hpp>
@@ -63,15 +64,28 @@
 #include <openssl/ssl.h>
 #include <fstream>
 
+// for the aldebaran proxy to the robot
 #include <alerror/alerror.h>
 #include <alproxies/altexttospeechproxy.h>
 #include <alproxies/almotionproxy.h>
+
+// for the random number generator used to give random pose
+#include <boost/random.hpp>
+#include <boost/nondet_random.hpp> //for random_device
+#include <boost/random/triangle_distribution.hpp>
+#include <boost/random/mersenne_twister.hpp>
+#include <map>
+#include <vector>
+#include <tuple>
 
 namespace asio = boost::asio;
 namespace beast = boost::beast;
 namespace http = beast::http;
 namespace ssl = boost::asio::ssl;
 using json = nlohmann::json;
+
+// default listening port for NAOqi to listen
+#define NAOqi_PORT 9559
 
 // Read OpenAI APIKey
 std::string readApiKey() {
@@ -106,9 +120,9 @@ std::string create_request_message(std::string msg2gpt) {
     return jsonBody.dump();
 }
 
-// function to say something on aldebaran pepper robot
+// function to say something on aldebaran nao/pepper robot
 //
-void pepperSayText(const std::string& robotIp, const std::string& phraseToSay)
+void naoSayText(const std::string& robotIp, const std::string& phraseToSay)
 {;
   try
   {
@@ -117,7 +131,7 @@ void pepperSayText(const std::string& robotIp, const std::string& phraseToSay)
     *  - IP of the robot
     *  - port on which NAOqi is listening. Default is 9559
     */
-    AL::ALTextToSpeechProxy tts(robotIp, 9559);
+    AL::ALTextToSpeechProxy tts(robotIp, NAOqi_PORT);
 
     /** Call the say method */
     tts.say(phraseToSay);
@@ -129,20 +143,63 @@ void pepperSayText(const std::string& robotIp, const std::string& phraseToSay)
   }
 }
 
-// Move pepper head, we use here a specialized proxy to ALMotion
+// Move NAO / pepper head, we use here a specialized proxy to ALMotion
 //
-void pepperMoveHead(const std::string& robotIp, AL::ALValue move_time)
+void naoMoveHead(const std::string& robotIp, AL::ALValue move_time, double random_selection)
 {
-  /** The name of the joint to be moved. */
-  const AL::ALValue jointName = "HeadYaw";
+   // create a map containing the joint names and pose selection you want the robot to have in memory first_param=random number value for selection
+   std::map<double, std::string> activeFunctions;	
+   activeFunctions.insert(std::make_pair(3.5, "HeadYaw"));              // first joint and movement sequence can be defined here
+   activeFunctions.insert(std::make_pair(5.0, "HeadPitch"));            // second joint and movement sequence can be defined here
+   activeFunctions.insert(std::make_pair(5.5, "HeadYaw"));              // third joint and movement sequence can be defined here
+   activeFunctions.insert(std::make_pair(5.6, "HeadPitch"));            // fourth joint and movement sequence can be defined here
+                                 
+   std::vector<std::tuple<float, float, float>> activePoseAngles;
+   activePoseAngles.push_back(std::make_tuple(-1.5f, 1.5f, 0.4f));           // first z,y,z pose angles
+   activePoseAngles.push_back(std::make_tuple(-1.2f, 1.7f, 0.4f));
+   activePoseAngles.push_back(std::make_tuple(-1.4f, 1.6f, 0.4f));
+   activePoseAngles.push_back(std::make_tuple(1.5f, -1.6f, 0.9f));           // fourth z,y,z pose angles
 
-  try {
+   std::vector<std::tuple<float, float, float>> activeTargetTimes;
+   activeTargetTimes.push_back(std::make_tuple(2.0f, 6.4f, 9.7f));           // first target times
+   activeTargetTimes.push_back(std::make_tuple(2.0f, 6.4f, 9.7f));
+   activeTargetTimes.push_back(std::make_tuple(2.0f, 7.4f, 6.7f));
+   activeTargetTimes.push_back(std::make_tuple(9.0f, 4.7f, 1.7f));           // fourth target times 
+   
+  /** Default name of the joint to be moved. angles and target times of motion */
+   AL::ALValue jointName = "HeadYaw";  
+   float target_angle_x = -1.5f;                                            // target angles
+   float target_angle_y = 1.5f;
+   float target_angle_z = 0.4f; 
+   float tt1 = 2.0f;                                                        // target times
+   float tt2 = 6.4f;
+   float tt3 = 9.7f; 
+   int pose_id = 0;   
+   for (auto& item: activeFunctions)                                       // select the joint acording to the activeFuncrions map and random number passed 
+   {
+	   if (item.first < random_selection) {
+           jointName = item.second;                                       // select the joint from the random number generated
+		   break;
+       } else { pose_id++; }	   		
+   }
+   if (pose_id < activePoseAngles.size() ) {                              // select the pose for that random number passed
+       std::tie(target_angle_x, target_angle_y, target_angle_z) = activePoseAngles[pose_id]; 
+   }
+   // if you want to bias the second table by the random number for further variations uncomment below
+   // int ii = static_cast<int>(random_selection); 
+   // int ii = static_cast<int>(r());                 <--- might even be better to use another random generated  
+   // pose_id = (pose_id + ii) % activeTargetTimes.size();
+   if (pose_id < activeTargetTimes.size() ) {                            // select the target times for the action relating to random number passed
+       std::tie(tt1, tt2, tt3) = activeTargetTimes[pose_id]; 
+   }
+   
+   try {
     /** Create a ALMotionProxy to call the methods to move NAO's head.
     * Arguments for the constructor are:
     * - IP adress of the robot
     * - port on which NAOqi is listening, by default 9559
     */
-    AL::ALMotionProxy motion(robotIp, 9559);
+    AL::ALMotionProxy motion(robotIp, NAOqi_PORT);
 
     /** Make sure the head is stiff to be able to move it.
     * To do so, make the stiffness go to the maximum in one second.
@@ -155,9 +212,9 @@ void pepperMoveHead(const std::string& robotIp, AL::ALValue move_time)
     motion.stiffnessInterpolation(jointName, stiffness, time);
 
     /** Set the target angle list, in radians. */
-    AL::ALValue targetAngles = AL::ALValue::array(-1.5f, 1.5f, 0.4f);
+    AL::ALValue targetAngles = AL::ALValue::array(target_angle_x, target_angle_y, target_angle_z);
     /** Set the corresponding time lists, in seconds. */
-    AL::ALValue targetTimes = AL::ALValue::array(2.0f, 6.4f, 9.7f);
+    AL::ALValue targetTimes = AL::ALValue::array(tt1, tt2, tt3);
     /** Specify that the desired angles are absolute. */
     bool isAbsolute = true;
 
@@ -191,6 +248,49 @@ int main(int argc, char* argv[]) {
 	// read the aldebaran pepper robot ip from the first argument
 	const std::string robotIp(argv[1]);  
     std::string your_message = argv[2];
+
+    // create a random number generator with boost to give the robot a random pose each time it speaks
+	
+    // create the seed
+    boost::random_device myseed;
+
+    // generate the random  using the marsenne twister algo
+    boost::mt19937 gen(static_cast<unsigned>(myseed());
+
+    // you can change for example to kreutzer
+	// include <boost/random/shuffle_order.hpp>
+    // boost::kreutzer1986 gen(static_cast<unsigned>(myseed());
+
+    // you can change for example to ecuyer1988
+    // include // In header: <boost/random/additive_combine.hpp>
+    // boost::ecuyer1988 gen(static_cast<unsigned>(myseed());
+
+    // you can change for example to taus88
+    // include // In header: <boost/random/taus88.hpp>
+    // boost::taus88 gen(static_cast<unsigned>(myseed());
+	
+    // Use Triangular distribution of minimum value a, center value b, and maximum value c e.g. dst(a, b, c);
+    boost::triangle_distribution<> dst(0.0f, 2.0f, 6.0f);
+
+    // alternative for example random normal distribution
+    // include // In header: #include <boost/random/normal_distribution.hpp>
+	// typedef boost::random::normal_distribution<double> MyDistribution;
+	// double mean = 3.0;
+	// double sigma = 1.1;
+    // MyDistribution dst(mean, sigma);
+
+    // we choose marsenne twister with triangle_distribution
+    boost::variate_generator<boost::mt19937, boost::triangle_distribution<> > r(gen, dst);
+	
+	// alternative example im using taus88 with normal distribution
+    // boost::variate_generator<boost::taus88, boost::normal_distribution<> > r(gen, dst);
+	
+    // now just select the nth generated number as our out pose - (if you iterated the code in sequences you would call r()/this in the while loop)
+    int n=5;
+    double random_pose = 0.0;
+    for (int i = 0; i < n; i++) {
+		random_pose = r();
+    }		
 	
     try {
         // OpenAI APIKey
@@ -268,17 +368,17 @@ int main(int argc, char* argv[]) {
                         // Chat-GPT reply
                         std::cout << "Response of Chat-GPT: " << data["choices"][0]["message"]["content"] << std::endl;
 						// say the result on the pepper robot and make a movement of its head
-						pepperSayText(robotIp, data["choices"][0]["message"]["content"]);
-						pepperMoveHead(robotIp, move_time);
+						naoSayText(robotIp, data["choices"][0]["message"]["content"]);						
+						naoMoveHead(robotIp, move_time, random_pose);
                     } catch (const json::exception& e) {
                         std::cerr << "Failed to parse JSON: " << e.what() << std::endl;
-				        pepperSayText(robotIp, e.what());						
+				        naoSayText(robotIp, e.what());						
                     }
 
                 } else {
                     // error response
                     std::cerr << "Error: " << ec.message() << std::endl;
-				    pepperSayText(robotIp, ec.message());
+				    naoSayText(robotIp, ec.message());
                 }
             });
 
