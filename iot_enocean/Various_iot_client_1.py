@@ -14,97 +14,13 @@ import time
 from sys import exit
 from datetime import datetime
 
-# enocean
-PORT = '/dev/ttyUSB400J'              # The name of the device/port to which the USB400J is connected
-SENSORID1 = '04:01:53:e1'             # ID of the 1st STM-431J
-SENSORID2 = '04:00:6f:e5'             # ID of the 2nd STM-431J
-s_port = 0                            # serial port number handle
-BAUD_RT = 57600                       # serial baud rate
-
-# soracom
-URL = 'http://harvest.soracom.io/'    # SORACOM HarvestのURL
-
-# mosquito
-MTOPIC = "topic/B/"
-MQTT_PORT = 1883
-KEEP_ALIVE = 60
-
-# beebotte
-TOKEN = "[BeebotteTKName]"
-HOSTNAME = "mqtt.beebotte.com"
-BPORT = 8883
-BTOPIC = "MyEnOceanSensors/temperature"                    # beebotte channel/resource
-CACERT = "mqtt.beebotte.com.pem"
-
-# ubidots
-# pip install ubidots==1.6.6
-# sudo apt-get install python-setuptools
-UBI_URL=https://industrial.api.ubidots.com/api/v1.6
-
-# machinist
-MAPIKEY = "xxxxxx"
-MUrl = "https://gw.machinist.iij.jp/endpoint"
-
-# aws
-AWS_TOPIC_NAME = "my/temperatures"
-AWS_CLIENT="iot-data"
-
-# azure
-AZURE_TYPE = "connection_string"          # choose connection_string or provisioning_host
-AZURE_CONN_STR="yourConnectionString"
-# ensure environment variables are set for your device and IoT Central application credentials
-PROVISIONING_HOST = "your host"
-ID_SCOPE = "your_scope"
-DEVICE_ID = "your_device"
-DEVICE_KEY = "your_key"
-provisioning_host = PROVISIONING_HOST
-id_scope = ID_SCOPE
-registration_id = DEVICE_ID
-symmetric_key = DEVICE_KEY
-
-# yandex
-YPORT=8443
-YHOST="rc1c-xxxx123456.mdb.yandexcloud.net"
-YCERTNAME="your_cert_name"	
-YUrl=r'https://api.iot.yandex.net/v1.0/devices/actions'	
-YAPI_KEY="xxxxxx"
-
 # time please set your timezone here
 import datetime
 import pytz
 MY_TZ='Europe/Moscow'
 
-# smtp
-SMTP_SERVER = "smtp.gmail.com"
-port = 587
-SMTP_NO_SSL=1 # 1 use above data without SSL otherwise use gmail and SSL
-
-# ssl server with tls_set
-SSLHOST, SSLPORT = "127.0.0.1", 12345
-# ssl23
-SSL_URL = '127.0.0.1'
-SSL_PORT = 10023
-
-# cloud MQTT
-CHOSTNAME = "driver.cloudmqtt.com"
-CPORT = 28607
-CTOPIC = "pi/sub2"                    
-CCACERT = "/etc/ssl/certs/ca-certificates.crt"
-
-#define a global MQTT Topic which will be set upon choices
-GTOPIC=" "
-
-# GCS Spreadsheet
-# set when you set-up sheet
-GSS_TEMP_KEY = os.environ['GSS_TEMP_KEY']
-
-# ambient
-#
-channelID = 100
-writeKey = 'writeKey'
-        
 # ------------ here list the choices and options for iOt or monitoring -----------------      
-TELEM_CHOICES=[ "soracom", "beebotte", "mosquito", "ubidots", "machinist", "aws", "azure", "yandex", "twillio", "smtp_email", "ssl_tls_server", "ssl_23_server", "cloud_mqtt", "gcs_blob", "splunk", "gcs_spread", "ambient", "influxdb", "redis", "mongo", "mysql", "sybase", "oracle", "sqllite", "pg", "fluvio", "scyllia", "rocks". "ali", "taiga"  ]
+TELEM_CHOICES=[ "soracom", "beebotte", "mosquito", "ubidots", "machinist", "aws", "azure", "yandex", "twillio", "smtp_email", "ssl_tls_server", "ssl_23_server", "cloud_mqtt", "gcs_blob", "splunk", "gcs_spread", "ambient", "influxdb", "redis", "mongo", "mysql", "sybase", "oracle", "sqllite", "pg", "fluvio", "scyllia", "rocks", "ali", "taiga", "msaccess", "riak", "elas", "neo4j"  ]
 SORACOM=0
 BEEBOTTE=1
 MOSQUITO=2
@@ -135,11 +51,33 @@ SCYLLIA=26
 ROCKS=27
 ALIBABA=28
 TAIGA=29
+MSACCESS=30
+RIAK=31
+ELAS=32
+NEO4J=33
+
 # ============= make your choice of cloud service here from list above ================== 
 MY_CURRENT_TELEM=TELEM_CHOICES[SORACOM]
 
-# if you want to use AES with SSLv23
-AES_ENCRYPT=0
+# enocean
+PORT = '/dev/ttyUSB400J'              # The name of the device/port to which the USB400J is connected
+SENSORID1 = '04:01:53:e1'             # ID of the 1st STM-431J
+SENSORID2 = '04:00:6f:e5'             # ID of the 2nd STM-431J
+s_port = 0                            # serial port number handle
+BAUD_RT = 57600                       # serial baud rate
+
+# soracom
+if MY_CURRENT_TELEM == "soracom":
+    URL = 'http://harvest.soracom.io/'    # SORACOM HarvestのURL
+
+# mosquito
+if MY_CURRENT_TELEM == "mosquito":
+    MTOPIC = "topic/B/"
+    MQTT_PORT = 1883
+    KEEP_ALIVE = 60
+
+#define a global MQTT Topic which will be set upon choices
+GTOPIC=" "
 
 # Broker processes when connected to
 def on_connect(client, userdata, flag, rc):
@@ -154,68 +92,193 @@ def on_disconnect(client, userdata, rc):
 # publish processes when publish done
 def on_publish(client, userdata, mid):
     print("publish Done")
+    
+# beebotte
+if MY_CURRENT_TELEM == "beebotte":
+    TOKEN = "[BeebotteTKName]"
+    HOSTNAME = "mqtt.beebotte.com"
+    BPORT = 8883
+    BTOPIC = "MyEnOceanSensors/temperature"                    # beebotte channel/resource
+    CACERT = "mqtt.beebotte.com.pem"
+
+# ubidots
+# pip install ubidots==1.6.6
+# sudo apt-get install python-setuptools
+if MY_CURRENT_TELEM == "ubidots":
+    UBI_URL=https://industrial.api.ubidots.com/api/v1.6
+
+# machinist
+if MY_CURRENT_TELEM == "machinist":
+    MAPIKEY = "xxxxxx"
+    MUrl = "https://gw.machinist.iij.jp/endpoint"
+
+# aws
+if MY_CURRENT_TELEM == "aws":
+    AWS_TOPIC_NAME = "my/temperatures"
+    AWS_CLIENT="iot-data"
+
+# azure
+if MY_CURRENT_TELEM == "azure":
+    AZURE_TYPE = "connection_string"          # choose connection_string or provisioning_host
+    AZURE_CONN_STR="yourConnectionString"
+    # ensure environment variables are set for your device and IoT Central application credentials
+    PROVISIONING_HOST = "your host"
+    ID_SCOPE = "your_scope"
+    DEVICE_ID = "your_device"
+    DEVICE_KEY = "your_key"
+    provisioning_host = PROVISIONING_HOST
+    id_scope = ID_SCOPE
+    registration_id = DEVICE_ID
+    symmetric_key = DEVICE_KEY
+
+# yandex
+if MY_CURRENT_TELEM == "smtp_email":
+    YPORT=8443
+    YHOST="rc1c-xxxx123456.mdb.yandexcloud.net"
+    YCERTNAME="your_cert_name"	
+    YUrl=r'https://api.iot.yandex.net/v1.0/devices/actions'	
+    YAPI_KEY="xxxxxx"
+
+# smtp
+if MY_CURRENT_TELEM == "smtp_email":
+    SMTP_SERVER = "smtp.gmail.com"
+    port = 587
+    SMTP_NO_SSL=1                             # 1 use above data without SSL otherwise use gmail and SSL
+
+# ssl server with tls_set
+if MY_CURRENT_TELEM == "ssl_tls_server":
+    SSLHOST, SSLPORT = "127.0.0.1", 12345
+
+# ssl23
+if MY_CURRENT_TELEM == "ssl_23_server":
+    SSL_URL = '127.0.0.1'
+    SSL_PORT = 10023
+
+# if you want to use AES with SSLv23
+AES_ENCRYPT=0
+
+# cloud MQTT
+if MY_CURRENT_TELEM == "cloud_mqtt":
+    CHOSTNAME = "driver.cloudmqtt.com"
+    CPORT = 28607
+    CTOPIC = "pi/sub2"                    
+    CCACERT = "/etc/ssl/certs/ca-certificates.crt"
+
+# GCS Spreadsheet
+# set when you set-up sheet
+if MY_CURRENT_TELEM == "gcs_spread":
+    GSS_TEMP_KEY = os.environ['GSS_TEMP_KEY']
+
+# ambient
+#
+if MY_CURRENT_TELEM == "ambient":
+    channelID = 100
+    writeKey = 'writeKey'
 
 # ============================== mongo DB Classes *perhaps make seperate include and import when option active) =======================================
-import pandas as pd
-import pymongo
+if MY_CURRENT_TELEM == "mongo":
+    import pandas as pd
+    import pymongo
 
-# define globals here you could default them as parameters to class if preferred
+    # define globals here you could default them as parameters to class if preferred
 
-# remote / online
-USER_NAME = "1_MongoDB Atlas"
-CLUSTER_NAME = "1_MongoDB Atlas Cluster"
-PASSWORD = "DB_pass1"
-# database structure
-DB_NAME = "1_MongoDB Atlas DB"                      # online or offline
-COLLECTION_NAME="enocean_temps"                     # name of your collection
+    # remote / online
+    USER_NAME = "1_MongoDB Atlas"
+    CLUSTER_NAME = "1_MongoDB Atlas Cluster"
+    PASSWORD = "DB_pass1"
+    # database structure
+    DB_NAME = "1_MongoDB Atlas DB"                      # online or offline
+    COLLECTION_NAME="enocean_temps"                     # name of your collection
    
-class Mongo_Database_Class(object):
+    class Mongo_Database_Class(object):
 
-    def __init__(self, dbName, collectionName, rem="local"):
-        self.clint = self.connect_to_mongodb(rem)
-        self.db = self.clint[dbName]
-        self.collection = self.db.get_collection(collectionName)
+        def __init__(self, dbName, collectionName, rem="local"):
+            self.clint = self.connect_to_mongodb(rem)
+            self.db = self.clint[dbName]
+            self.collection = self.db.get_collection(collectionName)
 
-    def connect_to_mongodb(rem="online"):
-        """ connect to the mongo db either online or local """
-        if rem == "online":
-            client = pymongo.MongoClient(f"mongodb+srv://{USER_NAME}:{PASSWORD}@{CLUSTER_NAME}.jipvx.mongodb.net/{DB_NAME}?retryWrites=true&w=majority")
-        else:
-            client = pymongo.MongoClient()	
-        return client
+        def connect_to_mongodb(rem="online"):
+            """ connect to the mongo db either online or local """
+            if rem == "online":
+                client = pymongo.MongoClient(f"mongodb+srv://{USER_NAME}:{PASSWORD}@{CLUSTER_NAME}.jipvx.mongodb.net/{DB_NAME}?retryWrites=true&w=majority")
+            else:
+                client = pymongo.MongoClient()	
+            return client
     
-    def add_record(self,sd1,st1,sd2,st2):
-        """ adds the record to the open mongo database """
-        post = {
-            'sensor1_desc1': sd1,
-            'sensor1_temp1': st1,
-            'sensor1_desc2': sd2,
-            'sensor1_temp2': st2,
-            'created_at': datetime.datetime.now(pytz.timezone(MY_TZ))
-        }
-        return self.collection.insert_one(post)
+        def add_record(self,sd1,st1,sd2,st2):
+            """ adds the record to the open mongo database """
+            post = {
+                'sensor1_desc1': sd1,
+                'sensor1_temp1': st1,
+                'sensor1_desc2': sd2,
+                'sensor1_temp2': st2,
+                'created_at': datetime.datetime.now(pytz.timezone(MY_TZ))
+            }
+            return self.collection.insert_one(post)
 		
-    def get_collection_to_df(self, filter=None, projection=None):
-        """ get the collection and return a pandas data frame """
-        #  collection = self.clint[dbName][collectionName] 
-        cursor = self.collection.find(filter=None, projection=None)
-        df = pd.DataFrame(list(cursor))	
-	    return df
+        def get_collection_to_df(self, filter=None, projection=None):
+            """ get the collection and return a pandas data frame """
+            #  collection = self.clint[dbName][collectionName] 
+            cursor = self.collection.find(filter=None, projection=None)
+            df = pd.DataFrame(list(cursor))	
+	        return df
 		
-    def insert_many(self, documents):
-        """ insert many records example :- mongo.insert_many([{'name':'mark','salary':40},{'name':'andy','salary':500000}]) """
-        return self.collection.insert_many(documents)
+        def insert_many(self, documents):
+           """ insert many records example :- mongo.insert_many([{'name':'mark','salary':40},{'name':'andy','salary':500000}]) """
+           return self.collection.insert_many(documents)
 		
-    def find(self, projection=None,filter=None, sort=None):
-        """ print collection """
-        return self.collection.find(projection=projection,filter=filter,sort=sort)
+        def find(self, projection=None,filter=None, sort=None):
+            """ print collection """
+            return self.collection.find(projection=projection,filter=filter,sort=sort)
 
 # =============================================  use mySQL database  ============================================================
 #
-MY_SQL_DB='python_db'
-MY_SQL_TAB="Enocean_Temperatures"
-MYSQLLIB = "MYSQLDB"
+if MY_CURRENT_TELEM == "mysql":
+    MY_SQL_DB='python_db'
+    MY_SQL_TAB="Enocean_Temperatures"
+    MYSQLLIB = "MYSQLDB"
 
+# =============================================  use neo4j  ============================================================
+#
+
+# only do this if we are using neo4j
+if MY_CURRENT_TELEM == "neo4j":
+    # Neo4j init data
+    T1_LAST="init1"
+    T2_LAST="init2"  
+    FIRST_CALL=0
+    NEO_INI_FIL='neo4j.ini'
+
+    # for .ini parser
+    import configparser
+    # for neo4j
+    from neo4j import GraphDatabase
+
+    def clear_db(tx):
+        tx.run('MATCH (n) OPTIONAL MATCH (n)-[r]-() DELETE n,r')
+    
+    def search_all(tx):
+        result = tx.run('MATCH (n) OPTIONAL MATCH (n)-[r]-() RETURN n,r')
+        return [r for r in result]
+
+    # create nodes for the temperature 1 data    
+    def add_friend_relationship_t1(tx, value, friend_name=None):
+        if not friend_name:
+            tx.run('CREATE (p:Temp1 {value: $value}) RETURN p', {'value': value})
+        else:
+            tx.run('MATCH (p:Temp1 {value: $value}) '
+                   'CREATE (p)-[:FRIEND]->(:Temp1 {value: $friend_name})',
+                   value=value, friend_name=friend_name)
+
+    # create nodes for the temperature 2 data 
+    def add_friend_relationship_t2(tx, value, friend_name=None):
+        if not friend_name:
+            tx.run('CREATE (p:Temp2 {value: $value}) RETURN p', {'value': value})
+        else:
+            tx.run('MATCH (p:Temp2 {value: $value}) '
+                   'CREATE (p)-[:FRIEND]->(:Temp2 {value: $friend_name})',
+                   value=value, friend_name=friend_name)
+    
     
 # This function reads 1 byte of data from the serial port and parses the EnOcean telegram. After analyzing 
 # Telegram, data is sent to the chosen iOt (telemetry/database) system
@@ -1192,8 +1255,8 @@ def Enocean2Telemetry(s_port, telem_opt):
             with conn.cursor() as cursor:
                 conn.autocommit = True
                 values = [
-                    (desc1, temper1, str(datetime.datetime.now(pytz.timezone(MY_TZ)))),
-                    (desc2, temper2, str(datetime.datetime.now(pytz.timezone(MY_TZ)))),
+                    (desc1, str(temper1), str(datetime.datetime.now(pytz.timezone(MY_TZ)))),
+                    (desc2, str(temper2), str(datetime.datetime.now(pytz.timezone(MY_TZ)))),
                 ]
                 insert = sql.SQL('INSERT INTO enotemp (description, temperature, time_stamp) VALUES {}').format(
                     sql.SQL(',').join(map(sql.Literal, values))
@@ -1211,6 +1274,59 @@ def Enocean2Telemetry(s_port, telem_opt):
                 )
                 cursor.execute(drop)
 
+    # MS Access DB ODBC
+    #
+    def initMsAccess():    
+        import pyodbc
+        conn_str = (
+            r'DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};'
+            r'DBQ=C:\path\to\your_database.accdb;'
+        )
+        conn = pyodbc.connect(conn_str)
+        cursor = conn.cursor()
+        
+    def putValueMsAccess(desc1, temper1, desc2, temper2):	
+        sql_insert_data = (
+            "INSERT INTO enotemp (name1, value, name2, value, time_stamp)"
+            "VALUES  (desc1, temper1, desc2, temper2, str(datetime.datetime.now(pytz.timezone(MY_TZ))));"
+        )
+        cursor.execute(sql_insert_data)  
+        cursor.commit()        
+
+    def getValueMsAccess():
+        sql_select_all = "SELECT * FROM enotemp"
+        cursor.execute(sql_select_all)
+        for row in cursor.fetchall():
+            print(row)
+
+    # RiakClient
+    #
+    BUK_ID=1
+    MAKE_NEW_BUCKET=1                      # set to 1 if you want to store each dataset in a new bucket
+    def conn_riak(ipa="127.0.0.1", pt=8091):
+        pip install riak
+        client = riak.RiakClient(
+            host=ipa,
+            port=pt,
+        )
+        #bucket = client.bucket('mybucket')
+		
+    def add_data_riak(d1, t1, d2, t2):
+        if (BUK_ID < 1000) and (MAKE_NEW_BUCKET == 1) :
+            BUK_ID=BUK_ID+1
+        else:
+            BUK_ID=1
+        buk_name="mybucket"+str(BUK_ID)
+        bucket = client.bucket(buk_name)
+        obj = bucket.new('key', data={ d1 : t1, d2 : t2 })
+        obj.store
+
+    def query_riak(bukt='mybucket1', data_desc):
+        query = client.add(bukt)	
+        query.map("function(v) { var data = JSON.parse(v.values[0].data); if(data."+str(data_desc)+") { return [[v.key, data]]; } return []; }")
+        for spam in query.run():
+            print("%s - %s" % (spam[0], spam[1]))	
+            
     # rocks DB
     #
     # sudo apt install python3-dev librocksdb-dev
@@ -1338,6 +1454,212 @@ def Enocean2Telemetry(s_port, telem_opt):
         request.set_Qos(0)
         result = clt.do_action_with_exception(request)
         print('result : ' + result)
+
+
+    # ElasticSearch
+    #
+    N_IDX=0
+    def el_gendata(d1, t1, d2, t2):
+        # add the data to the temperatures index
+        temperatures = [
+            {
+                "name": d1,
+                "value": t1,
+                "ts": datetime.datetime.now(pytz.timezone(MY_TZ))
+            },
+            {
+                "name": d2,
+                "value": t2,
+                "ts": datetime.datetime.now(pytz.timezone(MY_TZ))
+            }
+        ]
+        # bulk record add uses this link table
+        for record_obj in temperatures:
+            yield {
+                "_op_type": "create",
+                "_index": "temperatures",
+                "_source": record_obj
+            }
+
+    def createElasticIdx():        
+        from elasticsearch import Elasticsearch, helpers
+        es.indices.create(index='temperatures')    
+        mapping = {
+            "mappings": {
+                "properties": {
+                    "name": {"type": "text"},
+                    "value": {"type": "long"},
+                    "ts": {"type": "text"}
+                }
+            }
+        }
+        es.indices.create(index="temperatures", body=mapping)
+    
+    def initElasticSearch():
+        try:
+            with open('elastic_idx.txt', 'r') as ss:
+                N_IDX=int(ss.read())
+        except:
+            print("ElasticSearch :: no index found starting at 0")
+
+        # You can also specify a port or http or https and Authentication
+        # Elasticsearch
+        es = Elasticsearch(
+            ["localhost", "otherhost"],
+            scheme="http",
+            port=9200
+            http_auth=("user_id", "password")
+        )
+        createElasticIdx()
+        es.close()
+
+    # if index is created then populate with the bulk data
+    def addData2Elastic(d1, t1, d2, t2):
+        es = Elasticsearch(
+            ["localhost", "otherhost"],
+            scheme="http",
+            port=9200
+            http_auth=("user_id", "password")
+        )
+        if (es.indices.exists(index="temperatures")==True)
+            helpers.bulk(es, el_gendata(d1, t1, d2, t2))
+        else:
+            createElasticIdx()
+            if (es.indices.exists(index="temperatures")==True)
+                helpers.bulk(es, el_gendata(d1, t1, d2, t2))
+            else:
+                print("ElasticSearch :: cant create the index")
+        N_IDX=N_IDX+2
+        with open('elastic_idx.txt', 'w') as ss:
+            ss.write(str(N_IDX))
+        es.close()
+
+    def addRecord2Elastic(d1, t1, d2, t2):
+        es = Elasticsearch(
+            ["localhost", "otherhost"],
+            scheme="http",
+            port=9200
+            http_auth=("user_id", "password")
+        )
+        rec = {
+            "name": d1,
+            "value": t1,
+            "ts": datetime.datetime.now(pytz.timezone(MY_TZ))
+        }
+        if (es.indices.exists(index="temperatures")==True)
+            es.create(index='temperatures', id=N_IDX, body=rec)
+        else:
+            createElasticIdx()
+            if (es.indices.exists(index="temperatures")==True)
+                es.create(index='temperatures', id=N_IDX, body=rec)
+            else:
+                print("ElasticSearch :: cant create the index")
+        N_IDX=N_IDX+1
+        with open('elastic_idx.txt', 'w') as ss:
+            ss.write(str(N_IDX))
+        es.close()
+        
+    # example of how to display all temperatures greeater than a value    
+    def displayGtElastic(greater_than=20.0):
+        es = Elasticsearch(
+            ["localhost", "otherhost"],
+            scheme="http",
+            port=9200
+            http_auth=("user_id", "password")
+        )
+        query = {
+            "query": {
+                "range": {
+                    "value": {
+                        "gt": greater_than
+                    }
+                }
+            }
+        }
+        result = es.search(index="temperatures", body=query, size=3)
+        es.close()
+
+    # example of how to display all temperatures less than a value    
+    def displayLtElastic(less_than=20.0):
+        es = Elasticsearch(
+            ["localhost", "otherhost"],
+            scheme="http",
+            port=9200
+            http_auth=("user_id", "password")
+        )
+        query = {
+            "query": {
+                "range": {
+                    "value": {
+                        "lt": less_than
+                    }
+                }
+            }
+        }
+        result = es.search(index="temperatures", body=query, size=3)
+        es.close()
+
+    # for Neo4j    
+    #
+    def initNeo4j():
+        # ====== Get neo4j settings
+        config = configparser.ConfigParser()
+        config.read(NEO_INI_FIL)
+        uri = config['NEO4J']['uri']
+        user = config['NEO4J']['user']
+        password = config['NEO4J']['password']
+    
+        # Creating the neo4j driver
+        driver = GraphDatabase.driver(uri, auth=(user, password))
+        with driver.session() as session:
+            # Clear database
+            session.write_transaction(clear_db)
+   
+    def recordAdd2Neo4j(d1, t1, d2, t2):
+
+        # ====== Get neo4j settings
+        config = configparser.ConfigParser()
+        config.read(NEO_INI_FIL)
+        uri = config['NEO4J']['uri']
+        user = config['NEO4J']['user']
+        password = config['NEO4J']['password']
+    
+        # Creating the neo4j driver
+        driver = GraphDatabase.driver(uri, auth=(user, password))
+    
+        with driver.session() as session:
+            recd1 = d1 + "_" + str(t1)
+            recd2 = d2 + "_" + str(t2)
+            if FIRST_CALL == 0:
+                # Add node
+                session.write_transaction(add_friend_relationship_t1, recd1)
+                session.write_transaction(add_friend_relationship_t1, recd2)
+                FIRST_CALL = 1
+            else:
+                # ADD FRIEND RELATIONSHIP
+                session.write_transaction(add_friend_relationship_t1, T1_LAST, recd1)
+                session.write_transaction(add_friend_relationship_t2, T2_LAST, recd2)        
+            T1_LAST=recd1
+            T2_LAST=recd2
+               
+    def recordsShowNeo4j():
+
+        # ====== Get neo4j settings
+        config = configparser.ConfigParser()
+        config.read(NEO_INI_FIL)
+        uri = config['NEO4J']['uri']
+        user = config['NEO4J']['user']
+        password = config['NEO4J']['password']
+    
+        # Creating the neo4j driver
+        driver = GraphDatabase.driver(uri, auth=(user, password))
+    
+        with driver.session() as session:
+            # Search for data
+ r          result = session.read_transaction(search_all)
+            # Check results
+            for res in result:
+                print(res)
 
     # taiga kanban board
     TAIGA_USER="my_tiger"
@@ -1558,7 +1880,19 @@ def Enocean2Telemetry(s_port, telem_opt):
         initPostGr()
         sendData=putValuePostGr        
     elif telem_opt == "taiga":                               # enter a job card on the taiga kanban
-        sendData=sendDataTaigaKanban    
+        sendData=sendDataTaigaKanban   
+    elif telem_opt == "msaccess":    
+        initMsAccess()    
+        sendData=putValueMsAccess       
+    elif telem_opt == "riak":
+        conn_riak()
+        sendData=add_data_riak   
+    elif telem_opt == "elas":
+        initElasticSearch()
+        sendData=addData2Elastic       
+    elif telem_opt == "neo4j":
+        initNeo4j()
+        sendData=recordAdd2Neo4j           
     else:                                                    # we asume its for mosquito broker internally running on host e.g. raspberry pi 4
         client = mqtt.Client()
         client.on_connect = on_connect
