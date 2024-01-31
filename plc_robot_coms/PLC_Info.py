@@ -491,7 +491,7 @@ def omronCJReadTCP(TCP_client,data_cj_readprotocol):                            
         sendmsg = bytes(data_cj_readprotocol)
     elif (MY_PY == 3):
         sendmsg = data_cj_readprotocol.encode('utf-8')
-    TCP_client.send(bytes(data_cj_readprotocol))
+    TCP_client.send(bytes(sendmsg))
     # wait and read reply
     response = TCP_client.recv(1024)
     if (MY_PY == 3):
@@ -1384,7 +1384,7 @@ def connect_Titan(opt=1):
         ser = serial.Serial('/dev/ttyUSB0', TITAN_BAUD_RT, timeout=0.1)
     else:
         com_prt = search_com_port()                                        # get the first known device
-        s = serial.Serial(com_prt, TITAN_BAUD_RT, timeout=0.1)                      
+        ser = serial.Serial(com_prt, TITAN_BAUD_RT, timeout=0.1)                      
     return ser
     
 def readTitan(ser):
