@@ -13,7 +13,7 @@ import sys
 from __future__ import print_function
 
 # set to 1 if you want to use encryption
-AES_ENCRYPT = 0
+AES_ENCRYPT = 1
 
 #Diffie-Hellman Key Exchange Algorithm
 """
@@ -350,8 +350,8 @@ class eSSP(object):  # noqa
         result = self.send([self.getseq(), '0x1', '0x0C'])
         if len(result) >= 8:
             return [result[3], int(result[7],16)<<24|int(result[6],16)<<16|int(result[5],16)<<8|int(result[4],16)]           # f4=ok, serial number
-		else:
-		    return [0,0]
+        else:
+            return [0,0]
 
     def get_unit_data(self):
         """causes the validator to return information about itself"""
@@ -499,56 +499,30 @@ class eSSP(object):  # noqa
     def dec2snd(num):
         """convert the decimal currency value into bytes which we send in the right order """
         s=str(hex(num))
-		if s[4:6] == '':
-		    s[4:6] = 0x0
+        if s[4:6] == '':
+            s[4:6] = 0x0
         return ([s[4:6], s[2:4])
 
     def dec2snd4(num):
         """convert the decimal currency value into bytes which we send in the right order """
         s=str(hex(num))
-		if s[4:6] == '':
-		    s[4:6] = 0x0
-		if s[6:8] == '':
-		    s[6:8] = 0x0
-		if s[8:10] == '':
-		    s[8:10] = 0x0
+        if s[4:6] == '':
+            s[4:6] = 0x0
+        if s[6:8] == '':
+            s[6:8] = 0x0
+        if s[8:10] == '':
+            s[8:10] = 0x0
         return [[s[8:10], s[6:8], [s[4:6], s[2:4]]
-        
-    def payout_by_denomination_hard_coded_example(self):
-		denom1 = [0xF4, 0x01, 0x00, 0x00]    # note 1 is 5 eur = 0x1F4 = 500
-		denom2 = [0xE8, 0x03, 0x00, 0x00]    # note 2 is 10 eur = 0x3E8 = 1000
-		end_denom = [0x45, 0x55, 0x52]       # currency The country code when converted to ASCII characters is EUR
-		num = [0x01, 0x00]
-		tot_num = 0x02
-		real_pay = 0x58
-		test_pay = 0x19
-        result = self.send([self.getseq(), '0x12', '0x46', tot_num, num, denom1, end_denom, num, denom2, end_denom, real_pay])
-        return result
-
-    # note ammounts are in euro
-    def payout_by_denomination_of_2(self, note1amt, note2amt):
-        """which allows the user to specify exactly which notes are paid out."""
-		tupv1 = dec2snd(note1amt*100)
-		tupv2 = dec2snd(note2amt*100)
-		denom1 = [tupv1[0], tupv1[1], 0x00, 0x00]  # note 1 
-		denom2 = [tupv2[0], tupv2[1], 0x00, 0x00]  # note 2 
-		end_denom = [0x45, 0x55, 0x52]       # currency The country code when converted to ASCII characters is EUR
-		num = [0x01, 0x00]
-		tot_num = 0x02
-		real_pay = 0x58
-		test_pay = 0x19
-        result = self.send([self.getseq(), '0x12', '0x46', tot_num, num, denom1, end_denom, num, denom2, end_denom, real_pay])
-        return result
 
     def float_ammount(self, note1amt, note2amt, mode=1):
         """causes the validator to keep a set amount “floating” in the payout and specifies a minimum payout value"""
-		if (mode == 1):
-		    byte_pay = [0x58]
+        if (mode == 1):
+            byte_pay = [0x58]
         else:
-		    byte_pay = [0x19]
-		denom1 = dec2snd4(note1amt*100)
-		denom2 = dec2snd4(note2amt*100)
-		end_denom = [0x45, 0x55, 0x52]       # currency The country code when converted to ASCII characters is EUR
+            byte_pay = [0x19]
+        denom1 = dec2snd4(note1amt*100)
+        denom2 = dec2snd4(note2amt*100)
+        end_denom = [0x45, 0x55, 0x52]       # currency The country code when converted to ASCII characters is EUR
         s_arr = [self.getseq(), '0x12', '0x3D'] + denom1 + denom2 + end_denom + byte_pay
         lb=hex(len(s_arr)-2)	
         s_arr[1]=lb		                                   # message length
@@ -557,7 +531,7 @@ class eSSP(object):  # noqa
 
     def get_routing_chan(self, chan=0x1):
         """causes the validator to return the routing for a specific channel."""
-		end_denom = [0x45, 0x55, 0x52]       # currency The country code when converted to ASCII characters is EUR
+        end_denom = [0x45, 0x55, 0x52]       # currency The country code when converted to ASCII characters is EUR
         s_arr = [self.getseq(), '0x05', '0x3C'] + [chan] + end_denom 	
         lb=hex(len(s_arr)-2)	
         s_arr[1]=lb		                                   # message length        
@@ -572,7 +546,7 @@ class eSSP(object):  # noqa
         
     def set_routing_chan(self, recyc=0x1, ch=0x1):
         """causes the validator to return the routing for a specific channel"""
-		end_denom = [0x45, 0x55, 0x52]                     # currency The country code when converted to ASCII characters is EUR
+        end_denom = [0x45, 0x55, 0x52]                     # currency The country code when converted to ASCII characters is EUR
         s_arr = [self.getseq(), '0x05', '0x3B'] + [recyc] + [ch] + end_denom 	
         lb=hex(len(s_arr)-2)	
         s_arr[1]=lb		                                   # message length        
@@ -581,7 +555,7 @@ class eSSP(object):  # noqa
 
     def get_routing_note(self, amt):
         """causes the validator to return the routing for a specific note/ """
-		end_denom = [0x45, 0x55, 0x52]                     # currency The country code when converted to ASCII characters is EUR
+        end_denom = [0x45, 0x55, 0x52]                     # currency The country code when converted to ASCII characters is EUR
         denom1 = dec2snd4(amt*100)
         s_arr = [self.getseq(), '0x05', '0x3C'] + denom1 + end_denom 	
         lb=hex(len(s_arr)-2)	
@@ -591,7 +565,7 @@ class eSSP(object):  # noqa
 
     def set_routing_note(self, recyc=0x1, amt):
         """causes the validator to return the routing for a specific note"""
-		end_denom = [0x45, 0x55, 0x52]                     # currency The country code when converted to ASCII characters is EUR
+        end_denom = [0x45, 0x55, 0x52]                     # currency The country code when converted to ASCII characters is EUR
         denom1 = dec2snd4(amt*100)
         s_arr = [self.getseq(), '0x05', '0x3B'] + [recyc] + denom1 + end_denom 	
         lb=hex(len(s_arr)-2)	
@@ -601,20 +575,20 @@ class eSSP(object):  # noqa
         
     def set_coin_mech_inhibits(self, coinamt, inh=1):
         """causes the SMART Hopper to disable or enable acceptance of individual coin denominations by an attached coin mechanism"""
-		if (inh == 1):
-		    byte_inh = [0x01]
+        if (inh == 1):
+            byte_inh = [0x01]
         else:
-		    byte_inh = [0x00]
-		tup = dec2snd(coinamt)
+            byte_inh = [0x00]
+        tup = dec2snd(coinamt)
         denom1 = [ tup[0], tup[1] ]
-		end_denom = [0x45, 0x55, 0x52]                      # currency The country code when converted to ASCII characters is EUR
+        end_denom = [0x45, 0x55, 0x52]                      # currency The country code when converted to ASCII characters is EUR
         s_arr = [self.getseq(), '0x07', '0x40'] + byte_inh + denom1 + end_denom 
         result = self.send(s_arr)
         return result
         
     def get_min_payout(self):
         """causes the validator to report its current minimum payout of a specific currency"""
-		end_denom = [0x45, 0x55, 0x52]                      # currency The country code when converted to ASCII characters is EUR
+        end_denom = [0x45, 0x55, 0x52]                      # currency The country code when converted to ASCII characters is EUR
         s_arr = [self.getseq(), '0x12', '0x3E'] + end_denom 
         lb=hex(len(s_arr)-2)	
         s_arr[1]=lb		                                    # message length
@@ -631,7 +605,7 @@ class eSSP(object):  # noqa
             rf = [0x1]
         else:
             rf = [0x0]        
-		end_denom = [0x05, 0x81, 0x10]       
+        end_denom = [0x05, 0x81, 0x10]       
         s_arr = [self.getseq(), '0x12', '0x30'] + end_denom + md + rf 
         lb=hex(len(s_arr)-2)	
         s_arr[1]=lb		                                   # message length
