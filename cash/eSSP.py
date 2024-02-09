@@ -685,8 +685,8 @@ class eSSP(object):  # noqa
             return result
             
     # Diffie - Hellman key exchange
-    
-    # send the key exchange - not sure if these should be generated more than just random primes
+
+    # send the dh key exchange
     def send_dh_key_exchange(self, pub_key):
         msg = [ self.getseq(), '0x9', '0x4C' ]
         for z in range(0, 8):
@@ -769,7 +769,7 @@ class eSSP(object):  # noqa
         result = self.send(msg)
         return result, p
 
-    # send the key exchange - not sure if these should be generated more than just random primes
+    # send the key exchange - this just sends random primes but with diffie hellman you use send_dh_key_exchange instead
     def send_key_exchange(self):
         msg = [ self.getseq(), '0x9', '0x4C' ]
         for z in range(0,8):
