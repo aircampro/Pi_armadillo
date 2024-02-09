@@ -1,4 +1,5 @@
-
+#!/usr/bin/python3
+#
 import datetime
 import logging
 
@@ -6,11 +7,77 @@ import serial
 import numpy as np
 import time
 
+import sys
+
+# this allows this code to run on python 2.x and 3.x
+from __future__ import print_function
+
+# set to 1 if you want to use encryption
+AES_ENCRYPT = 0
+
+#Diffie-Hellman Key Exchange Algorithm
+"""
+This program tries to implement the standard Deffie-Hellman key exchange algorithm
+that mathematically helps the networking entities to derieve the key pairs without
+the actual physical key sharing.
+"""
+import random
+
+class DHKE:
+    def __init__(self,G,P):
+        self.G_param = G
+        self.P_param = P
+
+    def generate_privatekey(self):
+        self.pk = random.randrange(start = 1,stop = 10,step = 1)
+
+    def generate_publickey(self):
+        self.pub_key = pow(self.G_param,self.pk) % self.P_param
+
+    def exchange_key(self,other_public):
+        self.share_key = pow(other_public,self.pk) % self.P_param
+
+# this is a DH Enpoint class for sending encrypted messages using Diffie Hellman 
+# the manual for eSSP suggests that in our case
+# we use DH for key exchange and instead used AES encrypt/decrypt but if needed it has been included here
+# the usage is :-
+#     s_public = key generated (g), m_public = modulus generated (p), s_private = shared key received back
+#     my_dh_endpoint_client = DH_Endpoint(s_public, m_public, s_private)
+#     msg_to_send = my_dh_endpoint_client.encrypt_message(my_data_to_send) <-- msg to send formulation
+#     msg_rcv = my_dh_endpoint_client.decrypt_message(my_data_came_in)     <-- msg received decryption
+#
+class DH_Endpoint(object):
+    def __init__(self, public_key1, public_key2, private_key):
+        self.public_key1 = public_key1
+        self.public_key2 = public_key2
+        self.private_key = private_key
+        self.full_key = None
+    def generate_partial_key(self):
+        partial_key = self.public_key1**self.private_key
+        partial_key = partial_key%self.public_key2
+        return partial_key
+    def generate_full_key(self, partial_key_r):
+        full_key = partial_key_r**self.private_key
+        full_key = full_key%self.public_key2
+        self.full_key = full_key
+        return full_key
+    def encrypt_message(self, message):
+        encrypted_message = ""
+        key = self.full_key
+        for c in message:
+            encrypted_message += chr(ord(c)+key)
+        return encrypted_message
+    def decrypt_message(self, encrypted_message):
+        decrypted_message = ""
+        key = self.full_key
+        for c in encrypted_message:
+            decrypted_message += chr(ord(c)-key)
+        return decrypted_message
+        
 class eSSPError(IOError):  # noqa
     """Generic error exception for eSSP problems."""
 
     pass
-
 
 class eSSPTimeoutError(eSSPError):  # noqa
     """Indicates a timeout while communicating with the eSSP device."""
@@ -448,7 +515,6 @@ class eSSP(object):  # noqa
         return [[s[8:10], s[6:8], [s[4:6], s[2:4]]
         
     def payout_by_denomination_hard_coded_example(self):
-        """which allows the user to specify exactly which notes are paid out."""
 		denom1 = [0xF4, 0x01, 0x00, 0x00]    # note 1 is 5 eur = 0x1F4 = 500
 		denom2 = [0xE8, 0x03, 0x00, 0x00]    # note 2 is 10 eur = 0x3E8 = 1000
 		end_denom = [0x45, 0x55, 0x52]       # currency The country code when converted to ASCII characters is EUR
@@ -571,6 +637,121 @@ class eSSP(object):  # noqa
         s_arr[1]=lb		                                   # message length
         result = self.send(s_arr)
         return result
+
+    # ------------- Ciphers / Cryptography -----------------
+    # AES 128 bit encrtption is used when encryption has been enabled.
+    if AES_ENCRYPT == 1:
+        from Crypto.Cipher import AES
+        from Crypto.Random import get_random_bytes
+            
+        def aes_gcm_encrypt(key, iv, text):
+            cipher = AES.new(key, AES.MODE_GCM, nonce=iv)
+            ciphertext, mac = cipher.encrypt_and_digest(text)
+            return ciphertext, mac
+        
+        def aes_gcm_decrypt(key, iv, ciphertext, mac):
+            plaintext = 0
+            cipher = AES.new(key, AES.MODE_GCM, nonce=iv)
+            try:
+                plaintext = cipher.decrypt_and_verify(ciphertext,mac)
+            except (ValueError, KeyError):
+                print("Incorrect decryption")
+            return plaintext
+        
+        def send_rcv_with_aes(msgdata, key, nonce):
+            if key == None:
+                key = get_random_bytes(16)
+            if nonce == None:                
+                nonce = get_random_bytes(12)
+            ciphertext, mac = self.aes_gcm_encrypt(key, nonce, msgdata)
+            indata = self.send((ciphertext)
+            return self.aes_gcm_decrypt(key, nonce, indata, mac)
+
+        def payout_by_denomination_with_aes(self, key, nonce, note_amt_list, mode=1):
+            """which allows the user to specify exactly which notes are paid out.
+               this routine is when encryption has been enabled using AES """
+            i = 0
+            end_currency = [0x45, 0x55, 0x52]                                   # currency The country code when converted to ASCII characters is EUR
+            # end_currency = [hex(ord("C")), hex(ord("H")), hex(ord("F"))]      # uncomment to swap to swiss franks
+            tot_num = hex(i)
+            if (mode == 1):
+                byte_pay = [0x58]
+            else:
+                byte_pay = [0x19]
+            send_arr = [self.getseq(), '0x12', '0x46', tot_num]
+            for noteamt, note_num in note_amt_list:
+                tupv = dec2snd(noteamt*100)
+                denom = [tupv[0], tupv[1], 0x00, 0x00]
+                num = [hex(note_num)]
+                send_arr = send_arr + num + demon + end_currency	
+                i = i + 1	
+            send_arr = send_arr + byte_pay
+            tot_num = hex(i)                                       # number of different notes
+            send_arr[3]=tot_num		
+            lb=hex(len(send_arr)-2)	
+            send_arr[1]=lb		                                   # message length
+            result = self.send_rcv_with_aes(send_arr, key, nonce)
+            return result
+
+        def payout_by_value_with_aes(self, key, nonce, noteamt, mode=1):
+            """command that instructs the payout device to payout a specified amount"""
+            end_currency = [0x45, 0x55, 0x52]                                   # currency The country code when converted to ASCII characters is EUR
+            # end_currency = [hex(ord("C")), hex(ord("H")), hex(ord("F"))]      # uncomment to swap to swiss franks
+            # end_currency = [hex(ord("R")), hex(ord("U")), hex(ord("B"))]      # uncomment to swap to rubles
+            if (mode == 1):
+                byte_pay = [0x58]
+            else:
+                byte_pay = [0x19]
+            send_arr = [self.getseq(), '0x12', '0x33']
+            arr4_value = dec2snd4(noteamt*100)
+            send_arr = send_arr + arr4_value + end_currency + byte_pay	
+            lb=hex(len(send_arr)-2)	
+            send_arr[1]=lb		                                   # message length
+            result = self.send_rcv_with_aes(send_arr, key, nonce)
+            return result
+            
+    # Diffie - Hellman key exchange
+    
+    # send the key exchange - not sure if these should be generated more than just random primes
+    def send_dh_key_exchange(self, pub_key):
+        msg = [ self.getseq(), '0x9', '0x4C' ]
+        for z in range(0, 8):
+            byt = [ (pub_key >> int(8 * z)) & 0xFF ]
+            msg = msg + byt		
+        result = self.send(msg)
+        return result
+      
+    #Simulating the Diffie-Hellman Key Exchange b/w two entities. 
+    #
+    def generate_dh_key(base=5, primeRandom=23):
+        MyKey = DHKE(base, primeRandom)
+        MyKey.generate_privatekey()
+
+        print("------------Private Keys------------------\n")
+        print("My Private Key Generated is ",MyKey.pk,"\n")
+
+        MyKey.generate_publickey()
+
+        print("------------Public Keys------------------\n")
+        print("MyKey Public Key Generated is ",MyKey.pub_key,'\n')
+
+        # send the pub_key
+        # A = g^a mod p
+        ans = self.send_dh_key_exchange(MyKey.pub_key)
+
+        # parse the message for the key returned
+        resp, key_dat = self.parse_key_exchange(ans)
+        
+        if (resp != 0xF0):
+            print("invalid response to key exchange")
+            sys.exit(-3)
+            
+        # calculate the share key from the answer    
+        MyKey.exchange_key(key_dat)
+
+        print("------------Shared Key Derieved------------------\n")
+        print("Shared Key Generated now by MyKey : ",MyKey.share_key,'\n')
+        return MyKey
         
     def primesInRange(x, y):
         prime_list = []
@@ -587,55 +768,73 @@ class eSSP(object):  # noqa
         return prime_list
 
     # get a random prime number in the range
-    def get_random_prime(st=0,en=255):
-        p = primesInRange(st, en)                          # get all prime numbers between start and end
-	    rp = p[np.random.choice((len(p)-1),1)]             # select one of them randomly
+    def get_random_prime(st=0, en=255):
+        p = self.primesInRange(st, en)                          # get all prime numbers between start and end
+        rp = p[np.random.choice((len(p)-1),1)]                  # select one of them randomly
         return [rp]
 
     # send the generator	
     def send_generator(self):
-	    msg = [ self.getseq(), '0x9', '0x4A' ]
-		for z in range(0,8):
-            msg = msg + self.get_random_prime()		
+        msg = [ self.getseq(), '0x9', '0x4A' ]
+        g = 0
+        for z in range(0,8):
+            rp_num = self.get_random_prime()
+            msg = msg + rp_num
+            g = g | (rp_num[0] << (8*z))            
         result = self.send(msg)
-        return result
+        return result, g
 
     # send the modulus
     def send_modulus(self):
-	    msg = [ self.getseq(), '0x9', '0x4B' ]
-		for z in range(0,8):
-            msg = msg + self.get_random_prime()		
+        msg = [ self.getseq(), '0x9', '0x4B' ]
+        p = 0
+        for z in range(0,8):
+            rp_num = self.get_random_prime()
+            msg = msg + rp_num
+            p = p | (rp_num[0] << (8*z))            
         result = self.send(msg)
-        return result
+        return result, p
 
-    # send the key exchange
+    # send the key exchange - not sure if these should be generated more than just random primes
     def send_key_exchange(self):
-	    msg = [ self.getseq(), '0x9', '0x4C' ]
-		for z in range(0,8):
+        msg = [ self.getseq(), '0x9', '0x4C' ]
+        for z in range(0,8):
             msg = msg + self.get_random_keys()		
         result = self.send(msg)
         return result
-		
+
+    def parse_key_exchange(self, dat):
+        resp = dat[3] == 0xF0
+        num = 8 
+        for zz in range(0,num):
+            z += int(dat[4+zz],16) << (8*zz)
+        return (resp, z)    
+
+    # need to understand how to duplicate the generation of the 2 encryption keys and do encryption using these on the message
+    #// set full encryption key in command structure
+    #commandStructure->Key.FixedKey = 0x0123456701234567;
+    #commandStructure->Key.EncryptKey = keys->KeyHost;
+    
     # note ammounts are in euro for mode values are == 0 test 1 real payout
     def payout_by_denomination(self, note_amt_list, mode=1):
         """which allows the user to specify exactly which notes are paid out."""
-		i = 0
-		end_currency = [0x45, 0x55, 0x52]                                   # currency The country code when converted to ASCII characters is EUR
+        i = 0
+        end_currency = [0x45, 0x55, 0x52]                                   # currency The country code when converted to ASCII characters is EUR
         # end_currency = [hex(ord("C")), hex(ord("H")), hex(ord("F"))]      # uncomment to swap to swiss franks
-		tot_num = hex(i)
-		if (mode == 1):
-		    byte_pay = [0x58]
+        tot_num = hex(i)
+        if (mode == 1):
+            byte_pay = [0x58]
         else:
-		    byte_pay = [0x19]
-		send_arr = [self.getseq(), '0x12', '0x46', tot_num]
-		for noteamt, note_num in note_amt_list:
-		    tupv = dec2snd(noteamt*100)
-		    denom = [tupv[0], tupv[1], 0x00, 0x00]
-			num = [hex(note_num)]
-			send_arr = send_arr + num + demon + end_currency	
+            byte_pay = [0x19]
+        send_arr = [self.getseq(), '0x12', '0x46', tot_num]
+        for noteamt, note_num in note_amt_list:
+            tupv = dec2snd(noteamt*100)
+            denom = [tupv[0], tupv[1], 0x00, 0x00]
+            num = [hex(note_num)]
+            send_arr = send_arr + num + demon + end_currency	
             i = i + 1	
         send_arr = send_arr + byte_pay
-		tot_num = hex(i)                                       # number of different notes
+        tot_num = hex(i)                                       # number of different notes
         send_arr[3]=tot_num		
         lb=hex(len(send_arr)-2)	
         send_arr[1]=lb		                                   # message length
@@ -646,22 +845,22 @@ class eSSP(object):  # noqa
     def float_by_denomination(self, note_amt_list, mode=1):
         """instructs the validator to float individual quantities of a denomination in the SMART payout. It follows a similar format to the Payout by 
            Denomination command"""
-		i = 0
-		end_currency = [0x45, 0x55, 0x52]                                   # currency The country code when converted to ASCII characters is EUR
+        i = 0
+        end_currency = [0x45, 0x55, 0x52]                                   # currency The country code when converted to ASCII characters is EUR
         # end_currency = [hex(ord("C")), hex(ord("H")), hex(ord("F"))]      # uncomment to swap to swiss franks
-		tot_num = hex(i)
-		if (mode == 1):
-		    byte_pay = [0x58]
+        tot_num = hex(i)
+        if (mode == 1):
+            byte_pay = [0x58]
         else:
-		    byte_pay = [0x19]
-		send_arr = [self.getseq(), '0x12', '0x44', tot_num]
-		for noteamt, note_num in note_amt_list:
-		    denom = dec2snd4(noteamt*100)
-			num = [hex(note_num)]
-			send_arr = send_arr + num + demon + end_currency	
+            byte_pay = [0x19]
+        send_arr = [self.getseq(), '0x12', '0x44', tot_num]
+        for noteamt, note_num in note_amt_list:
+            denom = dec2snd4(noteamt*100)
+            num = [hex(note_num)]
+            send_arr = send_arr + num + demon + end_currency	
             i = i + 1	
         send_arr = send_arr + byte_pay
-		tot_num = hex(i)                                       # number of different notes
+        tot_num = hex(i)                                       # number of different notes
         send_arr[3]=tot_num		
         lb=hex(len(send_arr)-2)	
         send_arr[1]=lb		                                   # message length
@@ -670,15 +869,15 @@ class eSSP(object):  # noqa
         
     def payout_by_value(self, noteamt, mode=1):
         """command that instructs the payout device to payout a specified amount"""
-		end_currency = [0x45, 0x55, 0x52]                                   # currency The country code when converted to ASCII characters is EUR
+        end_currency = [0x45, 0x55, 0x52]                                   # currency The country code when converted to ASCII characters is EUR
         # end_currency = [hex(ord("C")), hex(ord("H")), hex(ord("F"))]      # uncomment to swap to swiss franks
-		if (mode == 1):
-		    byte_pay = [0x58]
+        if (mode == 1):
+            byte_pay = [0x58]
         else:
-		    byte_pay = [0x19]
-		send_arr = [self.getseq(), '0x12', '0x33']
-		arr4_value = dec2snd4(noteamt*100)
-		send_arr = send_arr + arr4_value + end_currency	+ byte_pay	
+            byte_pay = [0x19]
+        send_arr = [self.getseq(), '0x12', '0x33']
+        arr4_value = dec2snd4(noteamt*100)
+        send_arr = send_arr + arr4_value + end_currency	+ byte_pay	
         lb=hex(len(send_arr)-2)	
         send_arr[1]=lb		                                   # message length
         result = self.send(send_arr)
@@ -686,15 +885,15 @@ class eSSP(object):  # noqa
 
     def get_note_ammount(self, noteamt, mode=1):
         """causes the validator to report the amount of notes stored of a specified denomination in the payout unit"""
-		end_currency = [0x45, 0x55, 0x52]                                   # currency The country code when converted to ASCII characters is EUR
+        end_currency = [0x45, 0x55, 0x52]                                   # currency The country code when converted to ASCII characters is EUR
         # end_currency = [hex(ord("C")), hex(ord("H")), hex(ord("F"))]      # uncomment to swap to swiss franks
-		if (mode == 1):
-		    byte_pay = [0x58]
+        if (mode == 1):
+            byte_pay = [0x58]
         else:
-		    byte_pay = [0x19]
-		send_arr = [self.getseq(), '0x12', '0x35']
-		arr4_value = dec2snd4(noteamt*100)
-		send_arr = send_arr + arr4_value + end_currency	+ byte_pay	
+            byte_pay = [0x19]
+        send_arr = [self.getseq(), '0x12', '0x35']
+        arr4_value = dec2snd4(noteamt*100)
+        send_arr = send_arr + arr4_value + end_currency	+ byte_pay	
         lb=hex(len(send_arr)-2)	
         send_arr[1]=lb		                                   # message length
         result = self.send(send_arr)
@@ -702,13 +901,13 @@ class eSSP(object):  # noqa
 
     def set_coin_ammount(self, no_of_coins, value_of_coin):
         """causes the validator to report the amount of notes stored of a specified denomination in the payout unit"""
-		end_currency = [0x45, 0x55, 0x52]                                   # currency The country code when converted to ASCII characters is EUR
+        end_currency = [0x45, 0x55, 0x52]                                   # currency The country code when converted to ASCII characters is EUR
         # end_currency = [hex(ord("C")), hex(ord("H")), hex(ord("F"))]      # uncomment to swap to swiss franks
-		send_arr = [self.getseq(), '0x09', '0x34']
-		nofc = dec2snd(no_of_coins)
+        send_arr = [self.getseq(), '0x09', '0x34']
+        nofc = dec2snd(no_of_coins)
         nofca = [nofc[0], nofc[1]]
-		valc = dec2snd4(value_of_coin)
-		send_arr = send_arr + nofca + valc + end_currency	
+        valc = dec2snd4(value_of_coin)
+        send_arr = send_arr + nofca + valc + end_currency	
         result = self.send(send_arr)
         return result
 		
@@ -717,7 +916,7 @@ class eSSP(object):  # noqa
     # 0x03, this is the RAM programming command. The RAM file is transferred to the validator 
     # before the firmware/dataset file is transferred. The validator updates itself based on this 
     # RAM code rather than on code stored previously in the validator
-	def send_prog_cmd(self):
+    def send_prog_cmd(self):
         """ SENDING THE PROGRAMMING COMMAND AND RETRIEVING THE BLOCK SIZE """
         result = self.send([self.getseq(), '0x2', '0x0B', '0x03'])
         return result	
@@ -725,11 +924,9 @@ class eSSP(object):  # noqa
     def serial_number(self):
         """Return formatted serialnumber."""
         result = self.send([self.getseq(), '0x1', '0xC'], False)
-
         serial = 0
         for i in range(4, 8):
             serial += int(result[i], 16) << (8 * (7 - i))
-
         return serial
 
     def unit_data(self):
