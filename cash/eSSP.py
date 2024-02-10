@@ -638,8 +638,25 @@ class eSSP(object):  # noqa
             if nonce == None:                
                 nonce = get_random_bytes(12)
             ciphertext, mac = self.aes_gcm_encrypt(key, nonce, msgdata)
-            indata = self.send((ciphertext)
+            indata = self.send((ciphertext, False)
             return self.aes_gcm_decrypt(key, nonce, indata, mac)
+
+        def payout_by_value_with_aes(self, key, nonce, noteamt, mode=1):
+            """command that instructs the payout device to payout a specified amount"""
+            end_currency = [0x45, 0x55, 0x52]                                   # currency The country code when converted to ASCII characters is EUR
+            # end_currency = [hex(ord("C")), hex(ord("H")), hex(ord("F"))]      # uncomment to swap to swiss franks
+            # end_currency = [hex(ord("R")), hex(ord("U")), hex(ord("B"))]      # uncomment to swap to rubles
+            if (mode == 1):
+                byte_pay = [0x58]
+            else:
+                byte_pay = [0x19]
+            send_arr = [self.getseq(), '0x12', '0x33']
+            arr4_value = self.dec2snd4(noteamt*100)
+            send_arr = send_arr + arr4_value + end_currency + byte_pay	
+            lb=hex(len(send_arr)-2)	
+            send_arr[1]=lb		                                   # message length
+            result = self.send_rcv_with_aes(send_arr, key, nonce)
+            return result
 
         def payout_by_denomination_with_aes(self, key, nonce, note_amt_list, mode=1):
             """which allows the user to specify exactly which notes are paid out.
@@ -666,24 +683,7 @@ class eSSP(object):  # noqa
             send_arr[1]=lb		                                   # message length
             result = self.send_rcv_with_aes(send_arr, key, nonce)
             return result
-
-        def payout_by_value_with_aes(self, key, nonce, noteamt, mode=1):
-            """command that instructs the payout device to payout a specified amount"""
-            end_currency = [0x45, 0x55, 0x52]                                   # currency The country code when converted to ASCII characters is EUR
-            # end_currency = [hex(ord("C")), hex(ord("H")), hex(ord("F"))]      # uncomment to swap to swiss franks
-            # end_currency = [hex(ord("R")), hex(ord("U")), hex(ord("B"))]      # uncomment to swap to rubles
-            if (mode == 1):
-                byte_pay = [0x58]
-            else:
-                byte_pay = [0x19]
-            send_arr = [self.getseq(), '0x12', '0x33']
-            arr4_value = self.dec2snd4(noteamt*100)
-            send_arr = send_arr + arr4_value + end_currency + byte_pay	
-            lb=hex(len(send_arr)-2)	
-            send_arr[1]=lb		                                   # message length
-            result = self.send_rcv_with_aes(send_arr, key, nonce)
-            return result
-            
+		
     # Diffie - Hellman key exchange
 
     # send the dh key exchange
