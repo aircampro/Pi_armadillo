@@ -269,14 +269,14 @@ class eSSP(object):  # noqa
         return result
         
     def parse_get_chan_pos(self, dat):
-        resp = dat[3] == 0xF0
+        resp = dat[3] == 0xf0
         num = int(dat[4],16) 
         for zz in range(0,num):
             print("channel ",int(dat[5+zz],16))
         return resp
 
     def parse_get_note_pos(self, dat):
-        resp = dat[3] == 0xF0
+        resp = dat[3] == 0xf0
         num = int(dat[4],16)                         # the number of notes
         for zz in range(0,(num*4),4):
             note = int(dat[5+zz],16) | int(dat[6+zz],16) << 8 | int(dat[7+zz],16) << 16 | int(dat[8+zz],16) << 24
@@ -347,7 +347,7 @@ class eSSP(object):  # noqa
 
     def get_serial_number(self):
         """ causes the unit to report its unique serial number """
-        result = self.send([self.getseq(), '0x1', '0x0C'])
+        result = self.send([self.getseq(), '0x1', '0x0C'], False)
         if len(result) >= 8:
             return [result[3], int(result[7],16)<<24|int(result[6],16)<<16|int(result[5],16)<<8|int(result[4],16)]           # f4=ok, serial number
         else:
@@ -425,7 +425,7 @@ class eSSP(object):  # noqa
 
     def get_all_levels(self):
         """command that causes the SMART Payout to report the amount of notes stored for all denominations"""
-        result = self.send([self.getseq(), '0x1', '0x22'])
+        result = self.send([self.getseq(), '0x1', '0x22'], False)
         return result
 
     def halt_payout(self):
@@ -445,7 +445,7 @@ class eSSP(object):  # noqa
 
     def get_note_counters(self):
         """causes validator to report a set of global note counters that track various note statistics"""
-        result = self.send([self.getseq(), '0x1', '0x58'])
+        result = self.send([self.getseq(), '0x1', '0x58'], False)
         return result
 
     def reset_note_counters(self):
@@ -520,8 +520,8 @@ class eSSP(object):  # noqa
             byte_pay = [0x58]
         else:
             byte_pay = [0x19]
-        denom1 = dec2snd4(note1amt*100)
-        denom2 = dec2snd4(note2amt*100)
+        denom1 = self.dec2snd4(note1amt*100)
+        denom2 = self.dec2snd4(note2amt*100)
         end_denom = [0x45, 0x55, 0x52]       # currency The country code when converted to ASCII characters is EUR
         s_arr = [self.getseq(), '0x12', '0x3D'] + denom1 + denom2 + end_denom + byte_pay
         lb=hex(len(s_arr)-2)	
@@ -540,8 +540,8 @@ class eSSP(object):  # noqa
 
     # takes dat as result from above,,,, 1= not recycle 0= recycle
     def parse_routing_data(self, dat):
-        reponse = dat[3] == 0xF0                          # true if good data
-        route = dat[4] & 0xFF
+        reponse = dat[3] == 0xf0                          # true if good data
+        route = dat[4] & 0xff
         return (reponse, route)
         
     def set_routing_chan(self, recyc=0x1, ch=0x1):
@@ -556,7 +556,7 @@ class eSSP(object):  # noqa
     def get_routing_note(self, amt):
         """causes the validator to return the routing for a specific note/ """
         end_denom = [0x45, 0x55, 0x52]                     # currency The country code when converted to ASCII characters is EUR
-        denom1 = dec2snd4(amt*100)
+        denom1 = self.dec2snd4(amt*100)
         s_arr = [self.getseq(), '0x05', '0x3C'] + denom1 + end_denom 	
         lb=hex(len(s_arr)-2)	
         s_arr[1]=lb		                                   # message length        
@@ -566,7 +566,7 @@ class eSSP(object):  # noqa
     def set_routing_note(self, recyc=0x1, amt):
         """causes the validator to return the routing for a specific note"""
         end_denom = [0x45, 0x55, 0x52]                     # currency The country code when converted to ASCII characters is EUR
-        denom1 = dec2snd4(amt*100)
+        denom1 = self.dec2snd4(amt*100)
         s_arr = [self.getseq(), '0x05', '0x3B'] + [recyc] + denom1 + end_denom 	
         lb=hex(len(s_arr)-2)	
         s_arr[1]=lb		                                   # message length        
@@ -579,7 +579,7 @@ class eSSP(object):  # noqa
             byte_inh = [0x01]
         else:
             byte_inh = [0x00]
-        tup = dec2snd(coinamt)
+        tup = self.dec2snd(coinamt)
         denom1 = [ tup[0], tup[1] ]
         end_denom = [0x45, 0x55, 0x52]                      # currency The country code when converted to ASCII characters is EUR
         s_arr = [self.getseq(), '0x07', '0x40'] + byte_inh + denom1 + end_denom 
@@ -654,7 +654,7 @@ class eSSP(object):  # noqa
                 byte_pay = [0x19]
             send_arr = [self.getseq(), '0x12', '0x46', tot_num]
             for noteamt, note_num in note_amt_list:
-                tupv = dec2snd(noteamt*100)
+                tupv = self.dec2snd(noteamt*100)
                 denom = [tupv[0], tupv[1], 0x00, 0x00]
                 num = [hex(note_num)]
                 send_arr = send_arr + num + demon + end_currency	
@@ -677,7 +677,7 @@ class eSSP(object):  # noqa
             else:
                 byte_pay = [0x19]
             send_arr = [self.getseq(), '0x12', '0x33']
-            arr4_value = dec2snd4(noteamt*100)
+            arr4_value = self.dec2snd4(noteamt*100)
             send_arr = send_arr + arr4_value + end_currency + byte_pay	
             lb=hex(len(send_arr)-2)	
             send_arr[1]=lb		                                   # message length
@@ -692,7 +692,7 @@ class eSSP(object):  # noqa
         for z in range(0, 8):
             byt = [ (pub_key >> int(8 * z)) & 0xFF ]
             msg = msg + byt		
-        result = self.send(msg)
+        result = self.send(msg, False)
         return result
       
     #Simulating the Diffie-Hellman Key Exchange b/w two entities. 
@@ -713,10 +713,18 @@ class eSSP(object):  # noqa
         # A = g^a mod p
         ans = self.send_dh_key_exchange(MyKey.pub_key)
 
+        # check we got an ok crc
+        chk_res = self.chk_crc_response(ans)
+        if (chk_res == -1):
+            print("invalid CRC returned for key exchange ! ")
+            sys.exit(-2)
+        elif (chk_res == 0):
+            print("key exchange returned an error = ",ans[3])  
+            
         # parse the message for the key returned
         resp, key_dat = self.parse_key_exchange(ans)
         
-        if (resp != 0xF0):
+        if (resp != 0xf0):
             print("invalid response to key exchange")
             sys.exit(-3)
             
@@ -778,16 +786,16 @@ class eSSP(object):  # noqa
         return result
 
     def parse_key_exchange(self, dat):
-        resp = dat[3] == 0xF0
+        resp = dat[3] == 0xf0
         num = 8 
         for zz in range(0,num):
             z += int(dat[4+zz],16) << (8*zz)
         return (resp, z)    
 
-    # need to understand how to duplicate the generation of the 2 encryption keys and do encryption using these on the message
-    #// set full encryption key in command structure
-    #commandStructure->Key.FixedKey = 0x0123456701234567;
-    #commandStructure->Key.EncryptKey = keys->KeyHost;
+    # we duplicate the generation of the 2 encryption keys and do encryption using these on the message
+    #
+    # commandStructure->Key.FixedKey = 0x0123456701234567;
+    # commandStructure->Key.EncryptKey = keys->KeyHost;     which is read back after diffie-hellman key exchange
     
     # note ammounts are in euro for mode values are == 0 test 1 real payout
     def payout_by_denomination(self, note_amt_list, mode=1):
@@ -802,7 +810,7 @@ class eSSP(object):  # noqa
             byte_pay = [0x19]
         send_arr = [self.getseq(), '0x12', '0x46', tot_num]
         for noteamt, note_num in note_amt_list:
-            tupv = dec2snd(noteamt*100)
+            tupv = self.dec2snd(noteamt*100)
             denom = [tupv[0], tupv[1], 0x00, 0x00]
             num = [hex(note_num)]
             send_arr = send_arr + num + demon + end_currency	
@@ -829,7 +837,7 @@ class eSSP(object):  # noqa
             byte_pay = [0x19]
         send_arr = [self.getseq(), '0x12', '0x44', tot_num]
         for noteamt, note_num in note_amt_list:
-            denom = dec2snd4(noteamt*100)
+            denom = self.dec2snd4(noteamt*100)
             num = [hex(note_num)]
             send_arr = send_arr + num + demon + end_currency	
             i = i + 1	
@@ -850,13 +858,52 @@ class eSSP(object):  # noqa
         else:
             byte_pay = [0x19]
         send_arr = [self.getseq(), '0x12', '0x33']
-        arr4_value = dec2snd4(noteamt*100)
+        arr4_value = self.dec2snd4(noteamt*100)
         send_arr = send_arr + arr4_value + end_currency	+ byte_pay	
         lb=hex(len(send_arr)-2)	
         send_arr[1]=lb		                                   # message length
         result = self.send(send_arr)
         return result
 
+    # note is shown in euro
+    def payout_by_denomination_hard_coded_example(self,mode=1):
+        denom1 = [0xF4, 0x01, 0x00, 0x00]    # note 1 is 5 eur = 0x1F4 = 500
+        denom2 = [0xE8, 0x03, 0x00, 0x00]    # note 2 is 10 eur = 0x3E8 = 1000
+        end_denom = [0x45, 0x55, 0x52]       # currency The country code when converted to ASCII characters is EUR
+        num = [0x01, 0x00]
+        tot_num = 0x02
+        real_pay = 0x58
+        test_pay = 0x19
+        if mode == 1:
+            end_pay = [real_pay]
+        else:
+            end_pay = [test_pay]       
+        snd_arr = [self.getseq(), '0x12', '0x46', tot_num]
+        snd_arr = snd_arr + num + denom1 + end_denom + num + denom2 + end_denom + end_pay
+        result = self.send(snd_arr)
+        return result
+
+    # note ammounts are in euro
+    def payout_by_denomination_of_2(self, note1amt, note2amt, mode=1):
+        """which allows the user to specify exactly which notes are paid out."""
+        tupv1 = self.dec2snd(note1amt*100)
+        tupv2 = self.dec2snd(note2amt*100)
+        denom1 = [tupv1[0], tupv1[1], 0x00, 0x00]  # note 1 
+        denom2 = [tupv2[0], tupv2[1], 0x00, 0x00]  # note 2 
+        end_denom = [0x45, 0x55, 0x52]             # currency The country code when converted to ASCII characters is EUR
+        num = [0x01, 0x00]
+        tot_num = 0x02
+        real_pay = 0x58
+        test_pay = 0x19
+        if mode == 1:
+            end_pay = [real_pay]
+        else:
+            end_pay = [test_pay] 
+        snd_arr = [self.getseq(), '0x12', '0x46', tot_num]
+        snd_arr = snd_arr + num + denom1 + end_denom + num + denom2 + end_denom + end_pay
+        result = self.send(snd_arr)
+        return result
+		
     def get_note_ammount(self, noteamt, mode=1):
         """causes the validator to report the amount of notes stored of a specified denomination in the payout unit"""
         end_currency = [0x45, 0x55, 0x52]                                   # currency The country code when converted to ASCII characters is EUR
@@ -866,7 +913,7 @@ class eSSP(object):  # noqa
         else:
             byte_pay = [0x19]
         send_arr = [self.getseq(), '0x12', '0x35']
-        arr4_value = dec2snd4(noteamt*100)
+        arr4_value = self.dec2snd4(noteamt*100)
         send_arr = send_arr + arr4_value + end_currency	+ byte_pay	
         lb=hex(len(send_arr)-2)	
         send_arr[1]=lb		                                   # message length
@@ -878,9 +925,9 @@ class eSSP(object):  # noqa
         end_currency = [0x45, 0x55, 0x52]                                   # currency The country code when converted to ASCII characters is EUR
         # end_currency = [hex(ord("C")), hex(ord("H")), hex(ord("F"))]      # uncomment to swap to swiss franks
         send_arr = [self.getseq(), '0x09', '0x34']
-        nofc = dec2snd(no_of_coins)
+        nofc = self.dec2snd(no_of_coins)
         nofca = [nofc[0], nofc[1]]
-        valc = dec2snd4(value_of_coin)
+        valc = self.dec2snd4(value_of_coin)
         send_arr = send_arr + nofca + valc + end_currency	
         result = self.send(send_arr)
         return result
@@ -1007,9 +1054,9 @@ class eSSP(object):  # noqa
        ss = time.time()
        ready = 0
        while ready == 0:
-           result = self.send([self.getseq(), '0x1', '0x11']) 
+           result = self.send([self.getseq(), '0x1', '0x11'], False) 
            if len(result) >= 4:
-               if result[3] == 0xF0:
+               if result[3] == 0xf0:
                    ready = 1
            s = time.time()
            if (s - ss) > timeout: 
@@ -1198,6 +1245,36 @@ class eSSP(object):  # noqa
                     self._logger.debug("Error " + response[3])
         return processed_response
 
+    def chk_crc_response(self, response):
+        # Answers seem to be always in lowercase
+
+        # Error-Codes
+        # 0xf0   OK
+        # 0xf2   Command not known
+        # 0xf3   Wrong number of parameters
+        # 0xf4   Parameter out of range
+        # 0xf5   Command cannot be processed
+        # 0xf6   Software Error
+        # 0xf8   FAIL
+        # 0xFA   Key not set
+
+        crc_ok = 0
+        
+        if response[0] == '0x7f':
+            crc_command = []
+            for i in range(1, int(response[2], 16) + 3):
+                crc_command.append(response[i])
+
+            crc = self.crc(crc_command)
+
+            if (response[len(response) - 2] != crc[0]) & \
+                    (response[len(response) - 1] != crc[1]):
+                crc_ok = -1
+            else:
+                if response[3] == '0xf0':
+                    crc_ok = 1                
+        return crc_ok
+        
     def easy_inhibit(self, acceptmask):
         channelmask = []
         bitmask = int('00000000', 2)
@@ -1217,4 +1294,3 @@ class eSSP(object):  # noqa
 
         bitmask = hex(bitmask)
         return bitmask
-		
