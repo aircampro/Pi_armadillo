@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 #
+# ===================== Library for use with the eSSP protocol ============================
+#
 import datetime
 import logging
 
@@ -265,18 +267,18 @@ class eSSP(object):  # noqa
 
     def get_note_positions(self):
         """causes the validator to report the number of notes stored and the value of the note in each position."""
-        result = self.send([self.getseq(), '0x1', '0x41'])
+        result = self.send([self.getseq(), '0x1', '0x41'], False)
         return result
         
     def parse_get_chan_pos(self, dat):
-        resp = dat[3] == 0xf0
+        resp = dat[3] == '0xf0'
         num = int(dat[4],16) 
         for zz in range(0,num):
             print("channel ",int(dat[5+zz],16))
         return resp
 
     def parse_get_note_pos(self, dat):
-        resp = dat[3] == 0xf0
+        resp = dat[3] == '0xf0'
         num = int(dat[4],16)                         # the number of notes
         for zz in range(0,(num*4),4):
             note = int(dat[5+zz],16) | int(dat[6+zz],16) << 8 | int(dat[7+zz],16) << 16 | int(dat[8+zz],16) << 24
@@ -301,8 +303,29 @@ class eSSP(object):  # noqa
 
     def get_note_counter(self):
         """causes validator to report a set of global note counters that track various note statistics."""
-        result = self.send([self.getseq(), '0x1', '0x58'])
+        result = self.send([self.getseq(), '0x1', '0x58'], False)
         return result
+
+    def parse_get_note_counter(self, dat):
+        if len(dat) < 25:
+            print("cannot parse message as too short")
+            return 0
+        resp = dat[3] == '0xf0'
+        counters = int(dat[4],16)                         # the number of counters in the set
+        stacked = int(dat[5],16) | int(dat[6],16) << 8 | int(dat[7],16) << 16 | int(dat[8],16) << 24
+        print("stacked notes ", stacked)
+        stored = int(dat[9],16) | int(dat[10],16) << 8 | int(dat[11],16) << 16 | int(dat[12],16) << 24
+        print("stored notes ", stored)
+        dispensed = int(dat[13],16) | int(dat[14],16) << 8 | int(dat[15],16) << 16 | int(dat[16],16) << 24
+        print("dispensed notes ", dispensed)
+        cashbox = int(dat[17],16) | int(dat[18],16) << 8 | int(dat[19],16) << 16 | int(dat[20],16) << 24
+        print("cashbox notes ", cashbox)
+        rejected = int(dat[21],16) | int(dat[22],16) << 8 | int(dat[23],16) << 16 | int(dat[24],16) << 24
+        print("rejected notes ", rejected)
+        # report if the crc for the data was good
+        if (self.chk_crc_response(dat) == -1):
+            print("invalid CRC returned for key exchange ! ") 
+        return resp
         
     def enable_payout(self):
         """Enables the recycler unit for payout, stacking and storage.
@@ -332,9 +355,25 @@ class eSSP(object):  # noqa
 
     def get_note_positions(self):
         """Used to get the value of each of the notes in the recycler.."""
-        result = self.send([self.getseq(), '0x1', '0x41'])
+        result = self.send([self.getseq(), '0x1', '0x41'], False)
         return result
 
+    def parse_get_note_positions(self, dat):
+        resp = dat[3] == '0xf0'
+        num_note = int(dat[4],16)                         # the number of notes stored
+        if (len(dat)-5) == num_note:                      # must be channels
+            for ii in range(0,num_note):
+                print("channel for note ",ii," is ",dat[int(5+ii)])
+        else:
+            for ii in range(0,num_note):
+                note_val = int(dat[5+ii],16) | int(dat[6+ii],16) << 8 | int(dat[7+ii],16) << 16 | int(dat[8+ii],16) << 24   
+                print("value for note ",ii," is ",note_val)    
+                
+        # report if the crc for the data was good
+        if (self.chk_crc_response(dat) == -1):
+            print("invalid CRC returned for key exchange ! ") 
+        return resp
+        
     def dispense_note(self):
         """Used to dispense the notes in the recycler.."""
         result = self.send([self.getseq(), '0x1', '0x42'])
@@ -370,8 +409,24 @@ class eSSP(object):  # noqa
 
     def get_bar_code_reader_config(self):
         """causes the validator to return the configuration data for attached bar code readers if there is one present."""
-        result = self.send([self.getseq(), '0x1', '0x24'])
+        result = self.send([self.getseq(), '0x1', '0x24'], False)
         return result
+
+    def parse_get_bar_code_reader_config(self, dat):
+        if len(dat) < 8:
+            print("cannot parse message as too short")
+            return 0
+        resp = dat[3] == '0xf0'
+        pos_list = ["None", "top Only", "bottom Only", "Both Top&Bottom"]
+        hw_status = int(dat[4],16)                         # 1=top 2=bottom 3=both
+        enab_status = int(dat[5],16)
+        format = int(dat[6],16) 
+        chars = int(dat[7],16)
+        print("barcode hardware ",pos_list[hw_status]," enabled ",pos_list[enab_status]," format ",format," chars = ",chars)       
+        # report if the crc for the data was good
+        if (self.chk_crc_response(dat) == -1):
+            print("invalid CRC returned for key exchange ! ") 
+        return resp
         
     # Enabling both top and bottom barcode readers =3 bot=2 top=1 , interleaved 2 of 5 = 0x1 else 0, Number of characters 0xA=10
     def set_bar_code_reader_config(self, top_bot=0x03, inter=0x0, chars=0x0A):
@@ -381,8 +436,25 @@ class eSSP(object):  # noqa
 
     def get_bar_code_inhib(self):
         """ causes validator to get the current bar code/currency inhibit status"""
-        result = self.send([self.getseq(), '0x1', '0x25'])
+        result = self.send([self.getseq(), '0x1', '0x25'], False)
         return result
+
+    def parse_get_bar_code_inhib(self, dat):
+        if len(dat) < 5:
+            print("cannot parse message as too short")
+            return 0
+        resp = dat[3] == '0xf0'
+        pos_list = ["currency : ", "ticket : "]
+        s_word = int(dat[4],16) 
+        for i in range(1,3):        
+            if (s_word & i):
+                print(pos_list[i-1],"enabled")
+            else:
+                print(pos_list[i-1],"disabled")           
+        # report if the crc for the data was good
+        if (self.chk_crc_response(dat) == -1):
+            print("invalid CRC returned for key exchange ! ") 
+        return resp
         
     def set_bar_code_inhib(self, mask):
         """ causes validator to set the current bar code/currency inhibit status"""
@@ -391,9 +463,26 @@ class eSSP(object):  # noqa
 
     def get_bar_code_data(self):
         """ causes validator to return the last valid barcode ticket data"""
-        result = self.send([self.getseq(), '0x1', '0x27'])
+        result = self.send([self.getseq(), '0x1', '0x27'], False)
         return result
 
+    def parse_get_bar_code_data(self, dat):
+        if len(dat) < 8:
+            print("cannot parse message as too short")
+            return 0
+        resp = dat[3] == '0xf0'
+        ticket_state = ["not valid ", "ticket in escrow ", "ticket stacked ", "ticket rejected "]
+        ticket = int(dat[4],16) 
+        print("ticket status : ",ticket_state[ticket])   
+        barc_datalen = int(dat[5],16) 
+        for i in range(0,barc_datalen):
+            print("bar code data byte recv : ",i," ",int(dat[6+i],16))        
+        # report if the crc for the data was good
+        if (self.chk_crc_response(dat) == -1):
+            print("invalid CRC returned for key exchange ! ") 
+        return resp
+        
+        
     # mode is 1 EEPROM 0 RAM storage
     def conf_bezel(self, red=0xFF, green=0x11, blu=0x7F, mode=1):
         """ sets the colour of the bezel to a specified RGB colour """
@@ -428,6 +517,18 @@ class eSSP(object):  # noqa
         result = self.send([self.getseq(), '0x1', '0x22'], False)
         return result
 
+    def parse_get_all_levels(self, dat):
+        resp = dat[3] == '0xf0'
+        num_denom = int(dat[4],16)
+        for valu in range(0, num_denom, 9):
+            denom_cnt = int(dat[5+valu],16) | (int(dat[6+valu],16) << 8) 
+            denom_val = int(dat[7+valu],16) | (int(dat[8+valu],16) << 8) | (int(dat[9+valu],16) << 16)| (int(dat[10+valu],16) << 24)
+            denom_cur = "currency = "
+            for z in range(0,3):
+                denom_cur += chr(dat[11+valu+z])       
+            print("list item number ",valu,"denom count ",denom_cnt,"denom value ",denom_val,denom_cur)
+        return resp
+        
     def halt_payout(self):
         """command that causes the current payout to stop."""
         result = self.send([self.getseq(), '0x1', '0x38'])
@@ -440,13 +541,14 @@ class eSSP(object):  # noqa
 
     def cashbox_payout_operation_data(self):
         """instructs the validator to return the amount emptied from the payout to the cashbox in the last dispense"""
-        result = self.send([self.getseq(), '0x1', '0x53'])
+        result = self.send([self.getseq(), '0x1', '0x53'],False)
         return result
 
     def get_note_counters(self):
         """causes validator to report a set of global note counters that track various note statistics"""
         result = self.send([self.getseq(), '0x1', '0x58'], False)
         return result
+
 
     def reset_note_counters(self):
         """causes the validator to reset all of its internal note counters to zero"""
@@ -522,7 +624,7 @@ class eSSP(object):  # noqa
             byte_pay = [0x19]
         denom1 = self.dec2snd4(note1amt*100)
         denom2 = self.dec2snd4(note2amt*100)
-        end_denom = [0x45, 0x55, 0x52]       # currency The country code when converted to ASCII characters is EUR
+        end_denom = [0x45, 0x55, 0x52]                     # currency The country code when converted to ASCII characters is EUR
         s_arr = [self.getseq(), '0x12', '0x3D'] + denom1 + denom2 + end_denom + byte_pay
         lb=hex(len(s_arr)-2)	
         s_arr[1]=lb		                                   # message length
@@ -531,7 +633,7 @@ class eSSP(object):  # noqa
 
     def get_routing_chan(self, chan=0x1):
         """causes the validator to return the routing for a specific channel."""
-        end_denom = [0x45, 0x55, 0x52]       # currency The country code when converted to ASCII characters is EUR
+        end_denom = [0x45, 0x55, 0x52]                     # currency The country code when converted to ASCII characters is EUR
         s_arr = [self.getseq(), '0x05', '0x3C'] + [chan] + end_denom 	
         lb=hex(len(s_arr)-2)	
         s_arr[1]=lb		                                   # message length        
@@ -540,7 +642,7 @@ class eSSP(object):  # noqa
 
     # takes dat as result from above,,,, 1= not recycle 0= recycle
     def parse_routing_data(self, dat):
-        reponse = dat[3] == 0xf0                          # true if good data
+        reponse = dat[3] == '0xf0'                         # true if good data
         route = dat[4] & 0xff
         return (reponse, route)
         
@@ -592,8 +694,17 @@ class eSSP(object):  # noqa
         s_arr = [self.getseq(), '0x12', '0x3E'] + end_denom 
         lb=hex(len(s_arr)-2)	
         s_arr[1]=lb		                                    # message length
-        result = self.send(s_arr)
+        result = self.send(s_arr, False)
         return result
+
+    def parse_get_min_payout(self,dat):
+        if len(dat) < 8:
+            print("message too short")
+            return 0
+        resp = dat[3] == '0xf0'
+        denom_val = int(dat[4],16) | (int(dat[5],16) << 8) | (int(dat[6],16) << 16)| (int(dat[7],16) << 24)
+        print("minimum payout value ",denom_val)
+        return resp
 
     def set_refill_mode(self, write=1, refil=1):
         """Five or six byte command sequence which causes the payout to change or report its refill mode"""
@@ -612,18 +723,24 @@ class eSSP(object):  # noqa
         result = self.send(s_arr)
         return result
 
-    # ------------- Ciphers / Cryptography -----------------
-    # AES 128 bit encrtption is used when encryption has been enabled.
+    # ---------------------------- Ciphers / Cryptography ------------------------------
+    # AES 128 bit encrtption is used when encryption has been enabled for eSSP protocol
+    #
+    # $ python -m pip install PyCryptodome
+    #
+    # mode = "ECB" this is the mode we are using currently "CBC" is also valid
+    #
     if AES_ENCRYPT == 1:
         from Crypto.Cipher import AES
         from Crypto.Random import get_random_bytes
+        from Crypto.Util.Padding import pad, unpad
             
-        def aes_gcm_encrypt(key, iv, text):
+        def aes_gcm_encrypt_std(self, key, iv, text):
             cipher = AES.new(key, AES.MODE_GCM, nonce=iv)
             ciphertext, mac = cipher.encrypt_and_digest(text)
             return ciphertext, mac
         
-        def aes_gcm_decrypt(key, iv, ciphertext, mac):
+        def aes_gcm_decrypt_std(self, key, iv, ciphertext, mac):
             plaintext = 0
             cipher = AES.new(key, AES.MODE_GCM, nonce=iv)
             try:
@@ -631,8 +748,124 @@ class eSSP(object):  # noqa
             except (ValueError, KeyError):
                 print("Incorrect decryption")
             return plaintext
+
+        # seems to be useful for mode AES.new(key, AES.MODE_CFB, iv)
+        def create_key_from_text(self, txt):
+            from Crypto.Hash import SHA256
+            sha = SHA256.new()
+            sha.update(txt.encode())
+            key = sha.digest()
+            return key
+            
+        def create_iv(self):
+            from Crypto import Random
+            iv = Random.new().read(AES.block_size)
+            return iv
+            
+        # AES key generation (128bit, 50,000 times)
+        # The following lists the available hash libs, which you can change
+        # print(hashlib.algorithms_guaranteed)
+        # {'sha1', 'blake2s', 'shake_128', 'md5', 'shake_256', 'sha3_384', 'sha256', 'sha224', 'sha512', 'sha3_224', 'blake2b', 'sha384', 'sha3_512', 'sha3_256'}
+        #
+        # Simple hashing, can be cracked if you have a mapping table of hash values.
+        # It is said that the following methods are effective as deciphering measures
+        #
+        def create_AES_key(self, message, salt, iters=50000):
+            import hashlib
+            import base64
+            import os
+
+            if salt == None:
+                salt = base64.b64encode(os.urandom(32))
+            key = hashlib.pbkdf2_hmac('sha256', message.encode(), salt.encode(), iters, int(128 / 8)).hex()
+            return key
+	
+        def generate_salt(self, digit_num):
+            import random
+            DIGITS_AND_ALPHABETS = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+            return "".join(random.sample(DIGITS_AND_ALPHABETS, digit_num))
+
+        # AES-256
+        def derive_key_and_iv_256(self, password, salt, bs=AES.block_size):
+            from hashlib import sha256
+		
+            salted = ''.encode()
+            dx = ''.encode()
+            # AES-256 keyCBC(iv)
+            while len(salted) < 48:                               # 48 = AES256(32byte)+IV(16byte)
+                hash = dx + password.encode() + salt.encode()
+                dx = sha256(hash).digest()
+                salted = salted + dx
+            key = salted[0:32]                                    # 32byte -> AES-256
+            iv = salted[32:48]                                    # 16byte (AES.block_size AES 128bit(=16byte)
+            return key, iv
+
+        # encrypt file with AES-256 
+        def encrypt_file(self, in_file, out_file, password):
+            bs = AES.block_size                            
+            salt = self.generate_salt(AES.block_size)
+            key, iv = self.derive_key_and_iv_256(password, salt, bs)
+
+            cipher = AES.new(key, AES.MODE_CBC, iv)                 # CBC。AESCipher。 
+            out_file.write(('Salted__' + salt).encode())            # salt
+            finished = False
+            while not finished:
+                chunk = in_file.read(1024 * bs)
+                orgChunkLen = len(chunk)
+                if len(chunk) == 0 or len(chunk) % bs != 0:
+                    padding_length = (bs - len(chunk) % bs) or bs
+                    padding = padding_length * chr(padding_length)
+                    chunk += padding.encode()
+                    finished = True
+                if len(chunk) > 0:
+                    out_file.write(cipher.encrypt(chunk))
+
+        # decrypt file with AES-256
+        def decrypt_file(self, in_file, out_file, password):
+            bs = AES.block_size
+            in_file.seek(len('Salted__'))
+            salt = in_file.read(16).decode()
+            key, iv = self.derive_key_and_iv_256(password, salt, bs)
+
+            cipher = AES.new(key, AES.MODE_CBC, iv) 
+            finished = False
+
+            while not finished:
+                chunk = in_file.read(1024 * bs)
+                orgChunkLen = len(chunk)
+                if orgChunkLen == 0 or orgChunkLen % bs != 0:
+                    padding_length = (bs - orgChunkLen % bs) or bs
+                    padding = padding_length * chr(padding_length)
+                    chunk += padding.encode()
+                    finished = True
+                if orgChunkLen > 0:
+                    out_file.write(cipher.decrypt(chunk)[0:orgChunkLen])
+                
+        # It uses the generated AES key and encrypts it with AES (128bit).
+        def aes_gcm_encrypt(self, key, iv, text, mode="ECB"):
+            if mode == "CBC":
+                cipher = AES.new(key, AES.MODE_CBC, nonce=iv)                                # Cipher.AES.blockalgo.MODE_CFB, MODE_CTR, MODE_ECB, MODE_OFB 
+            elif mode == "ECB":
+                cipher = AES.new(key, AES.blockalgo.MODE_ECB, nonce=iv)                      # Cipher.AES.blockalgo.MODE_CFB, MODE_CTR, MODE_ECB, MODE_OFB 
+            data = pad(text.encode('utf-8'), AES.block_size, 'pkcs7')
+            ciphertext, mac = cipher.encrypt_and_digest(data)
+            return ciphertext, mac
         
-        def send_rcv_with_aes(msgdata, key, nonce):
+        def aes_gcm_decrypt(self, key, iv, ciphertext, mac, mode="ECB"):
+            plaintext = 0
+            if mode == "CBC":
+                cipher = AES.new(key, AES.MODE_CBC, nonce=iv)                                # Cipher.AES.blockalgo.MODE_CFB, MODE_CTR, MODE_ECB, MODE_OFB 
+            elif mode == "ECB":
+                cipher = AES.new(key, AES.blockalgo.MODE_ECB, nonce=iv)                      # Cipher.AES.blockalgo.MODE_CFB, MODE_CTR, MODE_ECB, MODE_OFB 
+            try:
+                plaintext = cipher.decrypt_and_verify(ciphertext, mac)
+                #plaintext = cipher.decrypt(encrypted)
+                print(plaintext.decode(encoding='utf-8'))
+            except (ValueError, KeyError):
+                print("Incorrect decryption")
+            return unpad(plaintext.decode('utf-8'))
+            
+        def send_rcv_with_aes(self, msgdata, key, nonce):
             if key == None:
                 key = get_random_bytes(16)
             if nonce == None:                
@@ -685,19 +918,19 @@ class eSSP(object):  # noqa
             return result
 		
     # Diffie - Hellman key exchange
-
+                
     # send the dh key exchange
     def send_dh_key_exchange(self, pub_key):
         msg = [ self.getseq(), '0x9', '0x4C' ]
         for z in range(0, 8):
-            byt = [ (pub_key >> int(8 * z)) & 0xFF ]
+            byt = [ hex((pub_key >> int(8 * z)) & 0xFF) ]
             msg = msg + byt		
         result = self.send(msg, False)
         return result
       
     #Simulating the Diffie-Hellman Key Exchange b/w two entities. 
     #
-    def generate_dh_key(base=5, primeRandom=23):
+    def generate_dh_key(self, base=5, primeRandom=23):
         MyKey = DHKE(base, primeRandom)
         MyKey.generate_privatekey()
 
@@ -724,7 +957,7 @@ class eSSP(object):  # noqa
         # parse the message for the key returned
         resp, key_dat = self.parse_key_exchange(ans)
         
-        if (resp != 0xf0):
+        if (resp == False):
             print("invalid response to key exchange")
             sys.exit(-3)
             
@@ -735,7 +968,7 @@ class eSSP(object):  # noqa
         print("Shared Key Generated now by MyKey : ",MyKey.share_key,'\n')
         return MyKey
         
-    def primesInRange(x, y):
+    def primesInRange(self, x, y):
         prime_list = []
         for n in range(x, y):
             isPrime = True
@@ -750,10 +983,13 @@ class eSSP(object):  # noqa
         return prime_list
 
     # get a random prime number in the range
-    def get_random_prime(st=0, en=255):
-        p = self.primesInRange(st, en)                          # get all prime numbers between start and end
-        rp = p[np.random.choice((len(p)-1),1)]                  # select one of them randomly
-        return [rp]
+    def get_random_prime(self, st=0, en=255):
+        p = self.primesInRange(st, en)                              # get all prime numbers between start and end
+        if len(p) > 0:
+            rp = p[np.random.choice((len(p)-1),1)]                  # select one of them randomly
+        else:
+            rp = 23                                                 # default it
+        return [hex(rp)]                                            # data sends as hex 
 
     # send the generator	
     def send_generator(self):
@@ -762,7 +998,7 @@ class eSSP(object):  # noqa
         for z in range(0,8):
             rp_num = self.get_random_prime()
             msg = msg + rp_num
-            g = g | (rp_num[0] << (8*z))            
+            g = g | (int(rp_num[0],16) << (8*z))            
         result = self.send(msg)
         return result, g
 
@@ -773,10 +1009,57 @@ class eSSP(object):  # noqa
         for z in range(0,8):
             rp_num = self.get_random_prime()
             msg = msg + rp_num
-            p = p | (rp_num[0] << (8*z))            
+            p = p | (int(rp_num[0], 16) << (8*z))            
         result = self.send(msg)
         return result, p
 
+    # create 2 random primes and make the smallest the modulus and largest the generator
+    # for use with DH key exchange
+    #	
+    def create_gen_mod(self):
+        g = 0
+        g_arr = []
+        for z in range(0,8):
+            rp_num = self.get_random_prime()
+            g = g | (int(rp_num[0],16) << (8*z))
+            g_arr.append(hex(rp_num[0]))            
+        p = 0
+        p_arr = []
+        for z in range(0,8):
+            rp_num = self.get_random_prime()
+            p = p | (int(rp_num[0],16) << (8*z)) 
+            p_arr.append(rp_num[0]) 
+        if p > g:                              # modulus greater than generator
+            old = g
+            g = p
+            p = old
+            old_arr = g_arr
+            g_arr = p_arr
+            p_arr = old_arr            
+        return p, g, p_arr, g_arr
+
+    # send the generator as the array created above	
+    def send_generator_array(self, g_arr):
+        msg = [ self.getseq(), '0x9', '0x4A' ]
+        g = 0
+        for z in range(0,8):
+            rp_num = [g_arr[z]]
+            msg = msg + rp_num
+            g = g | (int(rp_num[0],16) << (8*z))            
+        result = self.send(msg)
+        return result, g
+
+    # send the modulus as the array created above
+    def send_modulus_array(self, p_arr):
+        msg = [ self.getseq(), '0x9', '0x4B' ]
+        p = 0
+        for z in range(0,8):
+            rp_num = [p_arr[z]]
+            msg = msg + rp_num
+            p = p | (int(rp_num[0], 16) << (8*z))            
+        result = self.send(msg)
+        return result, p
+        
     # send the key exchange - this just sends random primes but with diffie hellman you use send_dh_key_exchange instead
     def send_key_exchange(self):
         msg = [ self.getseq(), '0x9', '0x4C' ]
@@ -786,12 +1069,63 @@ class eSSP(object):  # noqa
         return result
 
     def parse_key_exchange(self, dat):
-        resp = dat[3] == 0xf0
+        resp = dat[3] == '0xf0'
         num = 8 
-        for zz in range(0,num):
+        for zz in range(0, num):
             z += int(dat[4+zz],16) << (8*zz)
         return (resp, z)    
 
+    def create_arr_from_int(self, int_in):
+        arr_out = []
+        for i in range(0,8):
+            if (i == 0):
+                arr_out.append((int_in&0xff))
+            elif (i == 1):
+                arr_out.append((int_in&0xff00)>>8)
+            elif (i == 2):
+                arr_out.append((int_in&0xff0000)>>16)
+            elif (i == 3):
+                arr_out.append((int_in&0xff000000)>>24)
+            elif (i == 4):
+                arr_out.append(int_in&0xff00000000)>>32)
+            elif (i == 5):
+                arr_out.append(int_in&0xff0000000000)>>40)
+            elif (i == 6):
+                arr_out.append(int_in&0xff000000000000)>>48)
+            elif (i == 7):
+                arr_out.append(int_in&0xff00000000000000)>>56)
+        return arr_out
+
+    # should be the same depends what you find easiest to read
+    def create_arr_from_int2(self, int_in):
+        arr_out = []
+        mask = 0xff
+        for i in range(0,8):
+            arr_out.append((int_in&mask)>>(8*i))
+            mask = mask << 8
+        return arr_out
+        
+    def create_hex_arr_from_int(self, int_in):
+        arr_out = []
+        for i in range(0,8):
+            if (i == 0):
+                arr_out.append(hex(int_in&0xff))
+            elif (i == 1):
+                arr_out.append(hex((int_in&0xff00)>>8))
+            elif (i == 2):
+                arr_out.append(hex((int_in&0xff0000)>>16))
+            elif (i == 3):
+                arr_out.append(hex((int_in&0xff000000)>>24))
+            elif (i == 4):
+                arr_out.append(hex(int_in&0xff00000000)>>32))
+            elif (i == 5):
+                arr_out.append(hex(int_in&0xff0000000000)>>40))
+            elif (i == 6):
+                arr_out.append(hex(int_in&0xff000000000000)>>48))
+            elif (i == 7):
+                arr_out.append(hex(int_in&0xff00000000000000)>>56))
+        return arr_out
+        
     # we duplicate the generation of the 2 encryption keys and do encryption using these on the message
     #
     # commandStructure->Key.FixedKey = 0x0123456701234567;
@@ -917,9 +1251,15 @@ class eSSP(object):  # noqa
         send_arr = send_arr + arr4_value + end_currency	+ byte_pay	
         lb=hex(len(send_arr)-2)	
         send_arr[1]=lb		                                   # message length
-        result = self.send(send_arr)
+        result = self.send(send_arr, False)
         return result
 
+    def parse_get_note_ammount(self, dat):
+        resp = dat[3] == '0xf0'
+        num = int(dat[4],16) | (int(dat[5],16) << 8) 
+        print("number of notes ",num)
+        return resp
+        
     def set_coin_ammount(self, no_of_coins, value_of_coin):
         """causes the validator to report the amount of notes stored of a specified denomination in the payout unit"""
         end_currency = [0x45, 0x55, 0x52]                                   # currency The country code when converted to ASCII characters is EUR
@@ -1267,7 +1607,7 @@ class eSSP(object):  # noqa
 
             crc = self.crc(crc_command)
 
-            if (response[len(response) - 2] != crc[0]) & \
+            if (response[len(response) - 2] != crc[0]) | \
                     (response[len(response) - 1] != crc[1]):
                 crc_ok = -1
             else:
