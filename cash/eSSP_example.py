@@ -112,20 +112,20 @@ k.enable()
 var = 1
 i = 0
 while var == 1:
-	poll = k.poll()
-	print("Poll")
+    poll = k.poll()
+    print("Poll")
 	
-	if len(poll) > 1:
-		if len(poll[1]) == 2:
-			if poll[1][0] == '0xef':
-				if poll[1][1] == 1 or poll[1][1] == 3:
-					while i < 10:
-						k.hold()
-						print("Hold " + str(i))
-						time.sleep(0.5)
-						i += 1
-			if poll[1][0] == '0xee':
-				print("Credit on Channel " + str(poll[1][1]))
-				i = 0
+    if len(poll) > 1:
+        if len(poll[1]) == 2:
+            if poll[1][0] == '0xef':
+                if poll[1][1] == 1 or poll[1][1] == 3:
+                    while i < 10:
+                        k.hold()
+                        print("Hold " + str(i))
+                        time.sleep(0.5)
+                        i += 1
+                if poll[1][0] == '0xee':
+                    print("Credit on Channel " + str(poll[1][1]))
+                    i = 0
 				
-	time.sleep(0.5)
+    time.sleep(0.5)
