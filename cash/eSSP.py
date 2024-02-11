@@ -890,7 +890,7 @@ class eSSP(object):  # noqa
 
         def payout_by_value_with_aes(self, key, nonce, noteamt, mode=1):
             """command that instructs the payout device to payout a specified amount"""
-            end_currency = [0x45, 0x55, 0x52]                                   # currency The country code when converted to ASCII characters is EUR
+            end_currency = ['0x45', '0x55', '0x52']                                   # currency The country code when converted to ASCII characters is EUR
             # end_currency = [hex(ord("C")), hex(ord("H")), hex(ord("F"))]      # uncomment to swap to swiss franks
             # end_currency = [hex(ord("R")), hex(ord("U")), hex(ord("B"))]      # uncomment to swap to rubles
             if (mode == 1):
@@ -909,7 +909,7 @@ class eSSP(object):  # noqa
             """which allows the user to specify exactly which notes are paid out.
                this routine is when encryption has been enabled using AES """
             i = 0
-            end_currency = [0x45, 0x55, 0x52]                                   # currency The country code when converted to ASCII characters is EUR
+            end_currency = ['0x45', '0x55', '0x52']                                   # currency The country code when converted to ASCII characters is EUR
             # end_currency = [hex(ord("C")), hex(ord("H")), hex(ord("F"))]      # uncomment to swap to swiss franks
             tot_num = hex(i)
             if (mode == 1):
@@ -1158,7 +1158,7 @@ class eSSP(object):  # noqa
     def payout_by_denomination(self, note_amt_list, mode=1):
         """which allows the user to specify exactly which notes are paid out."""
         i = 0
-        end_currency = [0x45, 0x55, 0x52]                                   # currency The country code when converted to ASCII characters is EUR
+        end_currency = ['0x45', '0x55', '0x52']                                   # currency The country code when converted to ASCII characters is EUR
         # end_currency = [hex(ord("C")), hex(ord("H")), hex(ord("F"))]      # uncomment to swap to swiss franks
         tot_num = hex(i)
         if (mode == 1):
@@ -1185,7 +1185,7 @@ class eSSP(object):  # noqa
         """instructs the validator to float individual quantities of a denomination in the SMART payout. It follows a similar format to the Payout by 
            Denomination command"""
         i = 0
-        end_currency = [0x45, 0x55, 0x52]                                   # currency The country code when converted to ASCII characters is EUR
+        end_currency = ['0x45', '0x55', '0x52']                                   # currency The country code when converted to ASCII characters is EUR
         # end_currency = [hex(ord("C")), hex(ord("H")), hex(ord("F"))]      # uncomment to swap to swiss franks
         tot_num = hex(i)
         if (mode == 1):
@@ -1208,7 +1208,7 @@ class eSSP(object):  # noqa
         
     def payout_by_value(self, noteamt, mode=1):
         """command that instructs the payout device to payout a specified amount"""
-        end_currency = [0x45, 0x55, 0x52]                                   # currency The country code when converted to ASCII characters is EUR
+        end_currency = ['0x45', '0x55', '0x52']                                   # currency The country code when converted to ASCII characters is EUR
         # end_currency = [hex(ord("C")), hex(ord("H")), hex(ord("F"))]      # uncomment to swap to swiss franks
         if (mode == 1):
             byte_pay = [0x58]
@@ -1263,7 +1263,7 @@ class eSSP(object):  # noqa
 		
     def get_note_ammount(self, noteamt, mode=1):
         """causes the validator to report the amount of notes stored of a specified denomination in the payout unit"""
-        end_currency = [0x45, 0x55, 0x52]                                   # currency The country code when converted to ASCII characters is EUR
+        end_currency = ['0x45', '0x55', '0x52']                                   # currency The country code when converted to ASCII characters is EUR
         # end_currency = [hex(ord("C")), hex(ord("H")), hex(ord("F"))]      # uncomment to swap to swiss franks
         if (mode == 1):
             byte_pay = [0x58]
@@ -1285,7 +1285,7 @@ class eSSP(object):  # noqa
         
     def set_coin_ammount(self, no_of_coins, value_of_coin):
         """causes the validator to report the amount of notes stored of a specified denomination in the payout unit"""
-        end_currency = [0x45, 0x55, 0x52]                                   # currency The country code when converted to ASCII characters is EUR
+        end_currency = ['0x45', '0x55', '0x52']                                   # currency The country code when converted to ASCII characters is EUR
         # end_currency = [hex(ord("C")), hex(ord("H")), hex(ord("F"))]      # uncomment to swap to swiss franks
         send_arr = [self.getseq(), '0x09', '0x34']
         nofc = self.dec2snd(no_of_coins)
