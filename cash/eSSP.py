@@ -260,6 +260,20 @@ class eSSP(object):  # noqa
         result = self.send([self.getseq(), '0x1', '0xA'])
         return result
 
+    # choice =
+    # SSP_PROGRAM_FIRMWARE 0x0
+    # SSP_PROGRAM_DATASET 0x1
+    # SSP_PROGRAM_RAM 0x3
+    def program_on(self, choice):
+        """Program as defined by choice """
+        result = self.send([self.getseq(), '0x2', '0xB', choice])
+        return result
+
+    def program_status(self, choice):
+        """Program status """
+        result = self.send([self.getseq(), '0x1', '0x16'])
+        return result
+        
     def empty(self):
         """command causes the NV11 to empty all its stored notes to the cashbox."""
         result = self.send([self.getseq(), '0x1', '0x3F'])
@@ -1125,7 +1139,16 @@ class eSSP(object):  # noqa
             elif (i == 7):
                 arr_out.append(hex(int_in&0xff00000000000000)>>56))
         return arr_out
-        
+
+    # above padding should work but here is an alternative to pad any length word 
+    def padding_fnc( data, base=16 ):
+	    padding_data = data
+	    if 0 != (len(data) % base):
+		    padding_size = base - (len(data) % base)
+		    for i in range(padding_size):
+			    padding_data += padding_size.to_bytes(1, 'little')
+	    return padding_data
+    
     # we duplicate the generation of the 2 encryption keys and do encryption using these on the message
     #
     # commandStructure->Key.FixedKey = 0x0123456701234567;
@@ -1279,9 +1302,160 @@ class eSSP(object):  # noqa
     # RAM code rather than on code stored previously in the validator
     def send_prog_cmd(self):
         """ SENDING THE PROGRAMMING COMMAND AND RETRIEVING THE BLOCK SIZE """
-        result = self.send([self.getseq(), '0x2', '0x0B', '0x03'])
+        result = self.send([self.getseq(), '0x2', '0x0B', '0x03'], False)
         return result	
 
+    def parse_prog_cmd(self, dat):
+        block_sz = -1
+        if dat[3] == '0xf0'            # good response
+            block_sz = int(dat[4],16)
+            block_sz = block_sz | (int(dat[4],16)<<8)
+        return block_sz
+
+    # The header block is simply the first 128 bytes of the main firmware/dataset file. This is 
+    # transmitted to the validator as an SSP command
+    def send_header_file(self, filename):
+        """ first 128 bytes  """
+        s_array = [self.getseq(), '0x80']
+        infile = open(filename, "rb")
+        add_arr = []
+        for i in range(0,128):
+            each_byte = infile.read(1).decode()
+            add_arr.append(hex(each_byte))
+        s_array = s_array + add_arr 
+        infile.close()        
+        result = self.send(s_array, False)      
+        if (self.chk_crc_response(result) != 1):
+            print("invalid crc or response occured in downloading header file")
+        return result
+
+    def read_ram_sz_from_file(self, filename):
+        """ get ram size from file  """
+        infile = open(filename, "rb")
+        infile.seek(7)                         # data starts at byte 7
+        i = 3
+        tot_ram_sz = 0
+        while (i>=0):
+            tot_ram_sz += infile.read(1).decode() << (i*8)
+            i = i - 1
+        infile.close()           
+        return tot_ram_sz
+
+    def send_ram_file(self, filename, tot_ram_sz):
+        """ send in 128 byte blocks plus remainder """
+        num_ram_blocks = math.trunk(tot_ram_sz/128)
+        infile = open(filename, "rb")
+        # From this point, the SSP command packet format is not used
+        # s_array = [self.getseq(), '0x80']  
+        s_array = []        
+        xor_tot = 0
+        fail = 0
+        if num_ram_blocks > 0:
+            for ii in range(0, num_ram_blocks):
+                seek_pos = ii * 128
+                infile.seek(seek_pos)
+                add_arr = []
+                for i in range(0,128):
+                    each_byte = infile.read(1).decode()
+                    xor_tot ^= each_byte
+                    add_arr.append(hex(each_byte))
+                byte_array = s_array + add_arr         
+                result = self.send_no_readback(byte_array))     # suggests that it doesnt send a reply until end so specify no_readback
+                #if (self.chk_crc_response(result) != 1):
+                #   print("invalid crc or response occured in downloading ram file")                
+        rem_ram_blocks = tot_ram_sz % 128
+        seek_pos = (ii+1) * 128    
+        infile.seek(seek_pos)
+        add_arr = []
+        for i in range(0, rem_ram_blocks):
+            each_byte = infile.read(1).decode()
+            xor_tot ^= each_byte
+            add_arr.append(hex(each_byte))
+        # s_array[1] = hex(rem_ram_blocks)    we patch the length message field to the remaining byte length in ram file - but not using eSSP !
+        byte_array = s_array + add_arr 
+        result = self.send_read_one_byte_back(byte_array) 
+        res_int = int(result,16)
+        # An XOR checksum should be kept on each transferred byte, once the whole RAM file has 
+        # been transferred the validator will send a response. The first byte of this response will 
+        # contain the checksum of the RAM file as calculated by the validator, this should match the 
+        # one calculated as the file was transferred.
+        if (xor_tot != res_int):
+            print("invalid xor checksum or response occured in downloading ram file") 
+            fail = 1
+        #if (self.chk_crc_response(result) != 1):
+        #    print("invalid crc or response occured in downloading ram file") 
+        infile.close()          
+        return fail
+
+    def read_update_from_firmware_file(self, filename):
+        """ get ram size from file  """
+        infile = open(filename, "rb")
+        infile.seek(6)                         # data starts at byte 6
+        upd_code = infile.read(1).decode() 
+        infile.close()           
+        return hex(upd_code)
+
+    def send_firmware_update_code(self, updc):
+        self.__ser.write(hex(updc))
+        byte = self.__ser.read() 
+        if byte == '0x32':
+            print("firmware update code sent successfullt")
+        else:
+            print("firmware update code sent unsuccessfullt") 
+
+    def send_firmware_header_file(self, firmfil):
+        r = self.send_header_file(firmfil)          
+        if r[0] == '0x32':
+            print("sent firmware header success")
+        else:
+            print("sent firmware header failure")
+
+    def send_firmware_file(self, filename, tot_ram_sz):
+        """ send in 128 byte blocks plus remainder """
+        import os
+        infile = open(filename, "rb")
+        # f_size = os.stat(filename)
+        # file_size = f_size.st_size
+        infile.seek(0, os.SEEK_END)
+        file_sixe = infile.tell()                                                 
+        res = self.send_prog_cmd()
+        block_size = self.parse_prog_cmd(res)
+        total_download_size = file_sixe - tot_ram_sz - 128            # we subtract 128 bytes for the header
+        total_download_blocks = total_download_size / block_size
+        num_ram_blocks = math.trunk(tot_ram_sz/128)
+        # infile.seek(0)                                                rewind the seek cursor
+        infile.seek(128)                                              # should we skip first 128 bytes as we omitted the header above
+        # From this point, the SSP command packet format is not used
+        # s_array = [self.getseq(), '0x80']  
+        s_array = []  
+        fail = 0        
+        if total_download_blocks > 0:
+            for zz in range(0, total_download_blocks):
+                breakdown = block_size / 128
+                xor_tot = 0
+                for ii in range(0, breakdown):
+                    seek_pos = ii * 128
+                    infile.seek(seek_pos)
+                    add_arr = []
+                    for i in range(0, 128):
+                        each_byte = infile.read(1).decode()
+                        xor_tot ^= each_byte
+                        add_arr.append(hex(each_byte))
+                    byte_array = s_array + add_arr         
+                    result = self.send_no_readback(byte_array)     # suggests that it doesnt send a reply until end so specify no_readback
+                byte_array = [xor_tot] 
+                result = self.send_read_one_byte_back(byte_array) 
+                res_int = int(result, 16)
+                # An XOR checksum should be kept on each transferred byte, once the whole RAM file has 
+                # been transferred the validator will send a response. The first byte of this response will 
+                # contain the checksum of the RAM file as calculated by the validator, this should match the 
+                # one calculated as the file was transferred.
+                if (xor_tot != res_int):
+                    print("invalid xor checksum or response occured in downloading ram file for block no : ",zz+1)  
+                    fail = 1
+        infile.close()          
+        return fail
+        
     def serial_number(self):
         """Return formatted serialnumber."""
         result = self.send([self.getseq(), '0x1', '0xC'], False)
@@ -1403,8 +1577,6 @@ class eSSP(object):  # noqa
                ready = 2
        return ready
                
-    # SSP_CMD_DISPENSE 0x12 not implented
-
     # SSP_CMD_PROGRAM_STATUS 0x16 not implented
 
     def last_reject(self):
@@ -1446,9 +1618,12 @@ class eSSP(object):  # noqa
         return result
 
     # SPP_CMD_MANUFACTURER 0x30 not implented, collides with SSP_CMD_EXPANSION?
-
     # SSP_CMD_EXPANSION 0x30 not implented, collides with SSP_CMD_MANUFACTURER?
-
+    # header file shows these the same
+    def report_manufacturer(self):
+        result = self.send([self.getseq(), '0x1', '0x30'])
+        return result
+        
     def enable_higher_protocol(self):
         """Enable functions from implemented with version >= 3."""
         result = self.send([self.getseq(), '0x1', '0x19'])
@@ -1496,7 +1671,7 @@ class eSSP(object):  # noqa
     def send(self, command, process=True):
         crc = self.crc(command)
 
-        prepedstring = '7F'
+        prepedstring = '7F'                        # STX byte
 
         command = command + crc
 
@@ -1516,6 +1691,54 @@ class eSSP(object):  # noqa
         response = self.read(process)
         return response
 
+    # this is a raw send for the download of files as suggested if it is enclosed in eSSP uncomment
+    #
+    def send_no_readback(self, command):
+        #crc = self.crc(command)
+
+        prepedstring = ''                        # no STX byte
+
+        # command = command + crc no crc used ?
+
+        for i in range(0, len(command)):
+            #if (len(command[i]) % 2 == 1):
+            #    prepedstring += '0'
+
+            prepedstring += command[i][2:]
+
+        self._logger.debug("OUT: 0x" + ' 0x'.join([prepedstring[x:x + 2]
+                           for x in range(0, len(prepedstring), 2)]))
+
+        prepedstring = prepedstring.decode('hex')
+
+        self.__ser.write(prepedstring)
+
+
+    # this is a raw send for the download of files as suggested if it is enclosed in eSSP uncomment
+    #
+    def send_read_one_byte_back(self, command):
+        #crc = self.crc(command)
+
+        prepedstring = ''                        # no STX byte
+
+        # command = command + crc
+
+        for i in range(0, len(command)):
+            #if (len(command[i]) % 2 == 1):
+            #    prepedstring += '0'
+
+            prepedstring += command[i][2:]
+
+        self._logger.debug("OUT: 0x" + ' 0x'.join([prepedstring[x:x + 2]
+                           for x in range(0, len(prepedstring), 2)]))
+
+        prepedstring = prepedstring.decode('hex')
+
+        self.__ser.write(prepedstring)
+        response = read_bytes()
+        
+        return response
+        
     def read(self, process=True):
         """Read the requested data from the serial port."""
         bytes_read = []
@@ -1547,6 +1770,28 @@ class eSSP(object):  # noqa
             response = self.process_response(response)
         return response
 
+    def read_bytes(self, expected_bytes=1):
+        """Read the requested data from the serial port."""
+        bytes_read = []
+        # initial response length is only the header.
+        
+        timeout_expired = datetime.datetime.now() + datetime.timedelta(seconds=self.timeout)
+        while True:
+            byte = self.__ser.read()
+            if byte:
+                bytes_read += byte
+            else:
+                # when the socket doesn't give us any data, evaluate the timeout
+                if datetime.datetime.now() > timeout_expired:
+                    raise eSSPTimeoutError('Unable to read the expected response of {} bytes within {} seconds'.format(
+                                           expected_bytes, self.timeout))
+
+            if len(bytes_read) == expected_bytes:
+                # we've read the complete response
+                break
+
+        return response
+        
     def arrayify_response(self, response):
         array = []
         for i in range(0, len(response)):
