@@ -11,4 +11,5 @@ Client - Server in rust with the client reading the width for an object it has r
 controls a Mitsubishi FX or Q series with modbus TCP over discord. UR Robot to Omron FINS TCP in rust. a little bit of erlang for queueing.
 radio links BLE EnOcean LoRa Zigbee etc, usb interfaces, serial. Franka Emika gripper query to webserver of label read using tesseract to get width then grip object.
 Can query resnet from a picture or get information from Google Cloud API, haskell webserver examples for scotty and spock. Interface to aldebaran pepper robot from GPT-3
+eSSP and CCtalk protocol examples for communication with money machines and gaming dispensers AES encrpytion and Diffie Hellman jey exchange
 .................have fun it is still in development.....
