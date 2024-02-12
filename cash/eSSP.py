@@ -10,6 +10,8 @@ import numpy as np
 import time
 
 import sys
+import struct
+import os
 
 # this allows this code to run on python 2.x and 3.x
 from __future__ import print_function
@@ -1329,6 +1331,25 @@ class eSSP(object):  # noqa
             print("invalid crc or response occured in downloading header file")
         return result
 
+    # some commands im not sure if they are in hex or binary so an alternative binary routine has been made to test
+    # in that scenario rather than using the eSSP protocol to wrap that data.
+    # not sure if we send this in binary when sending the header file for the firmware update rather than above which for RAM 
+    def send_header_file_binary(self, filename):
+        """ first 128 bytes  """
+        s_array = []
+        infile = open(filename, "rb")
+        add_arr = []
+        for i in range(0,128):
+            each_byte = infile.read(1).decode()
+            add_arr.append(each_byte)
+        s_array = s_array + add_arr 
+        infile.close()        
+        self.binary_writer(s_array) 
+        result = self.binary_reader(1)  
+        if result != 0x32:
+            print("error occurred in downloading binary header file for firmware upgrade")        
+        return result
+        
     def read_ram_sz_from_file(self, filename):
         """ get ram size from file  """
         infile = open(filename, "rb")
@@ -1387,13 +1408,59 @@ class eSSP(object):  # noqa
         infile.close()          
         return fail
 
+    def send_ram_file_binary(self, filename, tot_ram_sz):
+        """ send in 128 byte blocks plus remainder """
+        num_ram_blocks = math.trunk(tot_ram_sz/128)
+        infile = open(filename, "rb")
+        # From this point, the SSP command packet format is not used
+        # s_array = [self.getseq(), '0x80']  
+        s_array = []        
+        xor_tot = 0
+        fail = 0
+        if num_ram_blocks > 0:
+            for ii in range(0, num_ram_blocks):
+                seek_pos = ii * 128
+                infile.seek(seek_pos)
+                add_arr = []
+                for i in range(0,128):
+                    each_byte = infile.read(1).decode()
+                    xor_tot ^= each_byte
+                    add_arr.append(each_byte)
+                byte_array = s_array + add_arr         
+                self.binary_writer(byte_array)     # suggests that it doesnt send a reply until end so specify no_readback
+                #if (self.chk_crc_response(result) != 1):
+                #   print("invalid crc or response occured in downloading ram file")                
+        rem_ram_blocks = tot_ram_sz % 128
+        seek_pos = (ii+1) * 128    
+        infile.seek(seek_pos)
+        add_arr = []
+        for i in range(0, rem_ram_blocks):
+            each_byte = infile.read(1).decode()
+            xor_tot ^= each_byte
+            add_arr.append(each_byte)
+        # s_array[1] = hex(rem_ram_blocks)    we patch the length message field to the remaining byte length in ram file - but not using eSSP !
+        byte_array = s_array + add_arr 
+        self.binary_writer(byte_array) 
+        result = self.binary_reader(1)
+        # An XOR checksum should be kept on each transferred byte, once the whole RAM file has 
+        # been transferred the validator will send a response. The first byte of this response will 
+        # contain the checksum of the RAM file as calculated by the validator, this should match the 
+        # one calculated as the file was transferred.
+        if (xor_tot != result):
+            print("invalid xor checksum or response occured in downloading ram file") 
+            fail = 1
+        #if (self.chk_crc_response(result) != 1):
+        #    print("invalid crc or response occured in downloading ram file") 
+        infile.close()          
+        return fail
+        
     def read_update_from_firmware_file(self, filename):
         """ get ram size from file  """
         infile = open(filename, "rb")
         infile.seek(6)                         # data starts at byte 6
         upd_code = infile.read(1).decode() 
         infile.close()           
-        return hex(upd_code)
+        return upd_code
 
     def send_firmware_update_code(self, updc):
         self.__ser.write(hex(updc))
@@ -1403,13 +1470,28 @@ class eSSP(object):  # noqa
         else:
             print("firmware update code sent unsuccessfullt") 
 
+    def send_firmware_update_code_binary(self, updc):
+        self.__ser.write(updc)
+        byte = self.__ser.read(1) 
+        if byte == 0x32:
+            print("firmware update code sent successfullt")
+        else:
+            print("firmware update code sent unsuccessfullt") 
+            
     def send_firmware_header_file(self, firmfil):
         r = self.send_header_file(firmfil)          
-        if r[0] == '0x32':
+        if r[4] == '0x32':
             print("sent firmware header success")
         else:
             print("sent firmware header failure")
 
+    def send_firmware_header_file_binary(self, firmfil):
+        r = self.send_header_file_binary(firmfil)          
+        if r == 0x32:
+            print("sent firmware header success")
+        else:
+            print("sent firmware header failure")
+            
     def send_firmware_file(self, filename, tot_ram_sz):
         """ send in 128 byte blocks plus remainder """
         import os
@@ -1443,8 +1525,55 @@ class eSSP(object):  # noqa
                         add_arr.append(hex(each_byte))
                     byte_array = s_array + add_arr         
                     result = self.send_no_readback(byte_array)     # suggests that it doesnt send a reply until end so specify no_readback
-                byte_array = [xor_tot] 
+                byte_array = [hex(xor_tot)] 
                 result = self.send_read_one_byte_back(byte_array) 
+                res_int = int(result, 16)
+                # An XOR checksum should be kept on each transferred byte, once the whole RAM file has 
+                # been transferred the validator will send a response. The first byte of this response will 
+                # contain the checksum of the RAM file as calculated by the validator, this should match the 
+                # one calculated as the file was transferred.
+                if (xor_tot != res_int):
+                    print("invalid xor checksum or response occured in downloading ram file for block no : ",zz+1)  
+                    fail = 1
+        infile.close()          
+        return fail
+
+    def send_firmware_file_binary(self, filename, tot_ram_sz):
+        """ send in 128 byte blocks plus remainder """
+        import os
+        infile = open(filename, "rb")
+        # f_size = os.stat(filename)
+        # file_size = f_size.st_size
+        infile.seek(0, os.SEEK_END)
+        file_sixe = infile.tell()                                                 
+        res = self.send_prog_cmd()
+        block_size = self.parse_prog_cmd(res)
+        total_download_size = file_sixe - tot_ram_sz - 128            # we subtract 128 bytes for the header
+        total_download_blocks = total_download_size / block_size
+        num_ram_blocks = math.trunk(tot_ram_sz/128)
+        # infile.seek(0)                                                rewind the seek cursor
+        infile.seek(128)                                              # should we skip first 128 bytes as we omitted the header above
+        # From this point, the SSP command packet format is not used
+        # s_array = [self.getseq(), '0x80']  
+        s_array = []  
+        fail = 0        
+        if total_download_blocks > 0:
+            for zz in range(0, total_download_blocks):
+                breakdown = block_size / 128
+                xor_tot = 0
+                for ii in range(0, breakdown):
+                    seek_pos = ii * 128
+                    infile.seek(seek_pos)
+                    add_arr = []
+                    for i in range(0, 128):
+                        each_byte = infile.read(1).decode()
+                        xor_tot ^= each_byte
+                        add_arr.append(each_byte)
+                    byte_array = s_array + add_arr         
+                    self.binary_writer(byte_array)     # suggests that it doesnt send a reply until end so specify no_readback
+                byte_array = [xor_tot] 
+                self.binary_writer(byte_array)
+                result = binary_reader(1)                
                 res_int = int(result, 16)
                 # An XOR checksum should be kept on each transferred byte, once the whole RAM file has 
                 # been transferred the validator will send a response. The first byte of this response will 
@@ -1713,6 +1842,37 @@ class eSSP(object):  # noqa
 
         self.__ser.write(prepedstring)
 
+    # use these routines to read and write binary data
+    def binary_reader(self, bytes_to_read=1):
+        a = -2
+        while True:
+            if self.__ser.in_waiting > 0:
+                if bytes_to_read == 1:                      # default we read one byte
+                    recv_data = self.__ser.read(1)
+                    a = struct.unpack_from("B",recv_data ,0)
+                    print( a )
+                elif bytes_to_read == -1:                   # then we read all data on the port
+                    recv_data = self.__ser.read_all()
+                    ll = len(recv_data)	
+                    if ll != 0:
+                        format_str = str(ll)+"B"
+                        a = struct.unpack(format_str, recv_data)
+                        print( a )	
+                else:                                        # then we read the bytes length specified to the function
+                    recv_data = self.__ser.read(bytes_to_read)
+                    format_str = str(bytes_to_read)+"B"
+                    a = struct.unpack(format_str, recv_data)
+                    print( a )
+        return a	
+
+    def binary_writer(self, buf):
+        while True:
+            if self.__ser.out_waiting == 0:
+                break
+        for b in buf:
+            a = struct.pack( "B", b )
+            self.__ser.write(a)
+        self.__ser.flush()
 
     # this is a raw send for the download of files as suggested if it is enclosed in eSSP uncomment
     #
