@@ -197,12 +197,12 @@ class eSSP(object):  # noqa
     # if it is not supported a generic Fail 
     # (0xF8) response will be given.
     #
-    def host_protocol(self, host_protocol=0x7):
+    def host_protocol(self, host_protocol='0x7'):
        result = self.send([self.getseq(), '0x2', '0x6', host_protocol])
        return result
 
     # ch_end = in binary = 00000111 0x7
-    def enable_chan1_3(self, ch_end=0x7, ch_start=0x0):
+    def enable_chan1_3(self, ch_end='0x7', ch_start='0x0'):
        result = self.send([self.getseq(), '0x3', '0x2', ch_end, ch_start])
        return result
 
@@ -264,7 +264,7 @@ class eSSP(object):  # noqa
     # SSP_PROGRAM_FIRMWARE 0x0
     # SSP_PROGRAM_DATASET 0x1
     # SSP_PROGRAM_RAM 0x3
-    def program_on(self, choice):
+    def program_on(self, choice='0x3'):
         """Program as defined by choice """
         result = self.send([self.getseq(), '0x2', '0xB', choice])
         return result
@@ -443,7 +443,7 @@ class eSSP(object):  # noqa
         return resp
         
     # Enabling both top and bottom barcode readers =3 bot=2 top=1 , interleaved 2 of 5 = 0x1 else 0, Number of characters 0xA=10
-    def set_bar_code_reader_config(self, top_bot=0x03, inter=0x0, chars=0x0A):
+    def set_bar_code_reader_config(self, top_bot='0x03', inter='0x0', chars='0x0A'):
         """sets up the validator’s bar code reader configuration"""
         result = self.send([self.getseq(), '0x4', '0x23', top_bot, inter, chars])
         return result
@@ -498,7 +498,7 @@ class eSSP(object):  # noqa
         
         
     # mode is 1 EEPROM 0 RAM storage
-    def conf_bezel(self, red=0xFF, green=0x11, blu=0x7F, mode=1):
+    def conf_bezel(self, red='0xFF', green='0x11', blu='0x7F', mode=1):
         """ sets the colour of the bezel to a specified RGB colour """
         result = self.send([self.getseq(), '0x5', '0x54', red, green, blu, mode])
         return result
@@ -607,7 +607,7 @@ class eSSP(object):  # noqa
         result = self.send([self.getseq(), '0x1', '0x53'])
         return result
 
-    def coin_mech_options(self, cctalk=0x01):
+    def coin_mech_options(self, cctalk='0x01'):
         """  set options currently you can set Coin Mech error events to 1 = cctalk format or 0 = Coin mech jam and Coin return mech open only"""
         result = self.send([self.getseq(), '0x2', '0x5A', cctalk])
         return result
@@ -616,29 +616,29 @@ class eSSP(object):  # noqa
         """convert the decimal currency value into bytes which we send in the right order """
         s=str(hex(num))
         if s[4:6] == '':
-            s[4:6] = 0x0
+            s[4:6] = '0x0'
         return ([s[4:6], s[2:4])
 
     def dec2snd4(num):
         """convert the decimal currency value into bytes which we send in the right order """
         s=str(hex(num))
         if s[4:6] == '':
-            s[4:6] = 0x0
+            s[4:6] = '0x0'
         if s[6:8] == '':
-            s[6:8] = 0x0
+            s[6:8] = '0x0'
         if s[8:10] == '':
-            s[8:10] = 0x0
+            s[8:10] = '0x0'
         return [[s[8:10], s[6:8], [s[4:6], s[2:4]]
 
     def float_ammount(self, note1amt, note2amt, mode=1):
         """causes the validator to keep a set amount “floating” in the payout and specifies a minimum payout value"""
         if (mode == 1):
-            byte_pay = [0x58]
+            byte_pay = ['0x58']
         else:
-            byte_pay = [0x19]
+            byte_pay = ['0x19']
         denom1 = self.dec2snd4(note1amt*100)
         denom2 = self.dec2snd4(note2amt*100)
-        end_denom = [0x45, 0x55, 0x52]                     # currency The country code when converted to ASCII characters is EUR
+        end_denom = ['0x45', '0x55', '0x52']                     # currency The country code when converted to ASCII characters is EUR
         s_arr = [self.getseq(), '0x12', '0x3D'] + denom1 + denom2 + end_denom + byte_pay
         lb=hex(len(s_arr)-2)	
         s_arr[1]=lb		                                   # message length
@@ -647,7 +647,7 @@ class eSSP(object):  # noqa
 
     def get_routing_chan(self, chan=0x1):
         """causes the validator to return the routing for a specific channel."""
-        end_denom = [0x45, 0x55, 0x52]                     # currency The country code when converted to ASCII characters is EUR
+        end_denom = ['0x45', '0x55', '0x52']                     # currency The country code when converted to ASCII characters is EUR
         s_arr = [self.getseq(), '0x05', '0x3C'] + [chan] + end_denom 	
         lb=hex(len(s_arr)-2)	
         s_arr[1]=lb		                                   # message length        
@@ -660,9 +660,9 @@ class eSSP(object):  # noqa
         route = dat[4] & 0xff
         return (reponse, route)
         
-    def set_routing_chan(self, recyc=0x1, ch=0x1):
+    def set_routing_chan(self, recyc='0x1', ch='0x1'):
         """causes the validator to return the routing for a specific channel"""
-        end_denom = [0x45, 0x55, 0x52]                     # currency The country code when converted to ASCII characters is EUR
+        end_denom = ['0x45', '0x55', '0x52']                     # currency The country code when converted to ASCII characters is EUR
         s_arr = [self.getseq(), '0x05', '0x3B'] + [recyc] + [ch] + end_denom 	
         lb=hex(len(s_arr)-2)	
         s_arr[1]=lb		                                   # message length        
@@ -671,7 +671,7 @@ class eSSP(object):  # noqa
 
     def get_routing_note(self, amt):
         """causes the validator to return the routing for a specific note/ """
-        end_denom = [0x45, 0x55, 0x52]                     # currency The country code when converted to ASCII characters is EUR
+        end_denom = ['0x45', '0x55', '0x52']                     # currency The country code when converted to ASCII characters is EUR
         denom1 = self.dec2snd4(amt*100)
         s_arr = [self.getseq(), '0x05', '0x3C'] + denom1 + end_denom 	
         lb=hex(len(s_arr)-2)	
@@ -681,7 +681,7 @@ class eSSP(object):  # noqa
 
     def set_routing_note(self, recyc=0x1, amt):
         """causes the validator to return the routing for a specific note"""
-        end_denom = [0x45, 0x55, 0x52]                     # currency The country code when converted to ASCII characters is EUR
+        end_denom = ['0x45', '0x55', '0x52']                     # currency The country code when converted to ASCII characters is EUR
         denom1 = self.dec2snd4(amt*100)
         s_arr = [self.getseq(), '0x05', '0x3B'] + [recyc] + denom1 + end_denom 	
         lb=hex(len(s_arr)-2)	
@@ -692,19 +692,19 @@ class eSSP(object):  # noqa
     def set_coin_mech_inhibits(self, coinamt, inh=1):
         """causes the SMART Hopper to disable or enable acceptance of individual coin denominations by an attached coin mechanism"""
         if (inh == 1):
-            byte_inh = [0x01]
+            byte_inh = ['0x01']
         else:
-            byte_inh = [0x00]
+            byte_inh = ['0x00']
         tup = self.dec2snd(coinamt)
         denom1 = [ tup[0], tup[1] ]
-        end_denom = [0x45, 0x55, 0x52]                      # currency The country code when converted to ASCII characters is EUR
+        end_denom = ['0x45', '0x55', '0x52']                      # currency The country code when converted to ASCII characters is EUR
         s_arr = [self.getseq(), '0x07', '0x40'] + byte_inh + denom1 + end_denom 
         result = self.send(s_arr)
         return result
         
     def get_min_payout(self):
         """causes the validator to report its current minimum payout of a specific currency"""
-        end_denom = [0x45, 0x55, 0x52]                      # currency The country code when converted to ASCII characters is EUR
+        end_denom = ['0x45', '0x55', '0x52']                      # currency The country code when converted to ASCII characters is EUR
         s_arr = [self.getseq(), '0x12', '0x3E'] + end_denom 
         lb=hex(len(s_arr)-2)	
         s_arr[1]=lb		                                    # message length
@@ -723,14 +723,14 @@ class eSSP(object):  # noqa
     def set_refill_mode(self, write=1, refil=1):
         """Five or six byte command sequence which causes the payout to change or report its refill mode"""
         if write == 1:
-            md = [0x11]                                      # write mode on
+            md = ['0x11']                                      # write mode on
         else:
-            md - [0x01]    
+            md - ['0x01']    
         if refil == 1:
-            rf = [0x1]
+            rf = ['0x1']
         else:
-            rf = [0x0]        
-        end_denom = [0x05, 0x81, 0x10]       
+            rf = ['0x0']        
+        end_denom = ['0x05', '0x81', '0x10']       
         s_arr = [self.getseq(), '0x12', '0x30'] + end_denom + md + rf 
         lb=hex(len(s_arr)-2)	
         s_arr[1]=lb		                                   # message length
@@ -894,9 +894,9 @@ class eSSP(object):  # noqa
             # end_currency = [hex(ord("C")), hex(ord("H")), hex(ord("F"))]      # uncomment to swap to swiss franks
             # end_currency = [hex(ord("R")), hex(ord("U")), hex(ord("B"))]      # uncomment to swap to rubles
             if (mode == 1):
-                byte_pay = [0x58]
+                byte_pay = ['0x58']
             else:
-                byte_pay = [0x19]
+                byte_pay = ['0x19']
             send_arr = [self.getseq(), '0x12', '0x33']
             arr4_value = self.dec2snd4(noteamt*100)
             send_arr = send_arr + arr4_value + end_currency + byte_pay	
@@ -913,9 +913,9 @@ class eSSP(object):  # noqa
             # end_currency = [hex(ord("C")), hex(ord("H")), hex(ord("F"))]      # uncomment to swap to swiss franks
             tot_num = hex(i)
             if (mode == 1):
-                byte_pay = [0x58]
+                byte_pay = ['0x58']
             else:
-                byte_pay = [0x19]
+                byte_pay = ['0x19']
             send_arr = [self.getseq(), '0x12', '0x46', tot_num]
             for noteamt, note_num in note_amt_list:
                 tupv = self.dec2snd(noteamt*100)
@@ -1162,13 +1162,13 @@ class eSSP(object):  # noqa
         # end_currency = [hex(ord("C")), hex(ord("H")), hex(ord("F"))]      # uncomment to swap to swiss franks
         tot_num = hex(i)
         if (mode == 1):
-            byte_pay = [0x58]
+            byte_pay = ['0x58']
         else:
-            byte_pay = [0x19]
+            byte_pay = ['0x19']
         send_arr = [self.getseq(), '0x12', '0x46', tot_num]
         for noteamt, note_num in note_amt_list:
             tupv = self.dec2snd(noteamt*100)
-            denom = [tupv[0], tupv[1], 0x00, 0x00]
+            denom = [tupv[0], tupv[1], '0x00', '0x00']
             num = [hex(note_num)]
             send_arr = send_arr + num + demon + end_currency	
             i = i + 1	
@@ -1189,9 +1189,9 @@ class eSSP(object):  # noqa
         # end_currency = [hex(ord("C")), hex(ord("H")), hex(ord("F"))]      # uncomment to swap to swiss franks
         tot_num = hex(i)
         if (mode == 1):
-            byte_pay = [0x58]
+            byte_pay = ['0x58']
         else:
-            byte_pay = [0x19]
+            byte_pay = ['0x19']
         send_arr = [self.getseq(), '0x12', '0x44', tot_num]
         for noteamt, note_num in note_amt_list:
             denom = self.dec2snd4(noteamt*100)
@@ -1211,9 +1211,9 @@ class eSSP(object):  # noqa
         end_currency = ['0x45', '0x55', '0x52']                                   # currency The country code when converted to ASCII characters is EUR
         # end_currency = [hex(ord("C")), hex(ord("H")), hex(ord("F"))]      # uncomment to swap to swiss franks
         if (mode == 1):
-            byte_pay = [0x58]
+            byte_pay = ['0x58']
         else:
-            byte_pay = [0x19]
+            byte_pay = ['0x19']
         send_arr = [self.getseq(), '0x12', '0x33']
         arr4_value = self.dec2snd4(noteamt*100)
         send_arr = send_arr + arr4_value + end_currency	+ byte_pay	
@@ -1224,13 +1224,13 @@ class eSSP(object):  # noqa
 
     # note is shown in euro
     def payout_by_denomination_hard_coded_example(self,mode=1):
-        denom1 = [0xF4, 0x01, 0x00, 0x00]    # note 1 is 5 eur = 0x1F4 = 500
-        denom2 = [0xE8, 0x03, 0x00, 0x00]    # note 2 is 10 eur = 0x3E8 = 1000
-        end_denom = [0x45, 0x55, 0x52]       # currency The country code when converted to ASCII characters is EUR
-        num = [0x01, 0x00]
-        tot_num = 0x02
-        real_pay = 0x58
-        test_pay = 0x19
+        denom1 = ['0xF4', '0x01', '0x00', '0x00']    # note 1 is 5 eur = 0x1F4 = 500
+        denom2 = ['0xE8', '0x03', '0x00', '0x00']    # note 2 is 10 eur = 0x3E8 = 1000
+        end_denom = ['0x45', '0x55', '0x52']       # currency The country code when converted to ASCII characters is EUR
+        num = ['0x01', '0x00']
+        tot_num = '0x02'
+        real_pay = '0x58'
+        test_pay = '0x19'
         if mode == 1:
             end_pay = [real_pay]
         else:
@@ -1245,13 +1245,13 @@ class eSSP(object):  # noqa
         """which allows the user to specify exactly which notes are paid out."""
         tupv1 = self.dec2snd(note1amt*100)
         tupv2 = self.dec2snd(note2amt*100)
-        denom1 = [tupv1[0], tupv1[1], 0x00, 0x00]  # note 1 
-        denom2 = [tupv2[0], tupv2[1], 0x00, 0x00]  # note 2 
-        end_denom = [0x45, 0x55, 0x52]             # currency The country code when converted to ASCII characters is EUR
-        num = [0x01, 0x00]
-        tot_num = 0x02
-        real_pay = 0x58
-        test_pay = 0x19
+        denom1 = [tupv1[0], tupv1[1], '0x00', '0x00']  # note 1 
+        denom2 = [tupv2[0], tupv2[1], '0x00', '0x00']  # note 2 
+        end_denom = ['0x45', '0x55', '0x52']             # currency The country code when converted to ASCII characters is EUR
+        num = ['0x01', '0x00']
+        tot_num = '0x02'
+        real_pay = '0x58'
+        test_pay = '0x19'
         if mode == 1:
             end_pay = [real_pay]
         else:
@@ -1266,9 +1266,9 @@ class eSSP(object):  # noqa
         end_currency = ['0x45', '0x55', '0x52']                                   # currency The country code when converted to ASCII characters is EUR
         # end_currency = [hex(ord("C")), hex(ord("H")), hex(ord("F"))]      # uncomment to swap to swiss franks
         if (mode == 1):
-            byte_pay = [0x58]
+            byte_pay = ['0x58']
         else:
-            byte_pay = [0x19]
+            byte_pay = ['0x19']
         send_arr = [self.getseq(), '0x12', '0x35']
         arr4_value = self.dec2snd4(noteamt*100)
         send_arr = send_arr + arr4_value + end_currency	+ byte_pay	
