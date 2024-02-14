@@ -158,9 +158,7 @@ double getAbsoluteScale(int frame_id, int sequence_id, double z_cal)	{
       i++;
     }
     myfile.close();
-  }
-
-  else {
+  } else {
     cout << "Unable to open file";
     return 0;
   }
@@ -178,7 +176,9 @@ int main( const int ac, const char* const * const av )	{
   // ("Option name", "Argument (optional)", "Option description")
   ("bright_threshold, bt", po::value<int>()->default_value(80), "Threshold for the difference in brightness between the center pixel and the pixels on the circumference around it.．")
   ("algorithm, a", po::value<std::string>()->default_value("FAST"), "Selection of minutiae algorithm\nFAST, FASTX, STAR, SIFT, SURF, ORB, BRISK, MSER, GFTT, HARRIS, Dense, SimpleBlob")
-  ("help, h", "usage : vo -a FASTX -bt 30");
+  ("compute, c", po::value<std::string>()->default_value("RANSAC"), "Method for computing an essential matrix. RANSAC LMedS")
+  ("xml_file, xml", po::value<int>()->default_value(1), "Use xml calib file = 0 do not = 1")
+  ("help, h", "usage : vo -a FASTX -bt 30 -c LMedS -xml 0");
 
   // Command Line Parsing
   po::variables_map vm;
@@ -198,11 +198,21 @@ int main( const int ac, const char* const * const av )	{
   }
 
   // Option algorithm  
-  std::string algo = "NONE";
   try {
   // Output of option string
-    algo = vm["bright_threshold"].as<std::string>();
+    std::string algo = vm["bright_threshold"].as<std::string>();
     std::cout << "selected brightness algorithm : " << algo << std::endl;
+  } catch (boost::bad_any_cast &e) {
+  // default Throw an exception if an option with no value is not specified
+    std::cout << e.what() << std::endl;
+    return -1;
+  }
+
+  // Option computation  
+  try {
+  // Output of option string
+    std::string compute = vm["compute"].as<std::string>();
+    std::cout << "selected essential matrix computation : " << compute << std::endl;
   } catch (boost::bad_any_cast &e) {
   // default Throw an exception if an option with no value is not specified
     std::cout << e.what() << std::endl;
@@ -210,10 +220,19 @@ int main( const int ac, const char* const * const av )	{
   }
   
   // Option brightness threshold
-  int bt = -99;
   try {
-    bt = vm["bright_threshold"].as<int>();
+    int bt = vm["bright_threshold"].as<int>();
     std::cout << "selected brightness thresjold : " << bt << std::endl;
+  } catch (boost::bad_any_cast &e) {
+  // default Throw an exception if an option with no value is not specified
+    std::cout << e.what() << std::endl;
+    return -1;
+  }
+
+  // Option use xml calib
+  try {
+    int xml_option = vm["xml_file"].as<int>();
+    std::cout << "selected xml calibration : " << xml_option << std::endl;
   } catch (boost::bad_any_cast &e) {
   // default Throw an exception if an option with no value is not specified
     std::cout << e.what() << std::endl;
@@ -238,28 +257,53 @@ int main( const int ac, const char* const * const av )	{
   int thickness = 1;  
   cv::Point textOrg(10, 50);
 
-  //  read the first two frames from the dataset
-  Mat img_1_c = imread(filename1);
-  Mat img_2_c = imread(filename2);
+  cv::Mat cameraMatrix, distCoeffs;
+  if (xml_option == 1) {
+    //  read the first two frames from the dataset
+    Mat img_1_c = imread(filename1);
+    Mat img_2_c = imread(filename2);
 
-  if ( !img_1_c.data || !img_2_c.data ) { 
-    std::cout<< " --(!) Error reading images " << std::endl; return -1;
+    if ( !img_1_c.data || !img_2_c.data ) { 
+      std::cout<< " --(!) Error reading images " << std::endl; return -1;
+    }
+	  
+    // we work with grayscale images so convert them 
+    cvtColor(img_1_c, img_1, COLOR_BGR2GRAY);
+    cvtColor(img_2_c, img_2, COLOR_BGR2GRAY);
+  
+  } else {
+    // calibration data
+    cv::FileStorage fs("camera.xml", CV_STORAGE_READ);
+    fs["intrinsic"] >> cameraMatrix;
+    fs["distortion"] >> distCoeffs;	
+
+    // undistort using cal data
+    Mat imgA, imgB;
+    cv::undistort(cv::imread(filename1), imgA, cameraMatrix, distCoeffs);
+    cv::undistort(cv::imread(filename2), imgB, cameraMatrix, distCoeffs);
+
+    if ( !imgA.data || !imgA.data ) { 
+      std::cout<< " --(!) Error reading images " << std::endl; return -1;
+    }
+	  
+    // we work with grayscale images so convert them 
+    cvtColor(imgA, img_1, COLOR_BGR2GRAY);
+    cvtColor(imgB, img_2, COLOR_BGR2GRAY);	
   }
 
-  // we work with grayscale images so convert them 
-  cvtColor(img_1_c, img_1, COLOR_BGR2GRAY);
-  cvtColor(img_2_c, img_2, COLOR_BGR2GRAY);
 
   // feature detection, tracking
   vector<Point2f> points1, points2;                                         //vectors to store the coordinates of the feature points
   // branch on the choice of feature detection
-  std::string as_default("NONE");
-  if ( algo == as_default ) && ( bt = -99 ) {
+  std::string as_default("FAST");
+  if ( algo == as_default ) && ( bt == 80 ) {
       featureDetection(img_1, points1);                                     //detect features in img_1 using FAST
-  else if ( algo == as_default ) {
+  } else if ( algo == as_default ) {
       featureDetection2(img_1, points1, bt);                                //detect features in img_1 using a specified brightness threshold to FAST
-  else {
-      featureDetection3(img_1, points1, algo);                                //detect features in img_1 using a specified algorithm  
+  } else {
+      if (featureDetection3(img_1, points1, algo) != 0) {                                //detect features in img_1 using a specified algorithm  
+	      std::cout << "error ocurred in feature detection not a valid algorithm" << std::endl;
+      }
   }
   vector<uchar> status;
   featureTracking(img_1,img_2,points1,points2, status);                 //track those features to img_2
@@ -268,9 +312,20 @@ int main( const int ac, const char* const * const av )	{
   // WARNING: different sequences in the KITTI VO dataset have different intrinsic/extrinsic parameters
   double focal = 718.8560;
   cv::Point2d pp(607.1928, 185.2157);
+  double fovx, fovy, focal, pasp;
+  cv::Point2d pp;
+  if (xml_option != 1) {   
+    // Focal length and lens principal point
+    cv::calibrationMatrixValues(cameraMatrix, cv::Size(img_1.cols, img_1.rows), 0.0, 0.0, fovx, fovy, focal, pp, pasp);
+  }
+		
   //recovering the pose and the essential matrix
   Mat E, R, t, mask;
-  E = findEssentialMat(points2, points1, focal, pp, RANSAC, 0.999, 1.0, mask);
+  if (compute == "RANSAC") {
+    E = findEssentialMat(points2, points1, focal, pp, RANSAC, 0.999, 1.0, mask);       // confidence and threshold
+  } else {
+    E = findEssentialMat(points2, points1, focal, pp, LMedS, 0.999, mask);             // confidence only	  
+  }
   recoverPose(E, points2, points1, R, t, focal, pp, mask);
 
   Mat prevImage = img_2;
@@ -293,12 +348,25 @@ int main( const int ac, const char* const * const av )	{
   for(int numFrame=2; numFrame < MAX_FRAME; numFrame++)	{
   	sprintf(filename, "/home/mark/Datasets/KITTI_VO/00/image_2/%06d.png", numFrame);
     //cout << numFrame << endl;
-  	Mat currImage_c = imread(filename);
-  	cvtColor(currImage_c, currImage, COLOR_BGR2GRAY);
+	Mat currImage_c;
+    if (xml_option == 1) {
+  	  currImage_c = imread(filename);
+    } else {
+      cv::undistort(cv::imread(filename1), currImage_c, cameraMatrix, distCoeffs);		
+    }
+    if ( !currImage_c.data ) { 
+      std::cout<< " --(!) Error reading images " << std::endl; return -1;
+    }	
+  	cvtColor(currImage_c, currImage, COLOR_BGR2GRAY);	
   	vector<uchar> status;
   	featureTracking(prevImage, currImage, prevFeatures, currFeatures, status);
 
-  	E = findEssentialMat(currFeatures, prevFeatures, focal, pp, RANSAC, 0.999, 1.0, mask);
+    if (compute == "RANSAC") {
+  	  E = findEssentialMat(currFeatures, prevFeatures, focal, pp, RANSAC, 0.999, 1.0, mask);
+    } else {
+  	  E = findEssentialMat(currFeatures, prevFeatures, focal, pp, LMedS, 0.999, mask);	  
+    }
+
   	recoverPose(E, currFeatures, prevFeatures, R, t, focal, pp, mask);
 
     Mat prevPts(2,prevFeatures.size(), CV_64F), currPts(2,currFeatures.size(), CV_64F);
@@ -335,10 +403,12 @@ int main( const int ac, const char* const * const av )	{
         //cout << "trigerring redection" << endl;
         if ( algo == as_default ) && ( bt = -99 ) {
           featureDetection(prevImage, prevFeatures);                                        // detect features in img_1 using FAST
-        else if ( algo == as_default ) {
+        } else if ( algo == as_default ) {
           featureDetection2(prevImage, prevFeatures, bt);                                   // detect features in img_1 using a specified brightness threshold to FAST
-        else {
-          featureDetection3(prevImage, prevFeatures, algo);                                 // detect features in img_1 using a specified algorithm  
+        } else {
+          if (featureDetection3(prevImage, prevFeatures, algo) != 0) {                      // detect features in img_1 using a specified algorithm  != 0) {                                //detect features in img_1 using a specified algorithm  
+	         std::cout << "error ocurred in feature detection not a valid algorithm" << std::endl;
+          }           
         }
         featureTracking(prevImage,currImage,prevFeatures,currFeatures, status);
  	}
