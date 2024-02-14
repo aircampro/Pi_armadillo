@@ -12,4 +12,5 @@ controls a Mitsubishi FX or Q series with modbus TCP over discord. UR Robot to O
 radio links BLE EnOcean LoRa Zigbee etc, usb interfaces, serial. Franka Emika gripper query to webserver of label read using tesseract to get width then grip object.
 Can query resnet from a picture or get information from Google Cloud API, haskell webserver examples for scotty and spock. Interface to aldebaran pepper robot from GPT-3
 eSSP and CCtalk protocol examples for communication with money machines and gaming dispensers AES encrpytion and Diffie Hellman key exchange
+visual odometry example allowing the feature detection algorithm to be changed.
 .................have fun it is still in development.....
