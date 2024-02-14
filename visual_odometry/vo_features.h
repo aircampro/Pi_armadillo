@@ -4,7 +4,7 @@ vo_features.h
 
 The MIT License
 
-Its the original code from AVI Singh with the feature detection alogrythms allowing selection
+Its the original code from AVI Singh with slection of feature detection alogrithms possible 
 
 Copyright (c) 2015 Avi Singh
 
@@ -111,16 +111,19 @@ void featureDetection2(Mat img_1, vector<Point2f>& points1, int bright_thres)	{ 
 // This function allows you to change the feature detector alogorithm
 //
 int featureDetection3(Mat img_1, vector<Point2f>& points1, string& algorithm)	{          //uses any selection of valid algorythm
+
   // Check selection of feature point algorithm
   if( "FAST" != algorithm && "FASTX" != algorithm && "STAR" != algorithm && "SIFT" != algorithm &&
 	  "SURF" != algorithm && "ORB" != algorithm && "BRISK" != algorithm && "MSER" != algorithm &&
       "GFTT" != algorithm && "HARRIS" != algorithm && "Dense" != algorithm && "SimpleBlob" != algorithm ) {
       return -1;
   }
+  
   // For SIFT or SURF, initModule_nonfree() is required
   if( "SIFT" == algorithm || "SURF" == algorithm ){
     cv::initModule_nonfree();
   }
+  
   // FeatureDetector
   cv::Ptr<cv::FeatureDetector> detector = cv::FeatureDetector::create( algorithm );  
 
@@ -142,4 +145,5 @@ int featureDetection3(Mat img_1, vector<Point2f>& points1, string& algorithm)	{ 
   //cv::namedWindow( "Feature point extraction", CV_WINDOW_AUTOSIZE );
   //cv::imshow("feature point extraction", img_dst);
   //cv::waitKey( 0 ); 
+  return 0;
 }
