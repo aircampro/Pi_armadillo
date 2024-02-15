@@ -51,19 +51,19 @@ int main(int argc, char *argv[])
     cv::String matcher_method = parser.get<cv::String>("matcher_method");
     int num_good_pts = parser.get<int>("knn_num_good");	
     double radius_thresh = parser.get<double>("radius_thresh");	
-	int use_cross_check = parser.get<int>("cross_check");
+    int use_cross_check = parser.get<int>("cross_check");
 	
-	if (parser.has("help"))
-	{
-		parser.printMessage();
-		return 0;
-	}
+    if (parser.has("help"))
+    {
+        parser.printMessage();
+        return 0;
+     }
 
-	if (!parser.check())
-	{
-		parser.printErrors();
-		return -1;
-	}
+     if (!parser.check())
+     {
+         parser.printErrors();
+         return -1;
+     }
 
     // Check selection of feature point algorithm FAST，FASTX，STAR，SIFT，SURF，ORB，BRISK，
     // MSER，GFTT，HARRIS，Dense，SimpleBlob
