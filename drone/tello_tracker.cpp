@@ -243,6 +243,10 @@ int main(int argc, char** argv)
 	{
 		if (!Paused)
 		{
+			if (use_tello_stream==1) 
+			{
+		            capture >> cap;                              // we are now getting the video capture from the dji drone
+			}
 			cap >> frame;
 			frame.copyTo(Image);
 
