@@ -4,7 +4,7 @@ vo_features.h
 
 The MIT License
 
-Its the original code from AVI Singh with slection of feature detection alogrithms possible 
+Its the original code from AVI Singh with the feature detection alogrythms allowing selection
 
 Copyright (c) 2015 Avi Singh
 
