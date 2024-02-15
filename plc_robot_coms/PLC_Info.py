@@ -699,7 +699,7 @@ dataFX = [
     0x07,0x00             # Device count
 ]
 # mitsubishi FX Series
-def readFXSeries(tcp_udp_connect_obj,dataFXmsg):
+def readFXSeries(tcp_udp_connect_obj,dataFXmsg=dataFX):
     if (MY_PY == 2):
         sendmsg = bytes(dataFXmsg)
     elif (MY_PY == 3):
