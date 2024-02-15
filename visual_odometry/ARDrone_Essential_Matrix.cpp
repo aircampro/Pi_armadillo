@@ -240,13 +240,13 @@ int main(int argc, char *argv[])
            } else {
               matcher_crosschk.match(descriptorsA, descriptorsB, matches);
            }
-	    } else if (matcher_method == "knn") {
+        } else if (matcher_method == "knn") {
            if (use_cross_check == 0) {
               matcher->knnMatch(descriptorsA, descriptorsB, matches, num_good_pts);         // find top num_good_pts good points
            } else {
               matcher_crosschk.knnMatch(descriptorsA, descriptorsB, matches, num_good_pts);
            }		   
-	    } else {
+        } else {
            if (use_cross_check == 0) {
               matcher->radiusMatch(descriptorsA, descriptorsB, matches, radius_thresh);     // Find points whose distance is less than or equal to the threshold value in the feature description space
            } else {
@@ -302,11 +302,11 @@ int main(int argc, char *argv[])
  
         // move the drone according to the keys 
         ardrone.move3D(vx, vy, vz, vr);
-		if (LeftRight != 1) {
-		    // set last frame to first frame when we cycle we will read the next one as second.
-                    // imgA = imgB;
-                    imgB.copyTo(imgA);
-		}
+        if (LeftRight != 1) {
+             // set last frame to first frame when we cycle we will read the next one as second.
+             // imgA = imgB;
+             imgB.copyTo(imgA);
+        }
     }
 
     // See you
