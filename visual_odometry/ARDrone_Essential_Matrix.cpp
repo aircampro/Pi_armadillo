@@ -304,8 +304,8 @@ int main(int argc, char *argv[])
         ardrone.move3D(vx, vy, vz, vr);
 		if (LeftRight != 1) {
 		    // set last frame to first frame when we cycle we will read the next one as second.
-            // imgA = imgB;
-			imgB.copyTo(imgA);
+                    // imgA = imgB;
+                    imgB.copyTo(imgA);
 		}
     }
 
