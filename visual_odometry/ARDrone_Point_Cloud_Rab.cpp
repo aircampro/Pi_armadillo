@@ -393,10 +393,10 @@ int main(int argc, char *argv[])
                     _t << R_AB(0,0), R_AB(0,1), R_AB(0,2), t_AB(0,0),
                     R_AB(1,0), R_AB(1,1), R_AB(1,2), t_AB(1,0),
                     R_AB(2,0), R_AB(2,1), R_AB(2,2), t_AB(2,0);
-					std::cout << "Position pitch " << _t(0,3) << " roll " << _t(1,3) << " yaw " << _t(2,3) << std::endl;  // obtained from 4th column
-					std::cout << "Orientation " << _t(0,0) << " , " << _t(0,1)  << " , " << _t(0,2) << std::endl;         // obtained from first three columns  
-					std::cout << "            " << _t(1,0) << " , " << _t(1,1)  << " , " << _t(1,2) << std::endl;
-					std::cout << "            " << _t(2,0) << " , " << _t(2,1)  << " , " << _t(2,2) << std::endl;	
+		    std::cout << "Position pitch " << _t(0,3) << " roll " << _t(1,3) << " yaw " << _t(2,3) << std::endl;  // obtained from 4th column
+		    std::cout << "Orientation " << _t(0,0) << " , " << _t(0,1)  << " , " << _t(0,2) << std::endl;         // obtained from first three columns  
+		    std::cout << "            " << _t(1,0) << " , " << _t(1,1)  << " , " << _t(1,2) << std::endl;
+		    std::cout << "            " << _t(2,0) << " , " << _t(2,1)  << " , " << _t(2,2) << std::endl;	
                     // conversion of the 3x3 orientation matrix to quaternion
                     double w = sqrt(FMAX(0.0f, 1.0f + _t(0,0) + _t(1,1) + _t(2,2) )) / 2.0f;
                     double x = sqrt(FMAX(0.0f, 1.0f + _t(0,0) - _t(1,1) - _t(2,2))) / 2.0f;
@@ -406,7 +406,7 @@ int main(int argc, char *argv[])
                     y = math_copysign(y, _t(0,2) - _t(2,0));
                     z = math_copysign(z, _t(1,0) - _t(0,1));
                     Eigen::Quaternionf quat(x, y, z, w);                                                                  // make quat 
-					// calculate the yaw
+		    // calculate the yaw
                     double q0 = w;
                     double q1 = x;
                     double q2 = y;
@@ -418,7 +418,7 @@ int main(int argc, char *argv[])
                     {
                         angle -= 2.0f * PI;
                     }
-	                std::cout << "Calculated out of orientation matrix is yaw == " << quat_yaw << " angle == " << angle << std::endl;
+	            std::cout << "Calculated out of orientation matrix is yaw == " << quat_yaw << " angle == " << angle << std::endl;
                     // calculate euler angle from 3x3 matrices
                     double a11 = _t(0,0);
                     double a12 = _t(0,1);
@@ -435,24 +435,24 @@ int main(int argc, char *argv[])
                     viewer.addCoordinateSystem(1.0, view);
 #endif	
 #ifdef _USE_RAB_WRAPPER				
-					// use rab viewer to look at pointcloud of pose information
-					++count_points;
-				    pcl::PointCloud<pcl::PointXYZ>::Ptr sample_cloud(new pcl::PointCloud<pcl::PointXYZ>());
-		            sample_cloud->push_back(pcl::PointXYZ(_t(0,3), _t(1,3), _t(2,3)));
-	                pcl::PointCloud<pcl::PointNormal>::Ptr sample_point_normal(new pcl::PointCloud<pcl::PointNormal>());
-	                pcl::PointCloud<pcl::Normal>::Ptr sample_normal(new pcl::PointCloud<pcl::Normal>());
-		            pcl::PointNormal pn;
-		            pn.x = _t(0,3);                                                           // get the position from the 4th column 
-		            pn.y = _t(1,3);
-		            pn.z = _t(2,3);
-		            const auto normal = Eigen::Vector3f(_t(0,3), _t(1,3), _t(2,3)).normalized();
-		            pn.normal_x = normal.x();
-		            pn.normal_y = normal.y();
-		            pn.normal_z = normal.z();
-		            sample_normal->push_back(pcl::Normal(normal.x(), normal.y(), normal.z()));
-		            sample_point_normal->push_back(pn);
+		      // use rab viewer to look at pointcloud of pose information
+	              ++count_points;
+		      pcl::PointCloud<pcl::PointXYZ>::Ptr sample_cloud(new pcl::PointCloud<pcl::PointXYZ>());
+		      sample_cloud->push_back(pcl::PointXYZ(_t(0,3), _t(1,3), _t(2,3)));
+	              pcl::PointCloud<pcl::PointNormal>::Ptr sample_point_normal(new pcl::PointCloud<pcl::PointNormal>());
+	              pcl::PointCloud<pcl::Normal>::Ptr sample_normal(new pcl::PointCloud<pcl::Normal>());
+		      pcl::PointNormal pn;
+		      pn.x = _t(0,3);                                                           // get the position from the 4th column 
+		      pn.y = _t(1,3);
+		      pn.z = _t(2,3);
+		      const auto normal = Eigen::Vector3f(_t(0,3), _t(1,3), _t(2,3)).normalized();
+		      pn.normal_x = normal.x();
+		      pn.normal_y = normal.y();
+		      pn.normal_z = normal.z();
+		      sample_normal->push_back(pcl::Normal(normal.x(), normal.y(), normal.z()));
+		      sample_point_normal->push_back(pn);
 
-                    if (count_points > min_num_of_points_to_view) {
+                      if (count_points > min_num_of_points_to_view) {
 	                    // 2.1. Add a pointcloud
 	                    rab->addCloud(
 		                           "sample1",                     // Unique name of the pointcloud
@@ -526,13 +526,13 @@ int main(int argc, char *argv[])
 	                    // 11. Visualize from the writer's rab data
 	                    //const auto& viewer2 = writer->visualize();
 	                    //viewer2->spinLoop();
-					}
+		   }
 #endif	
                 }
-	        }
+            }
         }
-		viewer.spin();
-		// masybe its --> viewer.spinLoop();
+	viewer.spin();
+	// masybe its --> viewer.spinLoop();
         // move the frone according to the keys 
         ardrone.move3D(vx, vy, vz, vr);
 
