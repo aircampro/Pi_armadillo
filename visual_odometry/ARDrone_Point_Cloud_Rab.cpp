@@ -119,14 +119,14 @@ double math_copysign(double val, double sign)
 int main(int argc, char *argv[])
 {
 	// parse the command line for set-up
-    cv::CommandLineParser parser(argc, argv, Keys);
-    cv::String feature_algo = parser.get<cv::String>("feature_detector");
-    cv::String desc_ext_algo = parser.get<cv::String>("desc_extractor");
-    cv::String desc_match_algo = parser.get<cv::String>("descriptor_matcher");	
-    cv::String matcher_method = parser.get<cv::String>("matcher_method");
-    int num_good_pts = parser.get<int>("knn_num_good");	
-    double radius_thresh = parser.get<double>("radius_thresh");	
-    int use_cross_check = parser.get<int>("cross_check");
+        cv::CommandLineParser parser(argc, argv, Keys);
+        cv::String feature_algo = parser.get<cv::String>("feature_detector");
+        cv::String desc_ext_algo = parser.get<cv::String>("desc_extractor");
+        cv::String desc_match_algo = parser.get<cv::String>("descriptor_matcher");	
+        cv::String matcher_method = parser.get<cv::String>("matcher_method");
+        int num_good_pts = parser.get<int>("knn_num_good");	
+        double radius_thresh = parser.get<double>("radius_thresh");	
+        int use_cross_check = parser.get<int>("cross_check");
 	
 	if (parser.has("help"))
 	{
@@ -305,8 +305,8 @@ int main(int argc, char *argv[])
             cv::BFMatcher matcher_crosschk(cv::NORM_HAMMING, true);                                          // we can also use this matcher instead crossCheck=True 
 		
             // Feature point detection
-			for (int i = 1; i < (int)images.size(); i++) {
-				cv::Mat descriptorsA, descriptorsB;
+	    for (int i = 1; i < (int)images.size(); i++) {
+		cv::Mat descriptorsA, descriptorsB;
                 std::vector<cv::KeyPoint> keypointsA, keypointsB;
                 detector->detect(images[i-1], keypointsA);
                 detector->detect(images[i],   keypointsB);
@@ -428,9 +428,9 @@ int main(int argc, char *argv[])
                     double tx = atan2(-a23, a33);                                 // output Euler angle tx
                     double ty = atan2(a13, sqrt(1.0f-a13*a13));                   // output Euler angle ty
                     double tz = atan2(-a12, a11);                                 // output Euler angle tz
-					std::cout << "Orientation output Euler angle tx " << tx << " Euler angle ty " << ty << " Euler angle tz " << tz << std::endl;  // obtained from 4th column					
+                    std::cout << "Orientation output Euler angle tx " << tx << " Euler angle ty " << ty << " Euler angle tz " << tz << std::endl;  // obtained from 4th column					
 #ifdef _SIMPLE_VIEWR					
-					// display in point cloud viewer
+		    // display in point cloud viewer
                     view = _t;
                     viewer.addCoordinateSystem(1.0, view);
 #endif	
@@ -490,7 +490,7 @@ int main(int argc, char *argv[])
                                 		0.05,                       // Length of normals
                                 		2,                          // Width of normals
                                 		rabv::Color(255, 0, 128)    // Color of normals
-                        );
+                            );
 
 	
 	                    // 3.1. Add a coordinate system as world coordinate system
@@ -531,8 +531,10 @@ int main(int argc, char *argv[])
                 }
             }
         }
+#ifdef _SIMPLE_VIEWR
 	viewer.spin();
 	// masybe its --> viewer.spinLoop();
+#endif
         // move the frone according to the keys 
         ardrone.move3D(vx, vy, vz, vr);
 
