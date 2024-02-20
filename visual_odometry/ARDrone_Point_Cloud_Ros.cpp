@@ -79,12 +79,6 @@ target_link_libraries (ARDrone_Point_Cloud ${PCL_LIBRARIES} ${VTK_LIBRARIES} ${O
 #include <Eigen/LU>
 #define PRINT_MAT(X) std::cout << #X << ":\n" << X << std::endl << std::endl
 
-// define how you want to visualizer this data
-#define _USE_RAB_WRAPPER                                    // to use the rab wrapper to pcl for pointcloud visualization
-//#define _SIMPLE_VIEWR                                       to use simple pcl viewer
-
-std::string my_rab_data = "./pose_pointcloud.rab";
-
 // this is for the openCV command line parser
 static const char* Keys =
 { "{feature_detector   | "ORB" | feature detector algorithm }"
@@ -282,19 +276,19 @@ int main(int argc, char *argv[])
         if (key == 'c') ardrone.setCamera(++mode % numOfCams);
 
         // Get [num_pics] images then process that data
-		if (pic_counter > 0) {
+	if (pic_counter > 0) {
             got_frame = ardrone.getImage();
             cv::undistort(got_frame, imgA, cameraMatrix, distCoeffs);	
-			images.push_back(imgA);
+	    images.push_back(imgA);
             --pic_counter;
-		} else {
-			pic_counter = num_pics;
-		}
+	 } else {
+	    pic_counter = num_pics;
+	 }
 
         // process the photos taken	
         if (pic_counter == num_pics) {
 		
-		    // FeatureDetector	FAST，FASTX，STAR，SIFT，SURF，ORB，BRISK，
+	    // FeatureDetector	FAST，FASTX，STAR，SIFT，SURF，ORB，BRISK，
             // MSER，GFTT，HARRIS，Dense，SimpleBlob
             cv::Ptr<cv::FeatureDetector> detector = cv::FeatureDetector::create( feature_algo );             // example also SURF
 		
@@ -309,8 +303,8 @@ int main(int argc, char *argv[])
             cv::BFMatcher matcher_crosschk(cv::NORM_HAMMING, true);                                          // we can also use this matcher instead crossCheck=True 
 		
             // Feature point detection
-			for (int i = 1; i < (int)images.size(); i++) {
-				cv::Mat descriptorsA, descriptorsB;
+	    for (int i = 1; i < (int)images.size(); i++) {
+		cv::Mat descriptorsA, descriptorsB;
                 std::vector<cv::KeyPoint> keypointsA, keypointsB;
                 detector->detect(images[i-1], keypointsA);
                 detector->detect(images[i],   keypointsB);
@@ -434,7 +428,7 @@ int main(int argc, char *argv[])
                         ros::spinOnce();
                         rate.sleep();
                     }
-		        }
+		}
             }
         }
 
