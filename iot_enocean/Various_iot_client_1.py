@@ -20,7 +20,7 @@ import pytz
 MY_TZ='Europe/Moscow'
 
 # ------------ here list the choices and options for iOt or monitoring -----------------      
-TELEM_CHOICES=[ "soracom", "beebotte", "mosquito", "ubidots", "machinist", "aws", "azure", "yandex", "twillio", "smtp_email", "ssl_tls_server", "ssl_23_server", "cloud_mqtt", "gcs_blob", "splunk", "gcs_spread", "ambient", "influxdb", "redis", "mongo", "mysql", "sybase", "oracle", "sqllite", "pg", "fluvio", "scyllia", "rocks", "ali", "taiga", "msaccess", "riak", "elas", "neo4j"  ]
+TELEM_CHOICES=[ "soracom", "beebotte", "mosquito", "ubidots", "machinist", "aws", "azure", "yandex", "twillio", "smtp_email", "ssl_tls_server", "ssl_23_server", "cloud_mqtt", "gcs_blob", "splunk", "gcs_spread", "ambient", "influxdb", "redis", "mongo", "mysql", "sybase", "oracle", "sqllite", "pg", "fluvio", "scyllia", "rocks", "ali", "taiga", "msaccess", "riak", "elas", "neo4j", "cumulocity"  ]
 SORACOM=0
 BEEBOTTE=1
 MOSQUITO=2
@@ -55,6 +55,7 @@ MSACCESS=30
 RIAK=31
 ELAS=32
 NEO4J=33
+CUMULOCITY=34
 
 # ============= make your choice of cloud service here from list above ================== 
 MY_CURRENT_TELEM=TELEM_CHOICES[SORACOM]
@@ -79,7 +80,7 @@ if MY_CURRENT_TELEM == "mosquito":
 #define a global MQTT Topic which will be set upon choices
 GTOPIC=" "
 
-# Broker processes when connected to
+# Broker processes when connected to beebotte
 def on_connect(client, userdata, flag, rc):
     print("Connect Broker:" + str(rc))
     client.subscribe(GTOPIC)
@@ -175,6 +176,24 @@ if MY_CURRENT_TELEM == "ambient":
     channelID = 100
     writeKey = 'writeKey'
 
+# pip3 install c8y-api
+if MY_CURRENT_TELEM == "cumulocity":
+    from c8y_api import CumulocityApi
+
+    c8y = CumulocityApi(base_url='',    # the url of your Cumulocity tenant here
+                        tenant_id='',   # the tenant ID of your Cumulocity tenant here
+                        username='',    # your Cumulocity IoT username
+                        password='')    # your Cumulocity IoT password
+                        
+    # In this first application we will simply iterate through all registered devices and list their Cumulocity object ID, designation and owner:
+    for d in c8y.device_inventory.select():
+        print(f"Found device #{d.id} '{d.name}', owned by {d.owner}")   
+
+    # create the alarm
+    from c8y_api.model import Alarm
+    from datetime import timezone  
+    DEV_ID = d.id  # d is still in memory from the loop     
+    
 # ============================== mongo DB Classes *perhaps make seperate include and import when option active) =======================================
 if MY_CURRENT_TELEM == "mongo":
     import pandas as pd
@@ -313,7 +332,7 @@ def Enocean2Telemetry(s_port, telem_opt):
         except requests.exceptions.Timeout as errt:
             print ("Timeout Error:",errt)
         except requests.exceptions.RequestException as err:
-            print ("OOps: Something Else",err) 
+            print ("OOps: Something Else ",err) 
 
     # SPLUNK
     def sendDataSplunk(string1, temp_data1, string2, temp_data2):
@@ -868,6 +887,7 @@ def Enocean2Telemetry(s_port, telem_opt):
         cipher = AES.new(key, AES.MODE_GCM, nonce=iv)
         ciphertext, mac = cipher.encrypt_and_digest(text)
         return ciphertext, mac
+        
     def aes_gcm_decrypt(key,iv,ciphertext,mac):
         plaintext = 0
         cipher = AES.new(key, AES.MODE_GCM, nonce=iv)
@@ -925,13 +945,17 @@ def Enocean2Telemetry(s_port, telem_opt):
         #Encrypting the message with the PKCS1_OAEP object
         cipher_text = cipher.encrypt(message.encode('UTF-8'))
         print(cipher_text)
+        return cipher_text
+        
     def RSA_decrypt(cipher_text,pr_key):
         from Crypto.Cipher import PKCS1_OAEP
         #Instantiating PKCS1_OAEP object with the private key for decryption
         decrypt = PKCS1_OAEP.new(key=pr_key)
         #Decrypting the message with the PKCS1_OAEP object
         decrypted_message = decrypt.decrypt(cipher_text)
-        print(decrypted_message)        
+        print(decrypted_message) 
+        return decrypted_message
+        
     # common packers
     #
     # messagepack
@@ -1318,7 +1342,10 @@ def Enocean2Telemetry(s_port, telem_opt):
             BUK_ID=1
         buk_name="mybucket"+str(BUK_ID)
         bucket = client.bucket(buk_name)
-        obj = bucket.new('key', data={ d1 : t1, d2 : t2 })
+        obj = bucket.new('key', data={
+            d1 : t1,
+            d2 : t2,
+        })
         obj.store
 
     def query_riak(bukt='mybucket1', data_desc):
@@ -1664,24 +1691,24 @@ def Enocean2Telemetry(s_port, telem_opt):
     # taiga kanban board
     TAIGA_USER="my_tiger"
     TAIGA_PW="tim"
-    x1 = 12.5          # temperature trigger below this will enter the job on the board unassigned
+    X1 = 12.5          # temperature trigger below this will enter the job on the board unassigned
 	
     # Send to Taiga Kanban to project 1 user story 17 if temperature is below the specified low limits
     #
     def sendDataTaigaKanban(descrip1, temp_data1, descrip2, temp_data2):
 	
-        if (temp_data1 < x1) and (temp_data2 < x1):
+        if (temp_data1 < X1) and (temp_data2 < X1):
             descrip_temp = descrip1 + " " + descrip2
             temp_val = (float(temp_data1) + float(temp_data2))/2.0
-        elif (temp_data1 < x1):
+        elif (temp_data1 < X1):
             descrip_temp = descrip1
             temp_val = float(temp_data2) 
-        elif (temp_data2 < x1):
+        elif (temp_data2 < X1):
             descrip_temp = descrip2
             temp_val = float(temp_data2)
         else:
             return	
-
+            
         # get the authorization then create the task for it			
         #msg = json.loads(payload_json)
         #msg_str = json.dumps(msg)
@@ -1755,6 +1782,49 @@ def Enocean2Telemetry(s_port, telem_opt):
             print ("Timeout Error:",errt)
         except requests.exceptions.RequestException as err:
             print ("OOps: Something Else",err)
+
+    # cumulocity iot board https://www.softwareag.cloud/site/product/cumulocity-iot.html#
+    #
+    X2 = 12.5                                                     # low alarm threshold  
+    ALWAYS_CLEAR_AL = 0                                           # set to 1 to automatically clear and regenerate alarm  
+    def setAlarmInCumulocity(dt, tv):
+        alarm_time = datetime.now(timezone.utc)
+        alarm_text = dt+"{"+alarm_time+"}"
+        
+        # clear any alarms first
+        no_alarm = 0
+        for a in c8y.alarms.select(source=DEV_ID, status=Alarm.Status.ACTIVE):
+            if (ALWAYS_CLEAR_AL == 1):            
+                a.status = Alarm.Status.CLEARED
+                a.update()
+                print(f"Alarm #{a.id} cleared.")
+            else:
+                no_alarm = 1                                  # keep alarm latched from instance time
+
+        if (no_alarm == 0):    
+            eno_temp_alarm = Alarm(type='cx_EnOceanTemps',
+                                   time=alarm_time,
+                                   source=DEV_ID,
+                                   text=alarm_text,
+                                   severity=Alarm.Severity.WARNING)
+            cx_CustomData={'temp': tv }
+            c8y.alarms.create(eno_temp_alarm)
+    
+    def sendDataCumulocity(descrip1, temp_data1, descrip2, temp_data2):
+	
+        if (temp_data1 < X2) and (temp_data2 < X2):
+            descrip_temp = descrip1 + " " + descrip2
+            temp_val = (float(temp_data1) + float(temp_data2))/2.0
+        elif (temp_data1 < X2):
+            descrip_temp = descrip1
+            temp_val = float(temp_data2) 
+        elif (temp_data2 < X2):
+            descrip_temp = descrip2
+            temp_val = float(temp_data2)
+        else:
+            return	
+
+        setAlarmInCumulocity(descrip_temp, temp_val)
         
     # Choose the iOt you want to use according to the define in top section        
     if telem_opt == "soracom":
@@ -1835,6 +1905,8 @@ def Enocean2Telemetry(s_port, telem_opt):
     elif telem_opt == "scyllia":        
         connectScyllia()        
         sendData=send2Scyllia
+    elif telem_opt == "cumulocity":
+        sendData=sendDataCumulocity
     elif telem_opt = "cloud_mqtt":            
         client = mqtt.Client(protocol=mqtt.MQTTv311)
         client.tls_set(CCACERT)
