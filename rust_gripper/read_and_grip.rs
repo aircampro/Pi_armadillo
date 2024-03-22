@@ -161,7 +161,6 @@ fn main() -> Result<(), Box<std::error::Error>>) {
 }
 
 // JSON sends position to get object name from server { "lat" : "23.4", "lon" : "0.032", "userId" : 1 } 
-// receives back json { "obj_name" : "unknown", "width" : 0 } or { "obj_name" : "small_box_3", "width" : 23.2 }
 //
 async fn post_json_pos_request(url: &str, v1: &str, v2: &str) -> std::io::Result<serde_json::Value> {
     let echo_json: serde_json::Value = reqwest::Client::new()
@@ -181,13 +180,14 @@ async fn post_json_pos_request(url: &str, v1: &str, v2: &str) -> std::io::Result
 }
 
 // JSON sends name to get width from server { "obj_name" : "large_log_6", "userId" : 1 }
+// receives back json { "obj_name" : "unknown", "width" : 0 } or { "obj_name" : "small_box_3", "width" : 23.2 }
 // replies with a single value equivalent to the objects width or -1
 //
 async fn post_json_obj_request(url: &str, v1: &str) -> std::io::Result<f64; N> {
     let ret_width: String = reqwest::Client::new()
         .post(url)
         .json(&serde_json::json!({
-            "obj_name": v1,
+            "name": v1,
             "userId": 1
         }))
         .send()

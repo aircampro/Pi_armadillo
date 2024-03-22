@@ -108,7 +108,7 @@ async fn main() -> Result<(), std::io::Error> {
 		// if we have more than one table for the objects e.g. floor 2 then these can apply
 		//
         // service client request to Add an object and its width to the database
-        // curl -X POST -H "Content-Type: application/json" -d '{ "obj_name" : "medium_slab_4", "width" : 19.4 }' localhost:8080/ObjectSize2
+        // curl -X POST -H "Content-Type: application/json" -d '{ "name" : "medium_slab_4", "width" : 19.4 }' localhost:8080/ObjectSize2
         // returns the ObjectSize names sent as a json message
         //
         app.at("/ObjectSize2").post(|mut req: tide::Request<()>| async move {
@@ -123,7 +123,7 @@ async fn main() -> Result<(), std::io::Error> {
             Ok(tide::Body::from_json(&ObjectSize)?)
         });
         // client requests to get an objects width from the database
-        // curl -X POST -H "Content-Type: application/json" -d '{ "obj_name" : "medium_slab_4", "width" : 19.4 }' localhost:8080/getwidth2
+        // curl -X POST -H "Content-Type: application/json" -d '{ "name" : "medium_slab_4", "width" : 19.4 }' localhost:8080/getwidth2
         // returns the width as a value
         //
         app.at("/getwidth2").post(|mut req: tide::Request<()>| async move {
