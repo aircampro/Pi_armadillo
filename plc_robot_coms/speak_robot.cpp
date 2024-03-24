@@ -95,7 +95,7 @@ std::string readApiKey() {
         std::string line;
 
         while (std::getline(file, line)) {
-            //std::cout << line << '\n';
+            std::cout << line << '\n';
         }
 
         file.close();
@@ -123,7 +123,7 @@ std::string create_request_message(std::string msg2gpt) {
 // function to say something on aldebaran nao/pepper robot
 //
 void naoSayText(const std::string& robotIp, const std::string& phraseToSay)
-{;
+{
   try
   {
     /** Create an ALTextToSpeechProxy so that we can call the say method
@@ -245,8 +245,8 @@ int main(int argc, char* argv[]) {
       exit(2);
     }
   
-	// read the aldebaran pepper robot ip from the first argument
-	const std::string robotIp(argv[1]);  
+    // read the aldebaran pepper robot ip from the first argument
+    const std::string robotIp(argv[1]);  
     std::string your_message = argv[2];
 
     // create a random number generator with boost to give the robot a random pose each time it speaks
@@ -258,7 +258,7 @@ int main(int argc, char* argv[]) {
     boost::mt19937 gen(static_cast<unsigned>(myseed());
 
     // you can change for example to kreutzer
-	// include <boost/random/shuffle_order.hpp>
+    // include <boost/random/shuffle_order.hpp>
     // boost::kreutzer1986 gen(static_cast<unsigned>(myseed());
 
     // you can change for example to ecuyer1988
@@ -274,9 +274,9 @@ int main(int argc, char* argv[]) {
 
     // alternative for example random normal distribution
     // include // In header: #include <boost/random/normal_distribution.hpp>
-	// typedef boost::random::normal_distribution<double> MyDistribution;
-	// double mean = 3.0;
-	// double sigma = 1.1;
+    // typedef boost::random::normal_distribution<double> MyDistribution;
+    // double mean = 3.0;
+    // double sigma = 1.1;
     // MyDistribution dst(mean, sigma);
 
     // we choose marsenne twister with triangle_distribution
@@ -289,7 +289,7 @@ int main(int argc, char* argv[]) {
     int n=5;
     double random_pose = 0.0;
     for (int i = 0; i < n; i++) {
-		random_pose = r();
+	random_pose = r();
     }		
 	
     try {
@@ -348,14 +348,14 @@ int main(int argc, char* argv[]) {
         // write HTTP stream with that request message
         http::write(stream, request);
 		
-		// set the robot motion time
-		AL::ALValue move_time = 2.0f;
+	// set the robot motion time
+	AL::ALValue move_time = 2.0f;
 						
         // HTTP read response from GPT webserver
         beast::flat_buffer buffer;
         http::response<http::dynamic_body> response;
         http::async_read(stream, buffer, response, 
-            [&](beast::error_code ec, std::size_t bytes_transferred) {
+        [&](beast::error_code ec, std::size_t bytes_transferred) {
                 if (!ec) {
                     // HTTP response code
                     std::cout << "Response code: " << response.result_int() << std::endl;
@@ -364,21 +364,21 @@ int main(int argc, char* argv[]) {
 
                     // JSON parse
                     try {
-                        json data = json::parse(response_data);
-                        // Chat-GPT reply
-                        std::cout << "Response of Chat-GPT: " << data["choices"][0]["message"]["content"] << std::endl;
-						// say the result on the pepper robot and make a movement of its head
-						naoSayText(robotIp, data["choices"][0]["message"]["content"]);						
-						naoMoveHead(robotIp, move_time, random_pose);
+                           json data = json::parse(response_data);
+                           // Chat-GPT reply
+                           std::cout << "Response of Chat-GPT: " << data["choices"][0]["message"]["content"] << std::endl;
+			   // say the result on the pepper robot and make a movement of its head
+			   naoSayText(robotIp, data["choices"][0]["message"]["content"]);						
+			   naoMoveHead(robotIp, move_time, random_pose);
                     } catch (const json::exception& e) {
-                        std::cerr << "Failed to parse JSON: " << e.what() << std::endl;
-				        naoSayText(robotIp, e.what());						
+                           std::cerr << "Failed to parse JSON: " << e.what() << std::endl;
+			   naoSayText(robotIp, e.what());						
                     }
 
                 } else {
                     // error response
                     std::cerr << "Error: " << ec.message() << std::endl;
-				    naoSayText(robotIp, ec.message());
+		    naoSayText(robotIp, ec.message());
                 }
             });
 
