@@ -63,6 +63,10 @@ COMMON_EXIT_ROUTE=0
 
 APPEND_DONE=0                                  # set when an append card has been used and cleared when append another presented or any other valid QR
 
+# audible alarms
+import simpleaudio
+ALARM_MSG_OBJ = simpleaudio.WaveObject.from_wave_file("alarm.wav")
+
 # -----------------------------------------------------------
 # Handle encryption 
 # -----------------------------------------------------------
@@ -662,6 +666,8 @@ while cap.isOpened():
                         GPIO.output(coil_relay, 1)                                                    # open barrier physically
                     else:
                         ACTIVE_QR = 0
+                        play_obj = ALARM_MSG_OBJ.play()                                               # speak alarm can not open due to alarm condition being present
+                        play_obj.wait_done()
                         
                 while (ACTIVE_QR == 1) :                                                              # when barrier opened wait for close proximity to be passed by delay secs
                     person_passed = GPIO.input(exited_switch) 
