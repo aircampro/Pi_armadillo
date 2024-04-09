@@ -210,14 +210,14 @@ def writeCoilsModbus(client,addr,boolValueList):
     
 def writeHoldingRegisterModbus(client,addr,value): 
     try:
-        rr = client.write_holding_register(addr, value)
+        rr = client.write_register(addr, value)
     except Exception as e:
         print("Exception in write_holding_register = ",e)  
     return readHoldingRegistersModbus(addr,1)	
 
 def writeHoldingRegistersModbus(client,addr,valuesList):
     try:
-        rr = client.write_holding_registers(addr, valuesList)          # example set starting at 9 values = [ 1, 3, 5, 8 ]
+        rr = client.write_registers(addr, valuesList)          # example set starting at 9 values = [ 1, 3, 5, 8 ]
     except Exception as e:
         print("Exception in write_holding_register = ",e)  
     return readHoldingRegistersModbus(addr,len(valuesList))	
