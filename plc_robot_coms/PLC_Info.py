@@ -203,7 +203,7 @@ def writeCoilModbus(client,addr,boolValue):
 
 def writeCoilsModbus(client,addr,boolValueList):
     try:
-        rr = client.write_coil(addr, boolValueList)          # example boolValueList=[True,False]
+        rr = client.write_coils(addr, boolValueList)          # example boolValueList=[True,False]
     except Exception as e:
         print("Exception in write_coil = ",e)  
     return readCoilsModbus(addr,len(boolValueList))	
@@ -1446,3 +1446,4 @@ def read_Titan_CURDA(a):
     except ValueError:
         rv = int(a[4][1])
     return rv 
+
