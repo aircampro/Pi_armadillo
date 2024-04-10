@@ -81,12 +81,12 @@ def get_descriptors(img, mode=0):
                 keypoints.append(cv2.KeyPoint(y, x, 1))
 	# Define descriptor
     if mode == 0:
-	    orb = cv2.ORB_create()
-	    # Compute descriptors
-	    _, des = orb.compute(img, keypoints)
+        orb = cv2.ORB_create()
+        # Compute descriptors
+        _, des = orb.compute(img, keypoints)
     elif mode == 1:
         akaze = cv2.AKAZE_create()
-		# _, des1 = akaze.detectAndCompute(img, None)
+	# _, des1 = akaze.detectAndCompute(img, None)
         _, des1 = akaze.detectAndCompute(img, keypoints)	
     elif mode == 2:
         # Initiate SIFT detector
@@ -109,9 +109,9 @@ def main():
 	kp2, des2 = get_descriptors(img2, MODE)
 
     if MODE <= 1:		
-	    # Matching between descriptors
-	    bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
-	    matches = sorted(bf.match(des1, des2), key= lambda match:match.distance)
+        # Matching between descriptors
+        bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
+        matches = sorted(bf.match(des1, des2), key= lambda match:match.distance)
     elif MODE == 2:
         # BFMatcher with default params
         bf = cv2.BFMatcher()
@@ -123,49 +123,49 @@ def main():
             good.append([m])
 
     if MODE <= 1:		
-	    # Plot keypoints
-	    img4 = cv2.drawKeypoints(img1, kp1, outImage=None)
-	    img5 = cv2.drawKeypoints(img2, kp2, outImage=None)
-	    f, axarr = plt.subplots(1,2)
-	    axarr[0].imshow(img4)
-	    axarr[1].imshow(img5)
-	    plt.show()
-	    # Plot matches
-	    img3 = cv2.drawMatches(img1, kp1, img2, kp2, matches, flags=2, outImg=None)
-	    plt.imshow(img3)
-	    plt.show()
+        # Plot keypoints
+        img4 = cv2.drawKeypoints(img1, kp1, outImage=None)
+        img5 = cv2.drawKeypoints(img2, kp2, outImage=None)
+        f, axarr = plt.subplots(1,2)
+        axarr[0].imshow(img4)
+        axarr[1].imshow(img5)
+        plt.show()
+        # Plot matches
+        img3 = cv2.drawMatches(img1, kp1, img2, kp2, matches, flags=2, outImg=None)
+        plt.imshow(img3)
+        plt.show()
 
-	    # Calculate score
-	    score = 0;
-	    for match in matches:
-		    score += match.distance
-	    if score/len(matches) < SCORE_THRES:
-		    print("Fingerprint matches.")
-	    else:
-		    print("Fingerprint does not match.")
+        # Calculate score
+        score = 0;
+        for match in matches:
+            score += match.distance
+        if score/len(matches) < SCORE_THRES:
+            print("Fingerprint matches.")
+        else:
+            print("Fingerprint does not match.")
     elif MODE == 2:
-	    # Plot keypoints
-	    img4 = cv2.drawKeypoints(img1, kp1, outImage=None)
-	    img5 = cv2.drawKeypoints(img2, kp2, outImage=None)
-	    f, axarr = plt.subplots(1,2)
-	    axarr[0].imshow(img4)
-	    axarr[1].imshow(img5)
-	    plt.show()
+        # Plot keypoints
+        img4 = cv2.drawKeypoints(img1, kp1, outImage=None)
+        img5 = cv2.drawKeypoints(img2, kp2, outImage=None)
+        f, axarr = plt.subplots(1,2)
+        axarr[0].imshow(img4)
+        axarr[1].imshow(img5)
+        plt.show()
         # cv2.drawMatchesKnn expects list of lists as matches.
         img3 = cv2.drawMatchesKnn(img1, kp1, img2, kp2, good, flags=2)
         plt.imshow(img3),plt.show()	
 
-	    # Calculate score
-	    score = 0;
-	    for match in good:
-		    score += match.distance
-	    if score/len(good) < SCORE_THRES:
-		    print("Fingerprint matches.")
-	    else:
-		    print("Fingerprint does not match.")
+        # Calculate score
+	score = 0;
+	for match in good:
+            score += match.distance
+        if score/len(good) < SCORE_THRES:
+            print("Fingerprint matches.")
+        else:
+            print("Fingerprint does not match.")
 			
 if __name__ == "__main__":
-	try:
-		main()
-	except:
-		raise
+    try:
+        main()
+    except:
+        raise
