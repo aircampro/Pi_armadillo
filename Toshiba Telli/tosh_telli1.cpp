@@ -153,7 +153,7 @@ int main(int argc, char* argv[]) {
             }                
             double ValAntiChat = 0.0f;
             status = CAM_API_STS_SUCCESS;
-            status = GenApi_GetFloatValue(hCam, "AntiChatter", &ValAntiChat);
+            status = GenApi_GetFloatValue(hCam, "AntiChattering", &ValAntiChat);
             if (status) {
                 printf("GenApi_GetFloatValue for \"AntiChatter\" error: 0x%08x\n", status);
                 break;
@@ -167,7 +167,7 @@ int main(int argc, char* argv[]) {
                         std::err < "third argument is anti-cxhatter so it must be a floating point number using default 0.45s" << std::endl;
                     }
                 }
-                status = GenApi_SetFloatValue(hCam, "AntiChatter", ValAntiChat, 1);    
+                status = GenApi_SetFloatValue(hCam, "AntiChattering", ValAntiChat, 1);    
                 if (status) {
                     printf("GenApi_SetFloatValue for \"AntiChatter\" error: 0x%08x\", status);
                     break;
