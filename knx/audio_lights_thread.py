@@ -479,14 +479,14 @@ def button_p_handler(button, pressed):
         PERIOD_BIAS = 1    
     # button F pressed on/off the sequencer
     elif (button == 5):
-        if SET_ACTIVE == 1:                                             # toggle on/off
-            SET_ACTIVE = 0
-            try:
-                if x.is_alive(): x.raise_exception()                    # kill thread and stop lights
-            except:
-                print("starting the light task first time with delay = ",LIGHT_DLY)
-        else:                                                           # start the thread
-            SET_ACTIVE = 1                                              
+        try:
+            if x.is_alive(): 
+                x.raise_exception()                    # kill thread and stop lights
+            else:
+                x = twe(name = 'Thread A', target=set_lights, args=(0, 127, 127), kwargs={'ga1': '1/1/40', 'ga2': '1/1/43', 'gas1': '1/1/41', 'gas2' : '1/1/44'})
+                x.start()                
+        except:
+            print("starting the light task first time with delay = ",LIGHT_DLY)                                             
             x = twe(name = 'Thread A', target=set_lights, args=(0, 127, 127), kwargs={'ga1': '1/1/40', 'ga2': '1/1/43', 'gas1': '1/1/41', 'gas2' : '1/1/44'})
             x.start()
             
