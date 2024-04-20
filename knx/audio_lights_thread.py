@@ -445,6 +445,7 @@ class twe(threading.Thread):
 def button_p_handler(button, pressed):
     # button A pressed use pyadio to stereo
     if (button == 0):
+        buttonshim.set_pixel(0x00, 0x00, 0xff)                           # LED to blue  
         LIGHT_DLY = record_using_pyaudio(output_file_name, 20, 2, 44100)
         with open(LIGHT_DLY_FL, "w") as f:                               # save the setting to disk for recall after reboot
             f.write("\n".join(str(LIGHT_DLY)))   
@@ -457,10 +458,12 @@ def button_p_handler(button, pressed):
         #
         x = twe(name = 'Thread A', target=set_lights, args=(0, 127, 127), kwargs={'ga1': '1/1/40', 'ga2': '1/1/43', 'gas1': '1/1/41', 'gas2' : '1/1/44'})
         x.start()
+        buttonshim.set_pixel(0x00, 0xff, 0x00)                            # LED to green  
     # button B pressed use soundcard to record to mono
     elif (button == 1):
+        buttonshim.set_pixel(0x00, 0x00, 0xff)                            # LED to blue  
         LIGHT_DLY = record_using_soundcard(output_file_name, 20, 1, 48000)
-        with open(LIGHT_DLY_FL, "w") as f:                               # save the setting to disk for recall after reboot
+        with open(LIGHT_DLY_FL, "w") as f:                                # save the setting to disk for recall after reboot
             f.write("\n".join(str(LIGHT_DLY)))                                                      
         try:
             if x.is_alive(): x.raise_exception()
@@ -468,29 +471,35 @@ def button_p_handler(button, pressed):
             print("starting the light task first time with delay = ",LIGHT_DLY)
         x = twe(name = 'Thread A', target=set_lights, args=(0, 127, 127), kwargs={'ga1': '1/1/40', 'ga2': '1/1/43', 'gas1': '1/1/41', 'gas2' : '1/1/44'})
         x.start()
+        buttonshim.set_pixel(0x00, 0xff, 0x00)                            # LED to green  
     # button C pressed change the pattern
     elif (button == 2):
         SET_PATTERN = (SET_PATTERN + 1) % NUM_PATTERNS	
     # button D pressed prolong the delay up to max
     elif (button == 3):
-        PERIOD_BIAS = ((PERIOD_BIAS + 1) % MAX_PERIOD_BIAS) + 1
-    # button E pressed reset the bias on the delay back to fast 1
+        PERIOD_BIAS = ((PERIOD_BIAS + 1) % MAX_PERIOD_BIAS) + 1  
+    # button E pressed on/off the sequencer
     elif (button == 4):
-        PERIOD_BIAS = 1    
-    # button F pressed on/off the sequencer
-    elif (button == 5):
         try:
             if x.is_alive(): 
-                x.raise_exception()                    # kill thread and stop lights
+                x.raise_exception()                                         # kill thread and stop lights
+                buttonshim.set_pixel(0xff, 0x00, 0x00)                      # LED to red
             else:
                 x = twe(name = 'Thread A', target=set_lights, args=(0, 127, 127), kwargs={'ga1': '1/1/40', 'ga2': '1/1/43', 'gas1': '1/1/41', 'gas2' : '1/1/44'})
-                x.start()                
+                x.start()     
+                buttonshim.set_pixel(0x00, 0xff, 0x00)                      # LED to green                   
         except:
             print("starting the light task first time with delay = ",LIGHT_DLY)                                             
             x = twe(name = 'Thread A', target=set_lights, args=(0, 127, 127), kwargs={'ga1': '1/1/40', 'ga2': '1/1/43', 'gas1': '1/1/41', 'gas2' : '1/1/44'})
-            x.start()
-            
-    signal.pause()
+            x.start()  
+            buttonshim.set_pixel(0x00, 0xff, 0x00)                          # LED to green               
+
+@buttonshim.on_hold(buttonshim.BUTTON_D, hold_time=2)
+def hold_handler(button):
+    # button D pressed for 2 seconds or more than reset the bias on the lights delay back to fastest
+    PERIOD_BIAS = 1  
+    
+signal.pause()                                                          # Stop script from immediately exiting
 
 
     
