@@ -449,6 +449,7 @@ def record_using_pyaudio( fn, recordSeconds=10, channels=2, rate=44100 ):
 def button_p_handler(button, pressed):
     # button A pressed use pyadio to stereo
     if (button == 0):
+        buttonshim.set_pixel(0x00, 0x00, 0xff)                           # LED to blue  
         LIGHT_DLY = record_using_pyaudio(output_file_name, 10, 2, 44100)
         with open(LIGHT_DLY_FL, "w") as f:                               # save the setting to disk for recall after reboot
             f.write("\n".join(str(LIGHT_DLY)))   
@@ -457,8 +458,10 @@ def button_p_handler(button, pressed):
         SET_ACTIVE = 1                                                   # now set the global lights to active
         thread1 = threading.Thread(target=set_lights, args=()) 
         thread1.start()
+        buttonshim.set_pixel(0x00, 0xff, 0x00)                           # LED to green 
     # button B pressed use soundcard to record to mono
     elif (button == 1):
+        buttonshim.set_pixel(0x00, 0x00, 0xff)                           # LED to blue   
         LIGHT_DLY = record_using_soundcard(output_file_name, 10, 1, 48000)
         with open(LIGHT_DLY_FL, "w") as f:                               # save the setting to disk for recall after reboot
             f.write("\n".join(str(LIGHT_DLY)))   
@@ -467,25 +470,31 @@ def button_p_handler(button, pressed):
         SET_ACTIVE = 1                                                   # now set the global lights to active
         thread1 = threading.Thread(target=set_lights, args=()) 
         thread1.start()
+        buttonshim.set_pixel(0x00, 0xff, 0x00)                           # LED to green 
     # button C pressed change the pattern
     elif (button == 2):
         SET_PATTERN = (SET_PATTERN + 1) % NUM_PATTERNS	
     # button D pressed prolong the delay up to max
     elif (button == 3):
-        PERIOD_BIAS = ((PERIOD_BIAS + 1) % MAX_PERIOD_BIAS) + 1
-    # button E pressed reset the bias on the delay back to fast 1
+        PERIOD_BIAS = ((PERIOD_BIAS + 1) % MAX_PERIOD_BIAS) + 1  
+    # button E pressed on/off the sequencer
     elif (button == 4):
-        PERIOD_BIAS = 1    
-    # button F pressed on/off the sequencer
-    elif (button == 5):
-        if SET_ACTIVE == 1:                                             # toggle on/off
+        if SET_ACTIVE == 1:                                                 # toggle on/off
             SET_ACTIVE = 0
+            buttonshim.set_pixel(0xff, 0x00, 0x00)                          # LED to red               
         else:            
             SET_ACTIVE = 1   
-            thread1 = threading.Thread(target=set_lights, args=())      # restart light sequence
+            thread1 = threading.Thread(target=set_lights, args=())          # restart light sequence
             thread1.start()
-            
-    signal.pause()
+            buttonshim.set_pixel(0x00, 0xff, 0x00)                          # LED to green               
+
+@buttonshim.on_hold(buttonshim.BUTTON_D, hold_time=2)
+def hold_handler(button):
+    # button D pressed for more than 2 seconds reset the bias on the delay back to fastest
+    PERIOD_BIAS = 1  
+    
+signal.pause()
 
 
     
+
