@@ -19,6 +19,8 @@ import board
 import RPi.GPIO as GPIO
 import datetime
 
+import sys
+
 # GPIO pin scheme
 GPIO.setmode(GPIO.BCM)                                                           # BCM channel, ex GPIO#
 
@@ -71,8 +73,10 @@ ALARM_MSG_OBJ = simpleaudio.WaveObject.from_wave_file("alarm.wav")
 # Handle encryption 
 # -----------------------------------------------------------
 USE_CRYPT=0                                                   # use a encryption and decryption anti-fraud for the QR Codes 1=plain 2=hexlified etc as below
-if argc >= 1 :                                                  # we specified a decryption to be used
-    USE_CRYPT=int(argv[1])
+
+argc = len(sys.argv)
+if argc >= 1 :                                                # we specified a decryption to be used
+    USE_CRYPT=int(sys.argv[1])
     
 DECRYPT_PW="my_qr_decoder"                                      # same password as the encoder uses
 if USE_CRYPT == 1 :
