@@ -7,6 +7,7 @@ import sys
 import threading
 import weakref
 import datetime
+import re
 
 HELVAR_PORT=50000
 
@@ -24,13 +25,37 @@ class HelvarNet:
     STORE_NOW_FOR_GROUP = '>V:1,C:203,G:{0},O:{1},B:{2},S:{3}#'
     STORE_NOW_FOR_DEVICE = '>V:1,C:204,@:{0},O:{1},B:{2},S:{3}#'    
     SET_ROUTER_TIME = '>V:1,C:241,T:{0}#'
-           
-    def __init__(self, ip, port=50000):
+    DEVICE_POWER_CONS = '>V:1,C:160,@:{0}#'
+    GROUP_POWER_CONS = '>V:1,C:161,@:{0}#'
+    DEVICE_LOAD_LEVEL = '>V:1,C:152,@:{0}#'
+    DEVICE_MEAS = '>V:1,C:150,@:{0}#'
+    DEVICE_INPUT_STATE = '>V:1,C:151,@:{0}#'
+    DEVICE_FAULTY = '>V:1,C:114,@:{0}#'
+    DEVICE_MISSING = '>V:1,C:113,@:{0}#'
+    DEVICE_DISABLED = '>V:1,C:111,@:{0}#'
+    DEVICE_STATE = '>V:1,C:110,@:{0}#'
+    DEVICE_TYPE = '>V:1,C:104,@:{0}#'
+    EMER_BAT_CHG = '>V:1,C:174,@:{0}#'
+    EMER_BAT_TIME = '>V:1,C:175,@:{0}#'
+    EMER_BAT_TOT_LAMP = '>V:1,C:176,@:{0}#'
+    EMER_BAT_FAIL = '>V:1,C:129,@:{0}#'
+    HELVAR_GATEWAY_TIME = '>V:1,C:185#'
+    HELVAR_GATEWAY_LAT = '>V:1,C:186#'
+    HELVAR_GATEWAY_LON = '>V:1,C:187#'
+    HELVAR_GATEWAY_TIMEZONE = '>V:1,C:188#'
+    HELVAR_GATEWAY_DSTIME = '>V:1,C:189#'   
+    QUERY_CLUSTERS = '>V:1,C:101#' 
+    QUERY_ROUTERS = '>V:1,C:102#' 
+     
+    def __init__(self, ip, port=50000, retry_no=3):
         self.__s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.__s.connect((ip, port))
         self.__t = threading.Thread(target = self.__t_func,
                                     args = (self, weakref.ref(self)))
         self.__lock = threading.RLock()
+        self.__ip = ip
+        self.__port = port
+        self.__retry_no = retry_no
         self.__running = True
         self.__day_on = 1                            # enable daylight saving
         self.__timezone_diff = 0                     # timezone difference in seconds
@@ -44,6 +69,58 @@ class HelvarNet:
         self.__send(self.SET_ROUTER_TIME.format(self.__epoch))        
     def set_direct_level(self, address, level, fade_time = 0):
         self.__send(self.DIRECT_LEVEL.format(level, fade_time, address))
+    def get_power_cons_device(self, address):
+        received = self.__send_and_rcv(self.DEVICE_POWER_CONS.format(address))
+        received = re.search("(?<=\=).*(?=#)", str(received)).group()
+        return received
+    def get_load_level_device(self, address):
+        received = self.__send_and_rcv(self.DEVICE_LOAD_LEVEL.format(address))
+        received = re.search("(?<=\=).*(?=#)", str(received)).group()
+        return received
+     def get_measurement_device(self, address):
+        received = self.__send_and_rcv(self.DEVICE_MEAS.format(address))
+        received = re.search("(?<=\=).*(?=#)", str(received)).group()
+        return received
+    def get_input_state_device(self, address):
+        received = self.__send_and_rcv(self.DEVICE_INPUT_STATE.format(address))
+        received = re.search("(?<=\=).*(?=#)", str(received)).group()
+        return received       
+    def get_emergency_bat_charge_device(self, address):
+        received = self.__send_and_rcv(self.EMER_BAT_CHG.format(address))
+        received = re.search("(?<=\=).*(?=#)", str(received)).group()
+        return received
+    def get_emergency_bat_time_device(self, address):
+        received = self.__send_and_rcv(self.EMER_BAT_TIME.format(address))
+        received = re.search("(?<=\=).*(?=#)", str(received)).group()
+        return received
+    def get_emergency_bat_total_lamp_device(self, address):
+        received = self.__send_and_rcv(self.EMER_BAT_TOT_LAMP.format(address))
+        received = re.search("(?<=\=).*(?=#)", str(received)).group()
+        return received   
+    def get_emergency_bat_failure_device(self, address):
+        received = self.__send_and_rcv(self.EMER_BAT_FAIL.format(address))
+        received = re.search("(?<=\=).*(?=#)", str(received)).group()
+        return received   
+    def get_fault_device(self, address):
+        received = self.__send_and_rcv(self.DEVICE_FAULTY.format(address))
+        received = re.search("(?<=\=).*(?=#)", str(received)).group()
+        return received  
+    def get_missing_device(self, address):
+        received = self.__send_and_rcv(self.DEVICE_MISSING.format(address))
+        received = re.search("(?<=\=).*(?=#)", str(received)).group()
+        return received    
+    def get_disabled_device(self, address):
+        received = self.__send_and_rcv(self.DEVICE_DISABLED.format(address))
+        received = re.search("(?<=\=).*(?=#)", str(received)).group()
+        return received  
+    def get_state_device(self, address):
+        received = self.__send_and_rcv(self.DEVICE_STATE.format(address))
+        received = re.search("(?<=\=).*(?=#)", str(received)).group()
+        return received 
+    def get_type_device(self, address):
+        received = self.__send_and_rcv(self.DEVICE_TYPE.format(address))
+        received = re.search("(?<=\=).*(?=#)", str(received)).group()
+        return received        
     def recall_scene_on_device(self, address, block, scene, fade):  
         self.__send(self.RCL_SCENE_ON_DEVICE.format(block, scene, fade, address)) 
     def store_scene_for_device(self, address, force: bool, block, scene, level): 
@@ -62,6 +139,10 @@ class HelvarNet:
         self.__send(self.RST_DEV_EBAT_TIME.format(address))  
     def set_group_level(self, grp, level, fade_time = 0):
         self.__send(self.GROUP_LEVEL.format(grp, level, fade_time)) 
+    def get_power_cons_group(self, address):
+        received = self.__send_and_rcv(self.GROUP_POWER_CONS.format(address))
+        received = re.search("(?<=\=).*(?=#)", str(received)).group()
+        return received
     def reset_group_elamp_bat_time(self, group):
         self.__send(self.RST_GRP_EBAT_TIME.format(group))  
     def recall_scene_on_group(self, group, block, scene, fade): 
@@ -78,18 +159,83 @@ class HelvarNet:
         else:
             fc = 0        
         self.__send(self.STORE_NOW_FOR_GROUP.format(group, fc, block, scene))     
-    def set_daylight_saving(self, ds=True):
+    def set_gateway_daylight_saving(self, ds=True):
         if ds == True:
             self.__day_on = 1
         else:
             self.__day_on = 0
         self.__send(self.DAYLIGHT_SAVING.format(self.__day_on))     
-    def set_timezone_diff(self, diff=0):
+    def set__gateway_timezone_diff(self, diff=0):
         self.__timezone_diff = diff
-        self.__send(self.TIMEZONE_DIFF.format(self.__timezone_diff))          
+        self.__send(self.TIMEZONE_DIFF.format(self.__timezone_diff))  
+    def get_gateway_time(self, address):
+        received = self.__send_and_rcv(self.HELVAR_GATEWAY_TIME.format(address))
+        received = re.search("(?<=\=).*(?=#)", str(received)).group()
+        return received  
+    def get_gateway_timezone(self, address):
+        received = self.__send_and_rcv(self.HELVAR_GATEWAY_TIMEZONE.format(address))
+        received = re.search("(?<=\=).*(?=#)", str(received)).group()
+        return received   
+    def get_gateway_daylight_saving_time(self, address):
+        received = self.__send_and_rcv(self.HELVAR_GATEWAY_DSTIME.format(address))
+        received = re.search("(?<=\=).*(?=#)", str(received)).group()
+        return received     
+    def query_network_routers(self, cluster):
+        received = self.__send_and_rcv(self.QUERY_ROUTERS.format(cluster))
+        received = re.search("(?<=\=).*(?=#)", str(received)).group()
+        return received   
+    def query_network_clusters(self):
+        received = self.__send_and_rcv(self.QUERY_CLUSTERS.format())
+        received = re.search("(?<=\=).*(?=#)", str(received)).group()
+        return received            
+    def get_gateway_lattitude(self, address):
+        received = self.__send_and_rcv(self.HELVAR_GATEWAY_LAT.format(address))
+        received = re.search("(?<=\=).*(?=#)", str(received)).group()
+        return received 
+    def get_gateway_longditude(self, address):
+        received = self.__send_and_rcv(self.HELVAR_GATEWAY_LON.format(address))
+        received = re.search("(?<=\=).*(?=#)", str(received)).group()
+        return received           
     def __send(self, str):
         self.__lock.acquire()
+        attempt = self.__retry_no
+        while attempt:
+            try:
+                self.__s.send(str.encode())
+                break
+            except socket.error:
+                attempt -= 1
+        if [ attempt == 0 ]:                                        # all retries failed then try re-establishing connection
+            try:
+                self.__s.connect((self.__ip, self.__port))
+                self.__s.send(str.encode()) 
+            except socket.error:
+                print("error on send to helvar gateway")                
+        self.__lock.release()
+    def __send_and_rcv(self, str):
+        self.__lock.acquire()
         self.__s.send(str.encode())
+        self.__s.settimeout(10)
+        attempt = self.__retry_no
+        while attempt:
+            try:
+                self.__s.send(str.encode())
+                break
+            except socket.error:
+                attempt -= 1
+        if [ attempt == 0 ]:                                        # all retries failed then try re-establishing connection
+            try:
+                self.__s.connect((self.__ip, self.__port))
+                self.__s.send(str.encode()) 
+            except socket.error:
+                print("error on send to helvar gateway") 
+                return None                 
+        try:   
+            data = self.__s.recv(1024) 
+            return data  
+        except socket.error:
+            print("error on recv from helvar gateway")            
+            return None                
         self.__lock.release()
     def __keepalive(self):
         self.__send('')
@@ -125,6 +271,9 @@ class LedUnit:
         self.__net.store_curr_scene_for_device(self.__addr, force: bool, block, scene)     
     def reset_device_elamp_bat_time(self):
         self.__net.reset_device_elamp_bat_time(self.__addr)    
+    def get_device_power_cons(self):
+        pc = self.__net.get_power_cons_device(self.__addr)
+        return pc
         
 class LedGroup:
     def __init__(self, helvarNet, group):
@@ -140,12 +289,14 @@ class LedGroup:
         self.__net.store_scene_for_group(self.__grp, force: bool, block, scene, level)       
     def store_curr_scene_for_group(self, force: bool, block, scene): 
         self.__net.store_curr_scene_for_group(self.__grp, force: bool, block, scene)     
-     
+    def get_group_power_cons(self):
+        pc = self.__net.get_power_cons_group(self.__grp)
+        return pc     
         
 if __name__ == "__main__":
     helvarNet = HelvarNet('10.254.1.2', HELVAR_PORT)                       # connect to the helvar gateway on tcp/ip
     helvarNet.set_router_current_time()                                    # sync the routers time
-    helvarNet.set_daylight_saving(True)                                    # enable daylight saving
+    helvarNet.set_gateway_daylight_saving(True)                                    # enable daylight saving
  
     # these are individual devices 
     leds = [LedUnit(helvarNet, '1.2.1.1'),
@@ -189,4 +340,13 @@ if __name__ == "__main__":
         for i in range(0,len(grps)):
             grps[i].set_group_lvl(0, 100)
             time.sleep(0.5)
+        for i in range(0,len(leds)): 
+            print("--------------------------------------")        
+            power_cons = leds[i].get_device_power_cons()
+            print("device ",i," power = ",power_cons)
+        print(("--------------------------------------") 
+        for i in range(0,len(grps)):
+            power_cons = grps[i].get_group_power_cons()
+            print("device ",i," power = ",power_cons)
+        print(("--------------------------------------")        
         
