@@ -24,6 +24,8 @@ from xknx.devices import Switch
 
 from Crypto.Random import get_random_bytes
 
+import sys
+
 async def main(ramp_iterval=1,fan_ramp=1):
     """Connect to KNX/IP bus, slowly dimm on light, set it off again afterwards."""
     xknx = XKNX()
@@ -167,7 +169,8 @@ async def main(ramp_iterval=1,fan_ramp=1):
 
 if __name__ == '__main__':
 
+    argc = len(sys.argv)
     if argc >= 2:
-        asyncio.run(main(int(argv[1]),int(argv[2]))
+        asyncio.run(main(int(sys.argv[1]),int(sys.argv[2]))
     else:
         asyncio.run(main())
