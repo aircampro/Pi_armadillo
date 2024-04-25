@@ -7,6 +7,7 @@
 from modTCP_server import ModbusTCPServer
 from modTCP_client import ModbusTCPClient
 import time
+import sys
 
 ipaddress = "127.0.0.1"                     # using 127.0.0.1 to test this with a loopback address (it would be the address for the server [slave dev] e.g. 192.168.1.123)
 port = 502                                  # port designated to modbus TCP operations
@@ -103,11 +104,12 @@ def close_down():
 if __name__ == '__main__':
 
     start_add = 0                                      # start address in modbus  
+    argc = len(sys.argv)
     if (argc >= 1) :
         try:
-            start_add = int(argv[1])
+            start_add = int(sys.argv[1])
         except:
-            print("usage : ",argv[0]," start_address_integer ")
+            print("usage : ",sys.argv[0]," start_address_integer ")
     server_to_client(start_add)
     client_to_server(start_add)
     close_down()
