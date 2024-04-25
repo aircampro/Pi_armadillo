@@ -13,6 +13,7 @@
 import serial
 import time
 import numpy as np
+import sys
 
 class PyDMX:
 
@@ -171,10 +172,11 @@ class PyDMX:
             self.sendzero()
         self.ser.close()
         
-TIM_DLY=1                                       # set default delay to 1 second
+TIM_DLY=1                                           # set default delay to 1 second
+argc = len(sys.argv)
 if argc >= 1:
     try:
-        TIM_DLY=float(argv[1])                  # can be read as first argument to this program
+        TIM_DLY=float(sys.argv[1])                  # can be read as first argument to this program
     except:
         print("argument must be valid number!")
         
