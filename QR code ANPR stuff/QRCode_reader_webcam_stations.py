@@ -75,7 +75,7 @@ ALARM_MSG_OBJ = simpleaudio.WaveObject.from_wave_file("alarm.wav")
 USE_CRYPT=0                                                   # use a encryption and decryption anti-fraud for the QR Codes 1=plain 2=hexlified etc as below
 
 argc = len(sys.argv)
-if argc >= 1 :                                                # we specified a decryption to be used
+if argc >= 2 :                                                # we specified a decryption to be used
     USE_CRYPT=int(sys.argv[1])
     
 DECRYPT_PW="my_qr_decoder"                                      # same password as the encoder uses
