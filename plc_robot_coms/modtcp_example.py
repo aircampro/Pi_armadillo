@@ -105,7 +105,7 @@ if __name__ == '__main__':
 
     start_add = 0                                      # start address in modbus  
     argc = len(sys.argv)
-    if (argc >= 1) :
+    if (argc >= 2) :
         try:
             start_add = int(sys.argv[1])
         except:
