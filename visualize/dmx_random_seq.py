@@ -174,7 +174,7 @@ class PyDMX:
         
 TIM_DLY=1                                           # set default delay to 1 second
 argc = len(sys.argv)
-if argc >= 1:
+if argc >= 2:
     try:
         TIM_DLY=float(sys.argv[1])                  # can be read as first argument to this program
     except:
