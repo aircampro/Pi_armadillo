@@ -170,7 +170,7 @@ async def main(ramp_iterval=1,fan_ramp=1):
 if __name__ == '__main__':
 
     argc = len(sys.argv)
-    if argc >= 2:
+    if argc >= 3:
         asyncio.run(main(int(sys.argv[1]),int(sys.argv[2]))
     else:
         asyncio.run(main())
