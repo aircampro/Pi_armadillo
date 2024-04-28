@@ -25,7 +25,7 @@ ssh -T $_remote <<'EOL'
 	echo "Server date and time is $now"
 	echo "Server uptime: $up"
 	echo "Now setting $cbp to $value_set"
-	/opt/bin/tools/setval $cbp $value_set
+	/opt/fox/bin/tools/setval $cbp $value_set
 	echo "Now resding $cbp2"
 	/opt/bin/tools/getval $cbp2
 	echo "Bye"
