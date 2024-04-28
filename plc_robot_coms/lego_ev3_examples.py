@@ -80,7 +80,7 @@ stopped=False
 while time.time()-t0 < 30:                  # iterate for time
     if ts.value() == 1:                     # stop if ts pressed
         m.stop()
-		stopped = True
+        stopped = True
 if not stopped:                             # if not stopped stop on timeout
     m.stop()
 	
