@@ -151,10 +151,10 @@ lenb=100                                   # distance to go forward in a small r
 tire=math.pi*56                            # circumference of tire (mm)
 rsa=lena/tire                              # number of revolutions required to move forward in a large rectangle
 rsb=lenb/tire                              # number of revolutions required to advance a small rectangle
-for i in range(4):.
+for i in range(4):
     rbt.on_for_rotations(sp,sp,rsa)        # forward movement (no of revs for lena) in large rectangle
     rbt.on_for_rotations(-sp,sp,rt)        # turn left
-    for j in range(2):.
+    for j in range(2):
         rbt.on_for_rotations(sp,sp,rsb)    # forward movement (no of revs for lenb) in small rectangle
         rbt.on_for_rotations(-sp,sp,rt)    # turn left
     #rbt.on_for_rotations(sp,sp,rsb*2)     # if you want 400 mm square
@@ -193,7 +193,7 @@ while True:
             while online==False:
                 if dir==1:                                   # try left turn to get back on line                
                     rbt.on(-sp,sp)                           # turn left and search for line
-                else:.
+                else:
                     rbt.on(sp,-sp)                           # turn right and search for line
                 ti += 0.1;                                   # increase search time
                 if ti > 1.2:                                 # ti has reached max time
