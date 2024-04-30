@@ -80,7 +80,7 @@ MORSE_DICT ={
     "Ü" : "..--",
     "É" : "..-..",
     "\"" : ".-..-.",
-    "$" : "...-..-",
+    "$" : "...-..-"
 }
 
 # japanese dictionary is in katakana
@@ -145,6 +145,73 @@ MORSE_DICT_JP = {
     '！' : '-.-.--'
 }
 
+# russian morse dictionary 
+#
+MORSE_DICT_RU ={
+    "A" : ".-",
+    "Б" : "-...",
+    "Ц" : "-.-.",
+    "Д" : "-..",
+    "E" : ".",
+    "Ф" : "..-.",
+    "Г" : "--.",
+    "X" : "....",
+    "И" : "..",
+    "Й" : ".---",
+    "K" : "-.-",
+    "Л" : ".-..",
+    "M" : "--",
+    "H" : "-.",
+    "O" : "---",
+    "П" : ".--.",
+    "Щ" : "--.-",
+    "P" : ".-.",
+    "С" : "...",
+    "T" : "-",
+    "У" : "..-",
+    "Ж" : "...-",
+    "В" : ".--",
+    "Ь" : "-..-",
+    "Ы" : "-.--",
+    "З" : "--..",
+    "Ч" : "---.",	
+	"Ш" : "----",
+	"Ъ" : "--.--",
+	"Э" : "..-..",
+	"Ю" : "..--",
+	"Я" : ".-.-",	
+    " " : "/",
+    "1" : ".----",
+    "2" : "..---",
+    "3" : "...--",
+    "4" : "....-",
+    "5" : ".....",
+    "6" : "-....",
+    "7" : "--...",
+    "8" : "---..",
+    "9" : "----.",
+    "0" : "-----",
+    "." : ".-.-.-",
+    "," : "--..--",
+    ":" : "---...",
+    ";" : "-.-.-.",
+    "?" : "..--..",
+    "'" : ".----.",
+    "-" : "-....-",
+    "/" : "-..-.",
+    "@" : ".--.-.",
+    "=" : "-...-",
+    "'" : ".----.",
+    "(" : "-.--.",
+    ")" : "-.--.-",
+    "*" : "-.-.-",
+    "+" : ".-.-.",
+    "_" : "..__._.",
+    "!" : "-.-.--",
+    "\"" : ".-..-.",
+    "$" : "...-..-"
+}
+
 def morse_encode(msg, morse_dict) -> list:
     encoded_lst = []
     for i in msg.upper():
@@ -192,6 +259,7 @@ def morse_beep(freq, dur=100, sys_has_play_installed=True, e3_dev=False):
     elif pt == 'Linux' and not e3_dev:                                                        # only got linux  
         import fcntl
         import time
+        import os
         len = dur / 1000                                                                      # convert millisecond to second
         KIOCSOUND = 0x4B2F
         CLOCK_TICK_RATE = 1193180
@@ -243,3 +311,9 @@ if __name__ == '__main__':
         send_morse_sound(sys.argv[2], MORSE_DICT_JP)
     else:
         send_morse_sound('よう！げんき？', MORSE_DICT_JP)
+        
+    # test in russian
+    if argc >= 4:
+        send_morse_sound(sys.argv[3], MORSE_DICT_RU)
+    else:
+        send_morse_sound('Используйте таблицу азбуки Морзе', MORSE_DICT_RU)
