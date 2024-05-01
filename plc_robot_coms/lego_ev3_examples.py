@@ -173,60 +173,90 @@ def display_image( lcd, imgnm ):
     lcd.clear()
     img=Image.open('/usr/share/images/ev3dev/mono/eyes/'+imgnm)
     lcd.image.paste(img,(0,0))
-    
+
+# define the modes for this craft
+SPEED_INCREASE=0
+SPEED_DECREASE=1
+STOP_MOVING=2 
+SCREEN_RSET=-99
+   
 ts=TouchSensor()                                         # make touch sensor 
 cs=ColorSensor()                                         # use a color sensor to detect the black line for movement
 lcd=Display()
 th=55                                                    # light intensity threshold
 rbt=MoveTank(OUTPUT_B,OUTPUT_C)                          # make tank object
-sp=30                                                    # speed (%)
-sp_inc=0.01                                              # speed increase
+
+sp_step=0.01                                             # speed increase %
+sp_inc_time=0.2                                          # time of delay between speed increases [secs]
+sp_default=30                                            # default reset speed for this craft
+sp=sp_default                                            # speed (%)
 rbt.on(sp,sp)                                            # forward movement first on line so go straight
+speed_state = SPEED_INCREASE                             # the speed will increase with time 
+di=SCREEN_RSET                                           # initialise flag to stop wriitng to display for the mode in continuos spped mode
 while True:
-    while ts.value() == 0:                                   # do forever........ if the screen is not pressed
-        if cs.reflected_light_intensity >= th:               # not seeing the black line ?
-            ti=0.0                                           # off the line and came to the white part
-            sp=30                                            # reset speed
-            online=False                                     # not on the line flag
-            dir=1                                            # First thing is to turn left and search
-            display_image(lcd, 'dizzy.png')
-            while online==False:
-                if dir==1:                                   # try left turn to get back on line                
-                    rbt.on(-sp,sp)                           # turn left and search for line
-                else:
-                    rbt.on(sp,-sp)                           # turn right and search for line
-                ti += 0.1;                                   # increase search time
-                if ti > 1.2:                                 # ti has reached max time
-                    ti=0.2                                   # reset ti to 0.2 seconds
-                    rbt.on(-sp,-sp)                          # Backtrack a bit.
-                ct=time();                                   # current time
-                while time()-ct < ti:                        # Repeat within search time, delay for ti seconds unless black is seen again
-                    if cs.reflected_light_intensity < th:    # it now sees the black line
-                        rbt.on(sp,sp)                        # on line, straight ahead
-                        online=True
-                        break                                # break out of repetition
-                    elif not ts.value() == 0:                # pressed touchscreen
-                        break                                # restart vehicle
-                dir = -dir                                   # Swap turn directions
-        else:
-            display_image(lcd, 'crazy_2.png')
-            sp += sp_inc                                     # increase the speed slightly
-            rbt.on(sp,sp)                                    # on line, straight ahead
-            ti = 0.2                                         # do it every 0.2 secs
-            ct=time();                                       # current time
-            while time()-ct < ti:                            # Repeat within search time, delay for ti seconds unless black is seen again
-                if cs.reflected_light_intensity >= th:       # it looses the black line                     
-                    break                                    # break out of repetition  
-                elif not ts.value() == 0:                    # pressed touchscreen
-                    break                                    # restart vehicle
+    while speed_state < STOP_MOVING:                             # state is not to stop
+        while ts.value() == 0:                                   # do forever........ if the screen is not pressed
+            if cs.reflected_light_intensity >= th:               # not seeing the black line ?
+                ti=0.0                                           # off the line and came to the white part
+                sp=sp_default                                    # reset speed
+                online=False                                     # not on the line flag
+                dir=1                                            # First thing is to turn left and search
+                display_image(lcd, 'dizzy.png')
+                while online==False:
+                    if dir==1:                                   # try left turn to get back on line                
+                        rbt.on(-sp,sp)                           # turn left and search for line
+                    else:
+                        rbt.on(sp,-sp)                           # turn right and search for line
+                    ti += 0.1;                                   # increase search time
+                    if ti > 1.2:                                 # ti has reached max time
+                        ti=0.2                                   # reset ti to 0.2 seconds
+                        rbt.on(-sp,-sp)                          # Backtrack a bit.
+                    ct=time();                                   # current time
+                    while time()-ct < ti:                        # Repeat within search time, delay for ti seconds unless black is seen again
+                        if cs.reflected_light_intensity < th:    # it now sees the black line
+                            rbt.on(sp,sp)                        # on line, straight ahead
+                            online=True
+                            break                                # break out of repetition
+                        elif not ts.value() == 0:                # pressed touchscreen
+                            online=True                          # exit the loop if the touch is pressed
+                            break                                
+                    dir = -dir                                   # Swap turn directions
+            else:
+                if speed_state == SPEED_INCREASE:
+                    sp += sp_step                                # increase the speed slightly
+                    if not di == SPEED_INCREASE:                 # so as not to keep writing to display
+                        display_image(lcd, 'crazy_2.png')
+                        di = SPEED_INCREASE
+                elif speed_state == SPEED_DECREASE:
+                    sp -= sp_step                                # decrease the speed slightly  
+                    if not di == SPEED_DECREASE:                    
+                        display_image(lcd, 'evil.png') 
+                        di = SPEED_DECREASE                        
+                rbt.on(sp,sp)                                    # on line, straight ahead
+                ti = sp_inc_time                                 # do it every sp_inc_time [secs]
+                ct=time();                                       # current time
+                while time()-ct < ti:                            # Repeat within search time, delay for ti seconds unless black is seen again
+                    if cs.reflected_light_intensity >= th:       # it looses the black line                     
+                        break                                    # break out of repetition  
+                    elif not ts.value() == 0:                    # pressed touchscreen
+                        break                                    # restart vehicle
                                                     
-    display_image(lcd, 'crazy_1.png')                        # now moving forward at set speed                                                    
-    ts.wait_for_released()                                   # wait for touchscreen release
+        display_image(lcd, 'crazy_1.png')                        # now moving forward at set speed while touchscreen is kept pressed                                                    
+        ts.wait_for_released()                                   # wait for touchscreen release it will run at the fixed speed now
+        if (speed_state == SPEED_INCREASE):                      # we were increasing speed
+            speed_state = SPEED_DECREASE
+        else:
+            speed_state = STOP_MOVING
+            
     rbt.on(0,0)                                              # stops vehicle
-    display_image(lcd, 'evil.png')
+    display_image(lcd, 'black_eye.png')
     
     while ts.value() == 0:                                   # do forever........ if the screen is not pressed   
         if not ts.value() == 0:                              # pressed touchscreen
             break                                            # restart vehicle
 
     ts.wait_for_released()                                   # wait for touchscreen release
+    
+    speed_state = SPEED_INCREASE                             # reset to default speed and increasing mode
+    sp=sp_default
+    di=SCREEN_RSET
