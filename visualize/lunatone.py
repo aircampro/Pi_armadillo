@@ -4,19 +4,25 @@
 import requests
 import json
 import time
+import datetime
+import pytz
 
-# the ip address for the lunatone gateway
+# LunaToneClient : client to the lunatone dali gateway
+# ip_addr = the ip address for the lunatone gateway
 #
-IP_ADD="192.168.0.62"
+class LunaToneClient:
 
-class LunaToneClient():
+    def __init__(self,ip_addr="192.168.0.62"):
+        self.ip_add = ip_addr
+        
+    def lunatone_change_state( self, id, state=True):
 
-    def lunatone_change_state( id, state=True):
-
-        if state == True:	
-            data = { "switchable": true }
+        if state == True:
+            lights_on="\"switchable\": true"        
+            data = { lights_on }
 		else:
-            data = { "switchable": false }	
+            lights_off="\"switchable\": false" 
+            data = { lights_off }	
 			
         headers = {
             "Content-Type": "application/json",
@@ -25,7 +31,7 @@ class LunaToneClient():
  
         senddatajson = json.dumps(data).encode("ascii")
         try:
-            req = requests.post("http://"+IP_ADD+"/device/"+id+"/control", data=senddatajson, headers=headers)
+            req = requests.post("http://"+self.ip_add+"/device/"+id+"/control", data=senddatajson, headers=headers)
             req.raise_for_status()
         except requests.exceptions.HTTPError as errh:
             print ("Http Error:",errh)
@@ -36,7 +42,7 @@ class LunaToneClient():
         except requests.exceptions.RequestException as err:
             print ("OOps: Something Else",err)
 
-    def lunatone_change_level( id, level=50):
+    def lunatone_change_level( self, id, level=50):
 
         data = { "dimmable": level}	
 			
@@ -47,7 +53,7 @@ class LunaToneClient():
  
         senddatajson = json.dumps(data).encode("ascii")
         try:
-            req = requests.post("http://"+IP_ADD+"/device/"+id+"/control", data=senddatajson, headers=headers)
+            req = requests.post("http://"+self.ip_add+"/device/"+id+"/control", data=senddatajson, headers=headers)
             req.raise_for_status()
         except requests.exceptions.HTTPError as errh:
             print ("Http Error:",errh)
@@ -58,9 +64,10 @@ class LunaToneClient():
         except requests.exceptions.RequestException as err:
             print ("OOps: Something Else",err)	
 
-    def lunatone_recall_last( id ):
+    def lunatone_recall_last( self, id ):
 
-        data = {"gotoLastActive": true}	
+        gtla="\"gotoLastActive\": true"
+        data = {gtla}	
 			
         headers = {
             "Content-Type": "application/json",
@@ -69,7 +76,7 @@ class LunaToneClient():
  
         senddatajson = json.dumps(data).encode("ascii")
         try:
-            req = requests.post("http://"+IP_ADD+"/device/"+id+"/control", data=senddatajson, headers=headers)
+            req = requests.post("http://"+self.ip_add+"/device/"+id+"/control", data=senddatajson, headers=headers)
             req.raise_for_status()
         except requests.exceptions.HTTPError as errh:
             print ("Http Error:",errh)
@@ -80,7 +87,7 @@ class LunaToneClient():
         except requests.exceptions.RequestException as err:
             print ("OOps: Something Else",err)	
 
-    def lunatone_recall_scene( id, scene_no=1 ):
+    def lunatone_recall_scene( self, id, scene_no=1 ):
 
         data = {"scene": scene_no }	
 			
@@ -91,7 +98,7 @@ class LunaToneClient():
  
         senddatajson = json.dumps(data).encode("ascii")
         try:
-            req = requests.post("http://"+IP_ADD+"/device/"+id+"/control", data=senddatajson, headers=headers)
+            req = requests.post("http://"+self.ip_add+"/device/"+id+"/control", data=senddatajson, headers=headers)
             req.raise_for_status()
         except requests.exceptions.HTTPError as errh:
             print ("Http Error:",errh)
@@ -102,7 +109,7 @@ class LunaToneClient():
         except requests.exceptions.RequestException as err:
             print ("OOps: Something Else",err)
 
-    def lunatone_store_scene( id, scene_no=1 ):
+    def lunatone_store_scene( self, id, scene_no=1 ):
 
         data = {"saveToScene": scene_no }	
 			
@@ -113,7 +120,7 @@ class LunaToneClient():
  
         senddatajson = json.dumps(data).encode("ascii")
         try:
-            req = requests.post("http://"+IP_ADD+"/device/"+id+"/control", data=senddatajson, headers=headers)
+            req = requests.post("http://"+self.ip_add+"/device/"+id+"/control", data=senddatajson, headers=headers)
             req.raise_for_status()
         except requests.exceptions.HTTPError as errh:
             print ("Http Error:",errh)
@@ -124,7 +131,7 @@ class LunaToneClient():
         except requests.exceptions.RequestException as err:
             print ("OOps: Something Else",err)
 
-    def lunatone_set_color_rgb( id, r=0, g=0.5, b=1.0 ):
+    def lunatone_set_color_rgb( self, id, r=0, g=0.5, b=1.0 ):
 
         data = { "colorRGB": { "r": r, "g": g, "b": b } }
 				
@@ -135,7 +142,7 @@ class LunaToneClient():
  
         senddatajson = json.dumps(data).encode("ascii")
         try:
-            req = requests.post("http://"+IP_ADD+"/device/"+id+"/control", data=senddatajson, headers=headers)
+            req = requests.post("http://"+self.ip_add+"/device/"+id+"/control", data=senddatajson, headers=headers)
             req.raise_for_status()
         except requests.exceptions.HTTPError as errh:
             print ("Http Error:",errh)
@@ -146,7 +153,7 @@ class LunaToneClient():
         except requests.exceptions.RequestException as err:
             print ("OOps: Something Else",err)
 
-    def lunatone_set_color_waf( id, w=0, a=0.5, f=1.0 ):
+    def lunatone_set_color_waf( self, id, w=0, a=0.5, f=1.0 ):
 
         data = { "colorWAF": { "w": w, "a": a, "f": f } }
 				
@@ -157,7 +164,7 @@ class LunaToneClient():
  
         senddatajson = json.dumps(data).encode("ascii")
         try:
-            req = requests.post("http://"+IP_ADD+"/device/"+id+"/control", data=senddatajson, headers=headers)
+            req = requests.post("http://"+self.ip_add+"/device/"+id+"/control", data=senddatajson, headers=headers)
             req.raise_for_status()
         except requests.exceptions.HTTPError as errh:
             print ("Http Error:",errh)
@@ -168,7 +175,7 @@ class LunaToneClient():
         except requests.exceptions.RequestException as err:
             print ("OOps: Something Else",err)
 
-    def lunatone_set_color_temp( id, temp_kel=4000 ):
+    def lunatone_set_color_temp( self, id, temp_kel=4000 ):
 
         data = { "colorKelvin": temp_kel }
 				
@@ -179,7 +186,7 @@ class LunaToneClient():
  
         senddatajson = json.dumps(data).encode("ascii")
         try:
-            req = requests.post("http://"+IP_ADD+"/device/"+id+"/control", data=senddatajson, headers=headers)
+            req = requests.post("http://"+self.ip_add+"/device/"+id+"/control", data=senddatajson, headers=headers)
             req.raise_for_status()
         except requests.exceptions.HTTPError as errh:
             print ("Http Error:",errh)
@@ -190,7 +197,7 @@ class LunaToneClient():
         except requests.exceptions.RequestException as err:
             print ("OOps: Something Else",err)
 			
-    def lunatone_set_color_coord( id, x=0.432, y=0.1 ):
+    def lunatone_set_color_coord( self, id, x=0.432, y=0.1 ):
 
         data = { "colorXY": { "x": x, "y": y } } 
 				
@@ -201,7 +208,7 @@ class LunaToneClient():
  
         senddatajson = json.dumps(data).encode("ascii")
         try:
-            req = requests.post("http://"+IP_ADD+"/device/"+id+"/control", data=senddatajson, headers=headers)
+            req = requests.post("http://"+self.ip_add+"/device/"+id+"/control", data=senddatajson, headers=headers)
             req.raise_for_status()
         except requests.exceptions.HTTPError as errh:
             print ("Http Error:",errh)
@@ -214,11 +221,14 @@ class LunaToneClient():
 			
     # example of creating an automation sequence to blink the lights
     #
-    def lunatone_create_all_blink_sequence( tim_del ):
+    def lunatone_create_all_blink_sequence( self, tim_del ):
 
-        data = { "name": "blink_slowly", "loop": true, "steps": [ { "type": "features", 
-                 "data": { "targets": [{ "type": "broadcast"}], "features": { "switchable": true } }, "delay": tim_del},
-                 { "type": "features", "data": { "targets": [{ "type": "broadcast"}], "features": { "switchable": false } }, "delay": tim_del} ], }
+        loo="\"loop\": false"
+        lights_on="\"switchable\": true"
+        lights_off="\"switchable\": false"
+        data = { "name": "blink_slowly", loo, "steps": [ { "type": "features", 
+                 "data": { "targets": [{ "type": "broadcast"}], "features": { lights_on } }, "delay": tim_del},
+               { "type": "features", "data": { "targets": [{ "type": "broadcast"}], "features": { lights_off } }, "delay": tim_del} ], }
 				
         headers = {
             "Content-Type": "application/json",
@@ -227,7 +237,7 @@ class LunaToneClient():
  
         senddatajson = json.dumps(data).encode("ascii")
         try:
-            req = requests.post("http://"+IP_ADD+"/automations/sequence", data=senddatajson, headers=headers)
+            req = requests.post("http://"+self.ip_add+"/automations/sequence", data=senddatajson, headers=headers)
             req.raise_for_status()
         except requests.exceptions.HTTPError as errh:
             print ("Http Error:",errh)
@@ -240,7 +250,7 @@ class LunaToneClient():
 
         headers = {'content-type': 'application/json'}
         try:
-            response = requests.get("http://"+IP_ADD+"/automations/sequence", headers=headers)
+            response = requests.get("http://"+self.ip_add+"/automations/sequence", headers=headers)
             response.raise_for_status()
         except requests.exceptions.HTTPError as errh:
             print ("Http Error:",errh)
@@ -268,7 +278,7 @@ class LunaToneClient():
             seq_state = seq_state
 		return seq_id, seq_state
 
-    def lunatone_start_sequence( s_id ):
+    def lunatone_start_sequence( self, s_id ):
 				
         headers = {
             "Content-Type": "application/json",
@@ -277,7 +287,7 @@ class LunaToneClient():
  
         senddatajson = json.dumps(data).encode("ascii")
         try:
-            req = requests.post("http://"+IP_ADD+"/automations/sequence/"+s_id+"/start", headers=headers)
+            req = requests.post("http://"+self.ip_add+"/automations/sequence/"+s_id+"/start", headers=headers)
             req.raise_for_status()
         except requests.exceptions.HTTPError as errh:
             print ("Http Error:",errh)
@@ -288,7 +298,7 @@ class LunaToneClient():
         except requests.exceptions.RequestException as err:
             print ("OOps: Something Else",err)
 
-    def lunatone_stop_sequence( s_id ):
+    def lunatone_stop_sequence( self, s_id ):
 				
         headers = {
             "Content-Type": "application/json",
@@ -297,7 +307,7 @@ class LunaToneClient():
  
         senddatajson = json.dumps(data).encode("ascii")
         try:
-            req = requests.post("http://"+IP_ADD+"/automations/sequence/"+s_id+"/stop", headers=headers)
+            req = requests.post("http://"+self.ip_add+"/automations/sequence/"+s_id+"/stop", headers=headers)
             req.raise_for_status()
         except requests.exceptions.HTTPError as errh:
             print ("Http Error:",errh)
@@ -308,9 +318,10 @@ class LunaToneClient():
         except requests.exceptions.RequestException as err:
             print ("OOps: Something Else",err)
 			
-    def lunatone_edit_all_blink_sequence( seq_id ):
+    def lunatone_edit_all_blink_sequence( self, seq_id ):
 
-        data = { "loop": false, "repeat": 5 }
+        loo="\"loop\": false"
+        data = { loo, "repeat": 5 }
 				
         headers = {
             "Content-Type": "application/json",
@@ -319,7 +330,7 @@ class LunaToneClient():
  
         senddatajson = json.dumps(data).encode("ascii")
         try:
-            req = requests.put("http://"+IP_ADD+"/automations/sequence/"+seq_id, data=senddatajson, headers=headers)
+            req = requests.put("http://"+self.ip_add+"/automations/sequence/"+seq_id, data=senddatajson, headers=headers)
             req.raise_for_status()
         except requests.exceptions.HTTPError as errh:
             print ("Http Error:",errh)
@@ -332,11 +343,14 @@ class LunaToneClient():
             
     # example of creating timed schedule
     #
-    def lunatone_create_timed_sched_lights_on( g_id=0, hr=6, min=30 ):
+    def lunatone_create_timed_sched_lights_on( self, g_id=0, hr=6, min=30 ):
 
-        data =  { "name": "lights-on", "targets": [ { "type": "group", "id": g_id } ], "activeWeekdays": { "saturday": false, "sunday": false },
+        sat="\"saturday\": false"
+        sun="\"sunday\": false"
+        s1 = "\"switchable\": false"
+        data =  { "name": "lights-on", "targets": [ { "type": "group", "id": g_id } ], "activeWeekdays": { sat, sun },
                   "recallMode": "timeOfDay",  "recallTime": { "hour": hr "minute": min }, "action": { "type": "features", "data": { "features": {
-                  "switchable": true } } } }
+                  s1 } } } }
 				
         headers = {
             "Content-Type": "application/json",
@@ -345,7 +359,7 @@ class LunaToneClient():
  
         senddatajson = json.dumps(data).encode("ascii")
         try:
-            req = requests.post("http://"+IP_ADD+"/automations/scheduler", data=senddatajson, headers=headers)
+            req = requests.post("http://"+self.ip_add+"/automations/scheduler", data=senddatajson, headers=headers)
             req.raise_for_status()
         except requests.exceptions.HTTPError as errh:
             print ("Http Error:",errh)
@@ -358,7 +372,7 @@ class LunaToneClient():
 
         headers = {'content-type': 'application/json'}
         try:
-            response = requests.get("http://"+IP_ADD+"/automations/schedules", headers=headers)
+            response = requests.get("http://"+self.ip_add+"/automations/schedules", headers=headers)
             response.raise_for_status()
         except requests.exceptions.HTTPError as errh:
             print ("Http Error:",errh)
@@ -385,11 +399,14 @@ class LunaToneClient():
             sched_name = "lights-on"
 		return sched_name, sched_id
         
-    def lunatone_create_timed_sched_lights_off( g_id=0, hr=18, min=30 ):
+    def lunatone_create_timed_sched_lights_off( self, g_id=0, hr=18, min=30 ):
 
-        data =  { "name": "lights-off", "targets": [ { "type": "group", "id": g_id } ], "activeWeekdays": { "saturday": false, "sunday": false },
+        sat="\"saturday\": false"
+        sun="\"sunday\": false"
+        s1 = "\"switchable\": false"
+        data =  { "name": "lights-off", "targets": [ { "type": "group", "id": g_id } ], "activeWeekdays": { sat, sun },
                   "recallMode": "timeOfDay",  "recallTime": { "hour": hr "minute": min }, "action": { "type": "features", "data": { "features": {
-                  "switchable": false } } } }
+                  s1 } } } }
 				
         headers = {
             "Content-Type": "application/json",
@@ -398,7 +415,7 @@ class LunaToneClient():
  
         senddatajson = json.dumps(data).encode("ascii")
         try:
-            req = requests.post("http://"+IP_ADD+"/automations/scheduler", data=senddatajson, headers=headers)
+            req = requests.post("http://"+self.self.ip_add+"/automations/scheduler", data=senddatajson, headers=headers)
             req.raise_for_status()
         except requests.exceptions.HTTPError as errh:
             print ("Http Error:",errh)
@@ -411,7 +428,7 @@ class LunaToneClient():
 
         headers = {'content-type': 'application/json'}
         try:
-            response = requests.get("http://"+IP_ADD+"/automations/schedules", headers=headers)
+            response = requests.get("http://"+self.ip_add+"/automations/schedules", headers=headers)
             response.raise_for_status()
         except requests.exceptions.HTTPError as errh:
             print ("Http Error:",errh)
@@ -428,7 +445,7 @@ class LunaToneClient():
             len(sched_name)                                      # if there is more than one sequence
             idx = 0
             for s in sched_name:
-                if (s == "lights-off"):                      # our sequence name
+                if (s == "lights-off"):                          # our sequence name
                     break
                 idx += 1
             sched_id = sched_id[idx]
@@ -440,9 +457,10 @@ class LunaToneClient():
 
      # example to edit or revise a schedule to include saturday
      #     
-     def lunatone_edit_timed_sched( seq_id ):
+     def lunatone_edit_timed_sched( self, seq_id ):
 
-        data = { "activeWeekdays": { "saturday": true } }
+        sat="\"saturday\": true"
+        data = { "activeWeekdays": { sat } }
 				
         headers = {
             "Content-Type": "application/json",
@@ -451,7 +469,7 @@ class LunaToneClient():
  
         senddatajson = json.dumps(data).encode("ascii")
         try:
-            req = requests.put("http://"+IP_ADD+"/automations/scheduler/"+seq_id, data=senddatajson, headers=headers)
+            req = requests.put("http://"+self.ip_add+"/automations/scheduler/"+seq_id, data=senddatajson, headers=headers)
             req.raise_for_status()
         except requests.exceptions.HTTPError as errh:
             print ("Http Error:",errh)
@@ -462,7 +480,7 @@ class LunaToneClient():
         except requests.exceptions.RequestException as err:
             print ("OOps: Something Else",err)
             
-    def lunatone_create_circadian(  ):
+    def lunatone_create_circadian( self ):
 
         data = { "targets": [ { "type": "device", "id": 2 } ], "longest": { "day": 21, "month": 6, "steps": [
                { "hour": 0, "colorKelvin": 2700 }, { "hour": 7, "colorKelvin": 3412 }, { "hour": 11, "colorKelvin": 5685 }, { "hour": 16, "colorKelvin": 4101 }, { "hour": 23, "colorKelvin": 2700 } ] },
@@ -476,7 +494,7 @@ class LunaToneClient():
  
         senddatajson = json.dumps(data).encode("ascii")
         try:
-            req = requests.post("http://"+IP_ADD+"/automations/circadian", data=senddatajson, headers=headers)
+            req = requests.post("http://"+self.ip_add+"/automations/circadian", data=senddatajson, headers=headers)
             req.raise_for_status()
         except requests.exceptions.HTTPError as errh:
             print ("Http Error:",errh)
@@ -489,7 +507,7 @@ class LunaToneClient():
 
         headers = {'content-type': 'application/json'}
         try:
-            response = requests.get("http://"+IP_ADD+"/automations/circadians", headers=headers)
+            response = requests.get("http://"+self.ip_add+"/automations/circadians", headers=headers)
             response.raise_for_status()
         except requests.exceptions.HTTPError as errh:
             print ("Http Error:",errh)
@@ -504,7 +522,7 @@ class LunaToneClient():
         sched_id = json_returned['circadians']['steps']['id']
 		return sched_name, sched_id     
 
-     def lunatone_edit_circadian( seq_id ):
+     def lunatone_edit_circadian( self, seq_id ):
 
         data = { "longest": { "day": 21, "month": 6, "steps": [
                { "hour": 0, "colorKelvin": 2700 }, { "hour": 7, "colorKelvin": 3432 }, { "hour": 12, "colorKelvin": 5765 }, { "hour": 17, "colorKelvin": 4001 }, { "hour": 23, "colorKelvin": 2700 } ] } }
@@ -516,7 +534,7 @@ class LunaToneClient():
  
         senddatajson = json.dumps(data).encode("ascii")
         try:
-            req = requests.put("http://"+IP_ADD+"/automations/circadian/"+seq_id, data=senddatajson, headers=headers)
+            req = requests.put("http://"+self.ip_add+"/automations/circadian/"+seq_id, data=senddatajson, headers=headers)
             req.raise_for_status()
         except requests.exceptions.HTTPError as errh:
             print ("Http Error:",errh)
@@ -526,10 +544,68 @@ class LunaToneClient():
             print ("Timeout Error:",errt)
         except requests.exceptions.RequestException as err:
             print ("OOps: Something Else",err)        
+
+    def get_month_string( self, month):
+
+        if month == 1:
+            ret_s = "January"
+        elif month == 2:
+            ret_s = "Febraury"
+        elif month == 3:
+            ret_s = "March"
+        elif month == 4:
+            ret_s = "April"
+        elif month == 5:
+            ret_s = "May"
+        elif month == 6:
+            ret_s = "June"
+        elif month == 7:
+            ret_s = "July"
+        elif month == 8:
+            ret_s = "August"
+        elif month == 9:
+            ret_s = "September"
+        elif month == 10:
+            ret_s = "October"
+        elif month == 11:
+            ret_s = "November"     
+        elif month == 12:
+            ret_s = "December" 
+        return ret_s
+            
+    def lunatone_set_time( self, time_z='Europe/Moscow' ):
+
+        dta = datetime.datetime.now(pytz.timezone(time_z))
+        dt_a = str(dta).split(' ')                                                               # split the date and time apart
+        dt_array = dt_a[0].split('-')
+        date_str = dt_array[2]+". "+self.get_month_string(int(dt_array[1]))+" "+dt_array[0]      # construct date string
+        tm_a = dt_a[1].split(':')
+        time_str = tm_a[0]+":"+tm_a[1]                                                           # construct the time string
+        strings1="\"automatic time\" : true"
+        data = { "timezone": time_z, strings1, "date": date_str, "time": time_str }
+               				
+        headers = {
+            "Content-Type": "application/json",
+            "User-Agent": "Python3"
+        }
+ 
+        senddatajson = json.dumps(data).encode("ascii")
+        try:
+            req = requests.post("http://"+self.ip_add+"/datetime", data=senddatajson, headers=headers)
+            req.raise_for_status()
+        except requests.exceptions.HTTPError as errh:
+            print ("Http Error:",errh)
+        except requests.exceptions.ConnectionError as errc:
+            print ("Error Connecting:",errc)
+        except requests.exceptions.Timeout as errt:
+            print ("Timeout Error:",errt)
+        except requests.exceptions.RequestException as err:
+            print ("OOps: Something Else",err)
             
 if __name__ == '__main__':
 
-    lc=LunaToneClient()
+    lc=LunaToneClient("10.0.0.1")
+    lc.lunatone_set_time('Europe/Vienna')          # syncronise the time and timezone
     lc.lunatone_change_state(2, True)              # set id 2 to on
     time.sleep(2)    
     lc.lunatone_change_state(2, False)             # set id 2 to off
