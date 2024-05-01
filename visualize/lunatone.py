@@ -170,7 +170,7 @@ class LunaToneClient():
 
     def lunatone_set_color_temp( id, temp_kel=4000 ):
 
-        data = { "colorWAF": { "colorKelvin": temp_kel }
+        data = { "colorKelvin": temp_kel }
 				
         headers = {
             "Content-Type": "application/json",
@@ -192,7 +192,7 @@ class LunaToneClient():
 			
     def lunatone_set_color_coord( id, x=0.432, y=0.1 ):
 
-        data = { "colorWAF": { "colorXY": { "x": x, "y": y } } }
+        data = { "colorXY": { "x": x, "y": y } } 
 				
         headers = {
             "Content-Type": "application/json",
@@ -217,8 +217,8 @@ class LunaToneClient():
     def lunatone_create_all_blink_sequence( tim_del ):
 
         data = { "name": "blink_slowly", "loop": true, "steps": [ { "type": "features", 
-		         "data": { "targets": [{ "type": "broadcast"}], "features": { "switchable": true } }, "delay": tim_del},
-				 { "type": "features", "data": { "targets": [{ "type": "broadcast"}], "features": { "switchable": false } }, "delay": tim_del} ], }
+                 "data": { "targets": [{ "type": "broadcast"}], "features": { "switchable": true } }, "delay": tim_del},
+                 { "type": "features", "data": { "targets": [{ "type": "broadcast"}], "features": { "switchable": false } }, "delay": tim_del} ], }
 				
         headers = {
             "Content-Type": "application/json",
