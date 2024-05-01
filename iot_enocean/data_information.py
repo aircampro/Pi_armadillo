@@ -40,7 +40,7 @@ class getExternalDataFromREST():
     #
     def getDataFloodMonitor(stat="E72639", data_good_mins=15):
         api = "http://environment.data.gov.uk/flood-monitoring/id/stations/{station_id}"
-        flood_url = api.format(station_id = city_name)
+        flood_url = api.format(station_id = stat)
 	    current_flood_value = -1
         headers = {'content-type': 'application/json'}
         try:
