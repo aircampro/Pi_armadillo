@@ -577,11 +577,11 @@ int main(int argc, char **argv)
   // loop forever letting the threads interact
   while (1)
   {
-	if (START_PRESS_STATE == motion_on) {
-		ret = vc.SetBrightness(10);
-	} else {
-		ret = vc.SetBrightness(1);
-    }		
+      if (START_PRESS_STATE == motion_on) {
+          ret = vc.SetBrightness(10);
+      } else {
+          ret = vc.SetBrightness(1);
+      }		
     sleep(10);
   }
   return 0;
