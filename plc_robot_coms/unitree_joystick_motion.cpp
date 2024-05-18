@@ -165,7 +165,7 @@ void JoystickHandler(const void *message)
     std::cout << "The key A is pressed " << std::endl;
     std::atomic_thread_fence(std::memory_order_release);
     ROBOT_MODE = scrape;
-	START_PRESS_STATE = no_press;                                   // reset the start button state if we chose and action next on the keypad
+    START_PRESS_STATE = no_press;                                   // reset the start button state if we chose and action next on the keypad
     ready.store(true, std::memory_order_relaxed);                   // set flag to true to force the action on the robot	
     while (ready.load(std::memory_order_relaxed)) {                 // wait for motion to complete
     }
@@ -175,7 +175,7 @@ void JoystickHandler(const void *message)
   {
     std::cout << "The key X is pressed " << std::endl;
     std::atomic_thread_fence(std::memory_order_release);
-	START_PRESS_STATE = no_press;                                   // reset the start button state if we chose and action next on the keypad
+    START_PRESS_STATE = no_press;                                   // reset the start button state if we chose and action next on the keypad
     ROBOT_MODE = front_flip;
     ready.store(true, std::memory_order_relaxed);                   // set flag to true to force the action on the robot	
     while (ready.load(std::memory_order_relaxed)) {                 // wait for motion to complete
@@ -186,7 +186,7 @@ void JoystickHandler(const void *message)
   {
     std::cout << "The key B is pressed " << std::endl;
     std::atomic_thread_fence(std::memory_order_release);
-	START_PRESS_STATE = no_press;                                   // reset the start button state if we chose and action next on the keypad
+    START_PRESS_STATE = no_press;                                   // reset the start button state if we chose and action next on the keypad
     ROBOT_MODE = front_jump;
     ready.store(true, std::memory_order_relaxed);                   // set flag to true to force the action on the robot	
     while (ready.load(std::memory_order_relaxed)) {                 // wait for motion to complete
@@ -197,7 +197,7 @@ void JoystickHandler(const void *message)
   {
     std::cout << "The key Y is pressed " << std::endl;
     std::atomic_thread_fence(std::memory_order_release);
-	START_PRESS_STATE = no_press;                                   // reset the start button state if we chose and action next on the keypad
+    START_PRESS_STATE = no_press;                                   // reset the start button state if we chose and action next on the keypad
     ROBOT_MODE = front_pounce;
     ready.store(true, std::memory_order_relaxed);                   // set flag to true to force the action on the robot	
     while (ready.load(std::memory_order_relaxed)) {                 // wait for motion to complete
@@ -208,7 +208,7 @@ void JoystickHandler(const void *message)
   {
     std::cout << "The key F1 is pressed " << std::endl;
     std::atomic_thread_fence(std::memory_order_release);
-	START_PRESS_STATE = no_press;                                   // reset the start button state if we chose and action next on the keypad
+    START_PRESS_STATE = no_press;                                   // reset the start button state if we chose and action next on the keypad
     ROBOT_MODE = sit;
     ready.store(true, std::memory_order_relaxed);                   // set flag to true to force the action on the robot	
     while (ready.load(std::memory_order_relaxed)) {                 // wait for motion to complete
@@ -219,7 +219,7 @@ void JoystickHandler(const void *message)
   {
     std::cout << "The key F2 is pressed " << std::endl;
     std::atomic_thread_fence(std::memory_order_release);
-	START_PRESS_STATE = no_press;                                   // reset the start button state if we chose and action next on the keypad
+    START_PRESS_STATE = no_press;                                   // reset the start button state if we chose and action next on the keypad
     ROBOT_MODE = rise_sit;
     ready.store(true, std::memory_order_relaxed);                   // set flag to true to force the action on the robot	
     while (ready.load(std::memory_order_relaxed)) {                 // wait for motion to complete
@@ -230,15 +230,15 @@ void JoystickHandler(const void *message)
   {
     std::cout << "The key start is pressed " << std::endl;
     std::atomic_thread_fence(std::memory_order_release);
-	if (START_PRESS_STATE == no_press) {
-		START_PRESS_STATE = motion_on;
-	} else if (START_PRESS_STATE == motion_on){
-		START_PRESS_STATE = no_press;
-	}
+    if (START_PRESS_STATE == no_press) {
+	START_PRESS_STATE = motion_on;
+     } else if (START_PRESS_STATE == motion_on){
+	START_PRESS_STATE = no_press;
+    }
     ROBOT_MODE = velocity_move;
-	VELO_X = std::clamp((JoyStick2Speed(joystick.lx(),joy_c) / JOYSTICK_SPAN),-1.0f,1.0f);   // Obtain data for left joystick x, range [-1.0~1.0]
-	VELO_Y = std::clamp((JoyStick2Speed(joystick.ly(),joy_c) / JOYSTICK_SPAN),-1.0f,1.0f);   // Obtain left joystick y data, range [-1.0~1.0]
-	VELO_Z = std::clamp((JoyStick2Speed(joystick.ry(),joy_c) / JOYSTICK_SPAN),-1.0f,1.0f);   // Obtain right joystick y data, range [-1.0~1.0]
+    VELO_X = std::clamp((JoyStick2Speed(joystick.lx(),joy_c) / JOYSTICK_SPAN),-1.0f,1.0f);   // Obtain data for left joystick x, range [-1.0~1.0]
+    VELO_Y = std::clamp((JoyStick2Speed(joystick.ly(),joy_c) / JOYSTICK_SPAN),-1.0f,1.0f);   // Obtain left joystick y data, range [-1.0~1.0]
+    VELO_Z = std::clamp((JoyStick2Speed(joystick.ry(),joy_c) / JOYSTICK_SPAN),-1.0f,1.0f);   // Obtain right joystick y data, range [-1.0~1.0]
     ready.store(true, std::memory_order_relaxed);                                            // set flag to true to force the action on the robot	
     while (ready.load(std::memory_order_relaxed)) {                                          // wait for motion to complete
     }
@@ -248,12 +248,12 @@ void JoystickHandler(const void *message)
   {
     std::cout << "The key select is pressed " << std::endl;
     std::atomic_thread_fence(std::memory_order_release);
-	START_PRESS_STATE = no_press;                                                                     // reset the start button state if we chose and action next on the keypad
+    START_PRESS_STATE = no_press;                                                                     // reset the start button state if we chose and action next on the keypad
     ROBOT_MODE = balance_stand;
-	ROLL_ANGLE = std::clamp((JoyStick2Speed(joystick.lx(),joy_c) / JOYSTICK_SPAN),-1.0f,1.0f);        // range is -1.0 to 1.0
-	PITCH_ANGLE = std::clamp((JoyStick2Speed(joystick.ly(),joy_c) / JOYSTICK_SPAN),-1.0f,1.0f);
-	YAW_ANGLE = std::clamp((JoyStick2Speed(joystick.rx(),joy_c) / JOYSTICK_SPAN),-1.0f,1.0f);
-	BODY_HT = std::clamp((JoyStick2Speed(joystick.ry(),joy_c) / JOYSTICK_SPAN),-0.18f,0.03f);
+    ROLL_ANGLE = std::clamp((JoyStick2Speed(joystick.lx(),joy_c) / JOYSTICK_SPAN),-1.0f,1.0f);        // range is -1.0 to 1.0
+    PITCH_ANGLE = std::clamp((JoyStick2Speed(joystick.ly(),joy_c) / JOYSTICK_SPAN),-1.0f,1.0f);
+    YAW_ANGLE = std::clamp((JoyStick2Speed(joystick.rx(),joy_c) / JOYSTICK_SPAN),-1.0f,1.0f);
+    BODY_HT = std::clamp((JoyStick2Speed(joystick.ry(),joy_c) / JOYSTICK_SPAN),-0.18f,0.03f);
     ready.store(true, std::memory_order_relaxed);                                                     // set flag to true to force the action on the robot	
     while (ready.load(std::memory_order_relaxed)) {                                                   // wait for motion to complete
     }
@@ -263,7 +263,7 @@ void JoystickHandler(const void *message)
   {
     std::cout << "The key R2 is pressed " << std::endl;
     std::atomic_thread_fence(std::memory_order_release);
-	START_PRESS_STATE = no_press;                                   // reset the start button state if we chose and action next on the keypad
+    START_PRESS_STATE = no_press;                                   // reset the start button state if we chose and action next on the keypad
     ROBOT_MODE = trajectory_follow;
     ready.store(true, std::memory_order_relaxed);                   // set flag to true to force the action on the robot	
     while (ready.load(std::memory_order_relaxed)) {                 // wait for motion to complete
@@ -274,7 +274,7 @@ void JoystickHandler(const void *message)
   {
     std::cout << "The key R1 is pressed " << std::endl;
     std::atomic_thread_fence(std::memory_order_release);
-	START_PRESS_STATE = no_press;                                   // reset the start button state if we chose and action next on the keypad
+    START_PRESS_STATE = no_press;                                   // reset the start button state if we chose and action next on the keypad
     ROBOT_MODE = recovery_stand;
     ready.store(true, std::memory_order_relaxed);                   // set flag to true to force the action on the robot	
     while (ready.load(std::memory_order_relaxed)) {                 // wait for motion to complete
@@ -285,7 +285,7 @@ void JoystickHandler(const void *message)
   {
     std::cout << "The key L1 is pressed " << std::endl;
     std::atomic_thread_fence(std::memory_order_release);
-	START_PRESS_STATE = no_press;                                   // reset the start button state if we chose and action next on the keypad
+    START_PRESS_STATE = no_press;                                   // reset the start button state if we chose and action next on the keypad
     ROBOT_MODE = wallow;
     ready.store(true, std::memory_order_relaxed);                   // set flag to true to force the action on the robot	
     while (ready.load(std::memory_order_relaxed)) {                 // wait for motion to complete
@@ -296,7 +296,7 @@ void JoystickHandler(const void *message)
   {
     std::cout << "The key L2 is pressed " << std::endl;
     std::atomic_thread_fence(std::memory_order_release);
-	START_PRESS_STATE = no_press;                                   // reset the start button state if we chose and action next on the keypad
+    START_PRESS_STATE = no_press;                                   // reset the start button state if we chose and action next on the keypad
     ROBOT_MODE = pose;
     ready.store(true, std::memory_order_relaxed);                   // set flag to true to force the action on the robot	
     while (ready.load(std::memory_order_relaxed)) {                 // wait for motion to complete
@@ -533,10 +533,10 @@ public:
   unitree::robot::go2::SportClient sport_client;
   unitree::robot::ChannelSubscriberPtr<unitree_go::msg::dds_::SportModeState_> suber;
 
-  double px0, py0, yaw0;  // 初始状态的位置和偏航
-  double ct = 0;          // 运行时间
-  int flag = 0;           // 特殊动作执行标志
-  float dt = 0.005f;      // 控制步长0.001~0.01
+  double px0, py0, yaw0;  // initial state position sum polarization
+  double ct = 0;          // running time
+  int flag = 0;           // Special operation strategy
+  float dt = 0.005f;      // Control step length
 };
 
 int main(int argc, char **argv)
