@@ -1,0 +1,213 @@
+PROGRAM example_server
+%NOBUSYLAMP
+%COMMENT = ''
+%NOLOCKGROUP
+%NOPAUSE=ERROR+COMMAND+TPENABLE
+%NOPAUSESHFT
+
+%include errors.klt
+%include socket.klt
+
+--controller specific variables
+  CONST
+    client_tag = 1
+    server_tag = 3
+    port_no = 65432
+    STEP1_NAME : 1
+    STEP2_NAME : 2
+    STEP3_NAME : 3
+    STEP4_NAME : 4
+	
+  -- custom type
+  -- parent frame (name, x, y, z, w, p, r)
+  TYPE
+    frame_t = STRUCTURE
+      name : STRING[16]
+      pos : XYZWPR
+    ENDSTRUCTURE
+
+  -- receive packet
+  -- actual corresponfing remote message
+  -- step to send back
+  -- step to use for actions
+  -- frame data for chosen pose
+  TYPE
+    rcv_packet_t = STRUCTURE
+      packet_data  : STRING[16]
+      packet_send  : STRING[16]
+      step  : INTEGER
+	  frame : frame_t
+    ENDSTRUCTURE
+
+  -- program vars
+  -- each possible message received
+  VAR
+    rcv_msgs : ARRAY[4] OF rcv_packet_t
+    countr : INTEGER
+    socket : T_SOCKET
+    ComFile : FILE
+    recv_str : ARRAY[10] OF STRING[64]
+    force_abort : BOOLEAN
+    v : REAL
+    status : INTEGER
+    action_str : STRING	
+    clock_var : INTEGER
+    time_gone : INTEGER
+	
+  -- custom routines
+  -- Returns the string relating to the step
+  ROUTINE process_rcv_msg(step : INTEGER) : STRING
+    BEGIN
+      SELECT step OF
+        CASE(STEP1_NAME):
+          $SPEED = 20.0
+		  DOUT[1] = ON
+		  DOUT[3] = OFF
+		  time_gone = clock_var
+          RETURN('OK')
+        CASE(STEP2_NAME):
+		  RELAX HAND 1
+          $SPEED = 70.0
+		  AOUT[1] = 30
+          RETURN('OK')
+        CASE(STEP3_NAME):
+		  $SPEED = 120.0
+		  DOUT[1] = OFF
+		  DOUT[3] = ON
+		  CLOSE HAND 1
+		  -- example of checking the response time is not exceeded a value
+		  -- if its an error it will send back a reply to restart above step
+          IF (clock_var - time_gone) > 2000 THEN
+		    RETURN('FL')
+          ELSE
+            RETURN('OK')
+        CASE(STEP4_NAME):
+          $SPEED = 200.0
+          AINP : INTEGER
+		  AINP = AIN[1]
+		  -- sacle input -10-10v
+		  IF (AINP <= 2047) THEN
+              V = AINP * 10.0 / 2047
+          ELSE
+              V = (AINP - 4096) * 10.0 / 2047
+          ENDIF
+		  IF v > 1.50 THEN
+		    AOUT[1] = 900
+          ELSE 
+            AOUT[1] = 200
+          ENDIF
+          RETURN('OK')
+      ENDSELECT
+    END process_rcv_msg
+	
+%include errors.klh
+%include socket.klh
+
+BEGIN
+  socket__new_server(socket, server_tag, port_no, '')
+  force_abort=FALSE
+
+  CONNECT TIMER TO clock_var
+  
+  -- define the messages to receive and their respective response
+  -- the sequence number for each action and the respective frame data 
+  rcv_msgs[1].packet_data = 's0'
+  rcv_msgs[1].packet_send = 's1'
+  rcv_msgs[1].step = 1 
+
+  -- position xyz and orientation angles gives the pose for each frame
+  rcv_msgs[1].frame.name = 'first pose'  
+  rcv_msgs[1].frame.pos.z = 500
+  rcv_msgs[1].frame.pos.y = 500
+  rcv_msgs[1].frame.pos.x = 20  
+  rcv_msgs[1].frame.pos.w = 90
+  rcv_msgs[1].frame.pos.p = 0
+  rcv_msgs[1].frame.pos.r = 180 
+  
+  rcv_msgs[2].packet_data = 's1'
+  rcv_msgs[1].packet_send = 's2'
+  rcv_msgs[2].step = 2 
+  
+  rcv_msgs[1].frame.name = 'second pose'  
+  rcv_msgs[1].frame.pos.z = 1000
+  rcv_msgs[1].frame.pos.y = 500
+  rcv_msgs[1].frame.pos.x = 20  
+  rcv_msgs[1].frame.pos.w = 0
+  rcv_msgs[1].frame.pos.p = 45
+  rcv_msgs[1].frame.pos.r = -45
+  
+  rcv_msgs[3].packet_data = 's2'
+  rcv_msgs[1].packet_send = 's3'
+  rcv_msgs[3].step = 3 
+
+  rcv_msgs[1].frame.name = 'third pose'  
+  rcv_msgs[1].frame.pos.z = 100
+  rcv_msgs[1].frame.pos.y = 500
+  rcv_msgs[1].frame.pos.x = 200  
+  rcv_msgs[1].frame.pos.w = -90
+  rcv_msgs[1].frame.pos.p = 45
+  rcv_msgs[1].frame.pos.r = 0
+  
+  rcv_msgs[4].packet_data = 's3'
+  rcv_msgs[1].packet_send = 's0'
+  rcv_msgs[4].step = 4 
+
+  rcv_msgs[1].frame.name = 'fourth pose'  
+  rcv_msgs[1].frame.pos.z = 1000
+  rcv_msgs[1].frame.pos.y = 100
+  rcv_msgs[1].frame.pos.x = 280  
+  rcv_msgs[1].frame.pos.w = -90
+  rcv_msgs[1].frame.pos.p = -45
+  rcv_msgs[1].frame.pos.r = 45
+  
+  --start the server with the ip and port sepcified
+  socket__start(socket, ComFile)
+
+  -- condition monitoring
+  CONDITION[1]:
+    WHEN DIN[1] AND DIN[2] DO DOUT[2] = TRUE
+  ENDCONDITION
+  ENABLE CONDITION [1]
+  -- low CMOS battery
+  CONDITION[2]:
+    WHEN OPOUT[4] DO DOUT[5] = TRUE
+  ENDCONDITION
+  ENABLE CONDITION [2]
+  
+  --comm loop
+  WHILE (force_abort=FALSE) AND (socket.status=0) DO
+  
+    --if F1 is pressed abort
+    IF TPIN[129] THEN
+      force_abort = TRUE
+    ENDIF
+
+    -- read the socket
+    socket__read_into_string_buffer(socket, ComFile, recv_str, 1)
+	-- check the received message and reply with either step advance or with s9 meaning error and resend message
+	WHILE countr < 5 DO
+	    IF recv_str = rcv_msgs[countr].packet_data THEN          -- the incoming message is equal to one of the stored packets
+            countr = 5                                           -- exit iteration
+            LOCK_GROUP(1, status)                                -- lock pr[1]
+			SET_POS_REG(1, rcv_msgs[countr].frame, status)       -- put position in PR[1]
+			move_to_pr1                                          -- call tp program to move to pr[1]
+            UNLOCK_GROUP(1, status)                              -- lock pr[1]
+            action_str = process_rcv_msg(rcv_msgs[countr].step)  -- now do the step as defined 
+			if (action_str = 'FL') THEN                          -- code detected a failure
+                socket__write_into_string_buffer(socket, ComFile, 's2')                                -- reset the step from 3 to 2 on the client
+            ELSE
+                socket__write_into_string_buffer(socket, ComFile, rcv_msgs[countr].packet_send)		   -- call the next step on the client	
+			ENDIF
+        ELSE 
+            socket__write_into_string_buffer(socket, ComFile, 's9')	                                   -- write an error mesage back to the client	
+        ENDIF
+	    countr = (countr + 1) MOD 6                                                                    -- increment counter to next message
+    ENDWHILE
+	
+    DELAY 500
+
+  ENDWHILE
+
+  socket__stop(socket, ComFile)
+
+END example_server
