@@ -51,8 +51,9 @@ enum JointIndex {
 
 // define the states for the arm
 enum arm_states_e {
-   move_forward,
-   move_backward
+  NO_WAVE,
+  START_WAVE,
+  FAST_WAVE
 };
 
 const static std::vector<int> arm_joints = {
