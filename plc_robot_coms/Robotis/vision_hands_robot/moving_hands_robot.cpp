@@ -89,7 +89,7 @@ int main(int argc, char const *argv[]) {
   // if the version of yolo was requested use it, if garbled then default it to v8, using stoi as better than atoi for human typed values
   if (argc >= 2 ) {
 	try {
-        camera.start(std::stoi(argv[2]), capture_width, capture_height);
+        camera.start(std::stoi(argv[1]), capture_width, capture_height);
 	}
     catch (const std::invalid_argument& e) {
         std::cout << "[" << i << "]: " << "invalid argument :- options are 0=yolov5 1=yolov8 defaulting to use v8" << std::endl;
