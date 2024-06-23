@@ -427,9 +427,9 @@ int main(int argc, char **argv) {
     switch (grab_the_object){
       // move fotward MotionSteps_e::move_fwd
       case MotionSteps_e::move_fwd:
-		act_tm = GetSystemTimeStamp(void);
-		if ((act_tm - st_tm) > MOVE_DURATION) {
-		    // stop motor velocity
+          act_tm = GetSystemTimeStamp(void);
+          if ((act_tm - st_tm) > MOVE_DURATION) {
+	    // stop motor zero velocity
             write1ByteTxRx(port_num, PROTOCOL_VERSION, DRIVE_ID, DRIVE_VELO_CTL_REG, 0);
             if ((dxl_comm_result = getLastTxRxResult(port_num, PROTOCOL_VERSION)) != COMM_SUCCESS)
             {
@@ -444,7 +444,7 @@ int main(int argc, char **argv) {
             } else if ((act_tm - st_tm) > MOVE_DURATION_STEP) {				
 		        st_tm = GetSystemTimeStamp(void);                   // reset the time and iterate another step
             }
-		} else {
+	} else {
             // reverse direction at velocity specified for the time duration of movement in a step
             write1ByteTxRx(port_num, PROTOCOL_VERSION, DRIVE_ID, DRIVE_VELO_CTL_REG, DRIVE_VELO_SP);
             if ((dxl_comm_result = getLastTxRxResult(port_num, PROTOCOL_VERSION)) != COMM_SUCCESS)
@@ -468,7 +468,7 @@ int main(int argc, char **argv) {
         {
            printRxPacketError(PROTOCOL_VERSION, dxl_error);
         }
-		grab_the_object=MotionSteps_e::wait_for_cls;
+	grab_the_object=MotionSteps_e::wait_for_cls;
         break;
       // wait until the posiion feedback shows closed MotionSteps_e::wait_for_cls
       case MotionSteps_e::wait_for_cls:
@@ -495,14 +495,14 @@ int main(int argc, char **argv) {
           {
              printRxPacketError(PROTOCOL_VERSION, dxl_error);
           }
-		  if (((shutdown_state & HW_ALERT_WORD) & ALL_SHUTDWN_ACTIVE) > 0) {
+          if (((shutdown_state & HW_ALERT_WORD) & ALL_SHUTDWN_ACTIVE) > 0) {
               saved_step = grab_the_object;
               grab_the_object = MotionSteps_e::shutdwn_actv;			  
           }			  
         } else {
-		  st_tm = GetSystemTimeStamp(void);
-		  grab_the_object=MotionSteps_e::move_rev;
-		  // revese dirction of drive
+          st_tm = GetSystemTimeStamp(void);
+          grab_the_object=MotionSteps_e::move_rev;
+           // revese dirction of drive
           write1ByteTxRx(port_num, PROTOCOL_VERSION, DRIVE_ID, DRIVE_MODE_CTL_REG, DRIVE_RVS_BIT);
           if ((dxl_comm_result = getLastTxRxResult(port_num, PROTOCOL_VERSION)) != COMM_SUCCESS)
           {
@@ -516,9 +516,9 @@ int main(int argc, char **argv) {
         break;
 	  // move back we wait until the lidar jumps us to the next step -- if it doesnt see the stop stop after exceeding the time MotionSteps_e::move_rev
       case MotionSteps_e::move_rev:
-		act_tm = GetSystemTimeStamp(void);
-		if ((act_tm - st_tm) > MOVE_DURATION) {
-		    // stop motor velocity
+        act_tm = GetSystemTimeStamp(void);
+        if ((act_tm - st_tm) > MOVE_DURATION) {
+            // stop motor velocity
             write1ByteTxRx(port_num, PROTOCOL_VERSION, DRIVE_ID, DRIVE_VELO_CTL_REG, 0);
             if ((dxl_comm_result = getLastTxRxResult(port_num, PROTOCOL_VERSION)) != COMM_SUCCESS)
             {
@@ -529,9 +529,9 @@ int main(int argc, char **argv) {
                printRxPacketError(PROTOCOL_VERSION, dxl_error);
             }
             if ((act_tm - st_tm) > MOVE_DURATION_TOTAL) {	        // it times out wihout the lidar seeing the mark
-		        grab_the_object=MotionSteps_e::fail_needs_reset;    // go to a alarm with reset step (eanble manual control)
+               grab_the_object=MotionSteps_e::fail_needs_reset;    // go to a alarm with reset step (eanble manual control)
             } else if ((act_tm - st_tm) > MOVE_DURATION_STEP) {				
-		        st_tm = GetSystemTimeStamp(void);                   // reset the time and iterate another step
+                st_tm = GetSystemTimeStamp(void);                   // reset the time and iterate another step
             }
        } else {
             // reverse direction at velocity specified for the time duration of movement in a step
