@@ -400,15 +400,15 @@ int main(int argc, char **argv) {
  // -------------- main loop continuous -----------------------
  try
  {  
-   while ((ros::ok())&&(stop_running==0)) {
+   while (((ros::ok())&&(stop_running==0))&&ldlidar::LDLidarDriver::IsOk()) {
 	  
     // read the lidar and publish to the ROS topic
     switch (ldlidarnode->GetLaserScanData(laser_scan_points, 1500)){
       case ldlidar::LidarStatus::NORMAL: 
         ldlidarnode->GetLidarScanFreq(lidar_scan_freq);
-		// publish to ROS and check if we need to close the grabber
+	// publish to ROS and check if we need to close the grabber
         lidar_grab = ToLaserscanMessagePublish(laser_scan_points, lidar_scan_freq, setting, lidar_pub);
-		if ((grab_the_object==MotionSteps_e::move_fwd) && (lidar_grab == OBJECT_FROM_REGION)) {
+        if ((grab_the_object==MotionSteps_e::move_fwd) && (lidar_grab == OBJECT_FROM_REGION)) {
             grab_the_object = lidar_grab;   
         else if ((grab_the_object==MotionSteps_e::move_rev) && (lidar_grab == OBJECT_TO_REGION)) {		
             grab_the_object = lidar_grab;
