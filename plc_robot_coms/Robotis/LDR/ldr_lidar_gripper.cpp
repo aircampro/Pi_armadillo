@@ -533,7 +533,7 @@ int main(int argc, char **argv) {
             } else if ((act_tm - st_tm) > MOVE_DURATION_STEP) {				
 		        st_tm = GetSystemTimeStamp(void);                   // reset the time and iterate another step
             }
-		} else {
+       } else {
             // reverse direction at velocity specified for the time duration of movement in a step
             write1ByteTxRx(port_num, PROTOCOL_VERSION, DRIVE_ID, DRIVE_VELO_CTL_REG, DRIVE_VELO_SP);
             if ((dxl_comm_result = getLastTxRxResult(port_num, PROTOCOL_VERSION)) != COMM_SUCCESS)
@@ -545,7 +545,7 @@ int main(int argc, char **argv) {
                printRxPacketError(PROTOCOL_VERSION, dxl_error);
             }			
         }
-	  break;
+	break;
       // set the hand to open MotionSteps_e::open_hand
       case MotionSteps_e::open_hand:
         write1ByteTxRx(port_num, PROTOCOL_VERSION, HAND_ID, HAND_POSITION_CTL_REG, HAND_OPEN);
@@ -557,7 +557,7 @@ int main(int argc, char **argv) {
         {
            printRxPacketError(PROTOCOL_VERSION, dxl_error);
         }
-		grab_the_object=MotionSteps_e::wait_for_open;
+        grab_the_object=MotionSteps_e::wait_for_open;
         break;
       // wait until the posiion feedback shows open MotionSteps_e::wait_for_open
       case MotionSteps_e::wait_for_open:
@@ -584,14 +584,14 @@ int main(int argc, char **argv) {
           {
              printRxPacketError(PROTOCOL_VERSION, dxl_error);
           }
-		  if (((shutdown_state & HW_ALERT_WORD) & ALL_SHUTDWN_ACTIVE) > 0) {
+          if (((shutdown_state & HW_ALERT_WORD) & ALL_SHUTDWN_ACTIVE) > 0) {
               saved_step = grab_the_object;
               grab_the_object = MotionSteps_e::shutdwn_actv;			  
           }
         } else {
-		  st_tm = GetSystemTimeStamp(void);
-		  grab_the_object=MotionSteps_e::move_fwd;
-		  // set the drive to forward directions
+          st_tm = GetSystemTimeStamp(void);
+          grab_the_object=MotionSteps_e::move_fwd;
+	  // set the drive to forward directions
           write1ByteTxRx(port_num, PROTOCOL_VERSION, DRIVE_ID, DRIVE_MODE_CTL_REG, DRIVE_FWD_BIT);
           if ((dxl_comm_result = getLastTxRxResult(port_num, PROTOCOL_VERSION)) != COMM_SUCCESS)
           {
@@ -605,22 +605,22 @@ int main(int argc, char **argv) {
         break;
       // on timeout we need manual interaction --- alarm step ---
       case MotionSteps_e::fail_needs_reset:
-	    // wait for reset we timed out on lidar signal
-		std::cout << "timed out on moving to target" << std::endl;
-		std::cout << "enter step to advance to when ready" << std::endl;
-		int my_input;
-		std:cin << my_input;
-		grab_the_object = my_input;
+        // wait for reset we timed out on lidar signal
+        std::cout << "timed out on moving to target" << std::endl;
+        std::cout << "enter step to advance to when ready" << std::endl;
+        int my_input;
+        std:cin << my_input;
+        grab_the_object = my_input;
         break;
       // allow manual control via signal interrupt
       case MotionSteps_e::manually_control:
-		std::cout << "enter step to advance to when ready...." << std::endl;
-		int my_input;
-		std:cin << my_input;
-		grab_the_object = my_input;
-	    break;
+          std::cout << "enter step to advance to when ready...." << std::endl;
+          int my_input;
+          std:cin << my_input;
+          grab_the_object = my_input;
+          break;
       case MotionSteps_e::stop_drive:
-		// stop motor velocity
+        // stop motor velocity
         write1ByteTxRx(port_num, PROTOCOL_VERSION, DRIVE_ID, DRIVE_VELO_CTL_REG, 0);
         if ((dxl_comm_result = getLastTxRxResult(port_num, PROTOCOL_VERSION)) != COMM_SUCCESS)
         {
@@ -630,11 +630,11 @@ int main(int argc, char **argv) {
         {
            printRxPacketError(PROTOCOL_VERSION, dxl_error);
         }
-		std::cout << "enter step to advance to when ready...." << std::endl;
-		int my_input;
-		std:cin << my_input;
-		grab_the_object = my_input;
-	    break;		
+        std::cout << "enter step to advance to when ready...." << std::endl;
+        int my_input;
+        std:cin << my_input;
+        grab_the_object = my_input;
+        break;		
       // drive detected shutdown exception step action
       case MotionSteps_e::shutdwn_actv:
         // re-enable torque on the drive after reboot (perhaps consider power-off contact)
@@ -648,11 +648,11 @@ int main(int argc, char **argv) {
         {
            printRxPacketError(PROTOCOL_VERSION, dxl_error);
         }
-		std::cout << "timed out on moving to target press any key to continue and return back...." << std::endl;
-		int my_input;
-		std:cin << my_input;
-		// release the output and after a time torque the drive
-		rs_st_tm = GetSystemTimeStamp(void);
+        std::cout << "timed out on moving to target press any key to continue and return back...." << std::endl;
+        int my_input;
+        std:cin << my_input;
+        // release the output and after a time torque the drive
+        rs_st_tm = GetSystemTimeStamp(void);
         write1ByteTxRx(port_num, PROTOCOL_VERSION, HAND_ID, P11_DATA, 0);
         if ((dxl_comm_result = getLastTxRxResult(port_num, PROTOCOL_VERSION)) != COMM_SUCCESS)
         {
@@ -662,11 +662,11 @@ int main(int argc, char **argv) {
         {
            printRxPacketError(PROTOCOL_VERSION, dxl_error);
         }
-		grab_the_object = MotionSteps_e::shutdwn_release;
-		break;
+        grab_the_object = MotionSteps_e::shutdwn_release;
+        break;
       case MotionSteps_e::shutdwn_release:		
-		rs_act_tm = GetSystemTimeStamp(void);
-		if ((rs_act_tm - rs_st_tm) > TORQ_AFTER_RST_DLY) {
+         rs_act_tm = GetSystemTimeStamp(void);
+         if ((rs_act_tm - rs_st_tm) > TORQ_AFTER_RST_DLY) {
             write1ByteTxRx(port_num, PROTOCOL_VERSION, HAND_ID, HAND_TORQ_REG, TORQUE_ENABLE);
             if ((dxl_comm_result = getLastTxRxResult(port_num, PROTOCOL_VERSION)) != COMM_SUCCESS)
             {
@@ -677,13 +677,13 @@ int main(int argc, char **argv) {
                printRxPacketError(PROTOCOL_VERSION, dxl_error);
             }	
             grab_the_object = saved_step;                                     // return the step we branched out of
-		}
-	    break;
+	  }
+          break;
       default:
-		std::cout << "invalid step encountered enter correct step to continue...." << std::endl;
-		int my_input;
-		std:cin << my_input;
-		grab_the_object = my_input;
+        std::cout << "invalid step encountered enter correct step to continue...." << std::endl;
+        int my_input;
+        std:cin << my_input;
+        grab_the_object = my_input;
         break;
     }
     r.sleep();
@@ -822,7 +822,7 @@ int ToLaserscanMessagePublish(ldlidar::Points2D& src, double lidar_spin_freq, La
 
 uint64_t GetSystemTimeStamp(void) {
   std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds> tp = 
-    std::chrono::time_point_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now());
+  std::chrono::time_point_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now());
   auto tmp = std::chrono::duration_cast<std::chrono::nanoseconds>(tp.time_since_epoch());
   return ((uint64_t)tmp.count());
 }
@@ -839,7 +839,7 @@ static void SignalHandler(int signo)
             break;
         case SIGTSTP:
             printf("We have a break.\n");
-			stop_running = 1;
+            stop_running = 1;
             break;
         case SIGSEGV: 
             printf("We got a seg fault.\n");
@@ -847,24 +847,24 @@ static void SignalHandler(int signo)
             break;
         case SIGUSR1:                                                        // sets the robot to manual control (kill -SIGNAL1 <pid>
             saved_step = grab_the_object;
-		    grab_the_object = MotionSteps_e::manually_control;
+            grab_the_object = MotionSteps_e::manually_control;
             //Re-register signal handler functions
             signal(SIGUSR1, SignalHandler);
-			break;
+            break;
         case SIGCONT:
             grab_the_object = saved_step;
             //Re-register signal handler functions
             signal(SIGCONT, SignalHandler);
-			break;	
+            break;	
         case SIGUSR2:                                                        // reset to move forward 
             saved_step = grab_the_object;
             grab_the_object = MotionSteps_e::stop_drive;
             //Re-register signal handler functions
             signal(SIGUSR2, SignalHandler);
-			break;				
+            break;				
         default:
             printf("I don't know what to do for this exception.\n");
-			break;
+            break;
     }
 }
 #elif (SIGNAL_HANDLER == USE_SIGACTION)
@@ -886,18 +886,18 @@ static void SignalHandler(int signo)
             break;
         case SIGUSR1:                                                        // sets the robot to manual control (kill -SIGNAL1 <pid>
             saved_step = grab_the_object;
-		    grab_the_object = MotionSteps_e::manually_control;
-			break;
+            grab_the_object = MotionSteps_e::manually_control;
+            break;
         case SIGUSR2:
             saved_step = grab_the_object;
             grab_the_object = MotionSteps_e::stop_drive;
-			break;
+            break;
         case SIGCONT:
             grab_the_object = saved_step;
-			break;			
+            break;			
         default:
             printf("I don't know what to do for this exception.\n");
-			break;
+            break;
     }
 }
 #endif
