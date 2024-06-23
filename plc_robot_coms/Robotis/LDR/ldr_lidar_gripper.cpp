@@ -136,7 +136,7 @@ typedef enum
 #include <unistd.h>
 // can also be 
 // #include <signal.h>
-// #include <stdexcept>
+#include <stdexcept>
 #define NO_SIGHANDLER 0                              // dont define signal handler (you have no manual mode)
 #define USE_SIGNAL 1                                 // use signal - maybe be deprecated for many
 #define USE_SIGACTION 2                              // use sigaction 
