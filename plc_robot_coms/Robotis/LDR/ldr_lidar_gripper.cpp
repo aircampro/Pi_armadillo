@@ -351,9 +351,9 @@ int main(int argc, char **argv) {
   ldlidar::Points2D laser_scan_points;
   double lidar_scan_freq;
   ROS_INFO("Publish topic message:ldlidar scan data .");
-  uint64_t st_tm = GetSystemTimeStamp(void);
+  uint64_t st_tm = GetSystemTimeStamp();
   uint64_t act_tm = 0;
-  uint64_t rs_st_tm = GetSystemTimeStamp(void);
+  uint64_t rs_st_tm = GetSystemTimeStamp();
   uint64_t rs_act_tm = 0;
 
   // initialize the sequence to the current operating condition
@@ -427,7 +427,7 @@ int main(int argc, char **argv) {
     switch (grab_the_object){
       // move fotward MotionSteps_e::move_fwd
       case MotionSteps_e::move_fwd:
-          act_tm = GetSystemTimeStamp(void);
+          act_tm = GetSystemTimeStamp();
           if ((act_tm - st_tm) > MOVE_DURATION) {
 	    // stop motor zero velocity
             write1ByteTxRx(port_num, PROTOCOL_VERSION, DRIVE_ID, DRIVE_VELO_CTL_REG, 0);
@@ -442,7 +442,7 @@ int main(int argc, char **argv) {
             if ((act_tm - st_tm) > MOVE_DURATION_TOTAL) {	        // it times out wihout the lidar seeing the mark
 		        grab_the_object=MotionSteps_e::fail_needs_reset;                                  // go to a alarm with reset step (eanble manual control)
             } else if ((act_tm - st_tm) > MOVE_DURATION_STEP) {				
-		        st_tm = GetSystemTimeStamp(void);                   // reset the time and iterate another step
+		        st_tm = GetSystemTimeStamp();                     // reset the time and iterate another step
             }
 	} else {
             // reverse direction at velocity specified for the time duration of movement in a step
@@ -500,7 +500,7 @@ int main(int argc, char **argv) {
               grab_the_object = MotionSteps_e::shutdwn_actv;			  
           }			  
         } else {
-          st_tm = GetSystemTimeStamp(void);
+          st_tm = GetSystemTimeStamp();
           grab_the_object=MotionSteps_e::move_rev;
            // revese dirction of drive
           write1ByteTxRx(port_num, PROTOCOL_VERSION, DRIVE_ID, DRIVE_MODE_CTL_REG, DRIVE_RVS_BIT);
@@ -516,7 +516,7 @@ int main(int argc, char **argv) {
         break;
 	  // move back we wait until the lidar jumps us to the next step -- if it doesnt see the stop stop after exceeding the time MotionSteps_e::move_rev
       case MotionSteps_e::move_rev:
-        act_tm = GetSystemTimeStamp(void);
+        act_tm = GetSystemTimeStamp();
         if ((act_tm - st_tm) > MOVE_DURATION) {
             // stop motor velocity
             write1ByteTxRx(port_num, PROTOCOL_VERSION, DRIVE_ID, DRIVE_VELO_CTL_REG, 0);
@@ -531,7 +531,7 @@ int main(int argc, char **argv) {
             if ((act_tm - st_tm) > MOVE_DURATION_TOTAL) {	        // it times out wihout the lidar seeing the mark
                grab_the_object=MotionSteps_e::fail_needs_reset;    // go to a alarm with reset step (eanble manual control)
             } else if ((act_tm - st_tm) > MOVE_DURATION_STEP) {				
-                st_tm = GetSystemTimeStamp(void);                   // reset the time and iterate another step
+                st_tm = GetSystemTimeStamp();                     // reset the time and iterate another step
             }
        } else {
             // reverse direction at velocity specified for the time duration of movement in a step
@@ -589,7 +589,7 @@ int main(int argc, char **argv) {
               grab_the_object = MotionSteps_e::shutdwn_actv;			  
           }
         } else {
-          st_tm = GetSystemTimeStamp(void);
+          st_tm = GetSystemTimeStamp();
           grab_the_object=MotionSteps_e::move_fwd;
 	  // set the drive to forward directions
           write1ByteTxRx(port_num, PROTOCOL_VERSION, DRIVE_ID, DRIVE_MODE_CTL_REG, DRIVE_FWD_BIT);
@@ -652,7 +652,7 @@ int main(int argc, char **argv) {
         int my_input;
         std:cin << my_input;
         // release the output and after a time torque the drive
-        rs_st_tm = GetSystemTimeStamp(void);
+        rs_st_tm = GetSystemTimeStamp();
         write1ByteTxRx(port_num, PROTOCOL_VERSION, HAND_ID, P11_DATA, 0);
         if ((dxl_comm_result = getLastTxRxResult(port_num, PROTOCOL_VERSION)) != COMM_SUCCESS)
         {
@@ -665,7 +665,7 @@ int main(int argc, char **argv) {
         grab_the_object = MotionSteps_e::shutdwn_release;
         break;
       case MotionSteps_e::shutdwn_release:		
-         rs_act_tm = GetSystemTimeStamp(void);
+         rs_act_tm = GetSystemTimeStamp();
          if ((rs_act_tm - rs_st_tm) > TORQ_AFTER_RST_DLY) {
             write1ByteTxRx(port_num, PROTOCOL_VERSION, HAND_ID, HAND_TORQ_REG, TORQUE_ENABLE);
             if ((dxl_comm_result = getLastTxRxResult(port_num, PROTOCOL_VERSION)) != COMM_SUCCESS)
