@@ -30,8 +30,7 @@
 
 // Robotis YM080-230-R099-RH fwd/rev drive sprinkler and pump (dot11) and gritter drive
 #define SPRKLR_ID 1
-#define SPRKLR_OP_MODE 11
-#define SPRKLR_MODE_CTL_REG 32
+#define SPRKLR_OP_MODE 33
 #define SPRKLR_FWD(s) (s&0xFFFE) 
 #define SPRKLR_RVS(s) (s|0x1)
 #define SPRKLR_FWD_BIT 0
@@ -40,15 +39,15 @@
 #define SPRKLR_TORQ_CTL_REG 512
 #define DXL_MOVING_STATUS_THRESHOLD 20
 
+// Robotis L42-10-S300-R is the gritter motor
 #define GRTR_ID 2
 #define GRTR_OP_MODE 11
-#define GRTR_MODE_CTL_REG 32
 #define GRTR_FWD(s) (s&0xFFFE) 
 #define GRTR_RVS(s) (s|0x1)
 #define GRTR_FWD_BIT 0
 #define GRTR_RVS_BIT 1
-#define GRTR_VELO_CTL_REG 528                              
-#define GRTR_TORQ_CTL_REG 512
+#define GRTR_VELO_CTL_REG 600                              
+#define GRTR_TORQ_CTL_REG 562
 
 // external port controls
 #define P1_MODE 56
@@ -71,7 +70,7 @@
 #define S_FAST_SPD 4000
 #define S_SLOW_SPD 1000
 #define S_VSLOW_SPD 300
-#define G_SPD 2500
+#define G_SPD 1000
 
 // Protocol version
 #define PROTOCOL_VERSION                2.0                 // See which protocol version is used in the Dynamixel
@@ -224,10 +223,10 @@ std::string get_responce() {
     std::string text2 = "\"&units=metric&mode=xml&APPID=\"";
     std::string text3 = "\"";
     std::string api_str = StringFormat("%s%d%s%d%s", text1.c_str(), WEATHER_CITY_ID, text2.c_str(), WEATHER_API_KEY, text3.c_str());
-    curl_easy_setopt(curl, CURLOPT_URL, &api_str[0]);
+	curl_easy_setopt(curl, CURLOPT_URL, &api_str[0]);
 #else
     std::string fmt_s = std::format("api.openweathermap.org/data/2.5/weather?id=\"{}\"&units=metric&mode=xml&APPID=\"{}\"", WEATHER_CITY_ID, WEATHER_API_KEY);	
-    curl_easy_setopt(curl, CURLOPT_URL, &fmt_s[0]);
+	curl_easy_setopt(curl, CURLOPT_URL, &fmt_s[0]);
 #endif	
     curl_easy_setopt(curl, CURLOPT_TIMEOUT, 15);
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0);
