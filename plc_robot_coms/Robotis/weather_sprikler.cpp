@@ -224,10 +224,10 @@ std::string get_responce() {
     std::string text2 = "\"&units=metric&mode=xml&APPID=\"";
     std::string text3 = "\"";
     std::string api_str = StringFormat("%s%d%s%d%s", text1.c_str(), WEATHER_CITY_ID, text2.c_str(), WEATHER_API_KEY, text3.c_str());
-	curl_easy_setopt(curl, CURLOPT_URL, &api_str[0]);
+    curl_easy_setopt(curl, CURLOPT_URL, &api_str[0]);
 #else
     std::string fmt_s = std::format("api.openweathermap.org/data/2.5/weather?id=\"{}\"&units=metric&mode=xml&APPID=\"{}\"", WEATHER_CITY_ID, WEATHER_API_KEY);	
-	curl_easy_setopt(curl, CURLOPT_URL, &fmt_s[0]);
+    curl_easy_setopt(curl, CURLOPT_URL, &fmt_s[0]);
 #endif	
     curl_easy_setopt(curl, CURLOPT_TIMEOUT, 15);
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0);
