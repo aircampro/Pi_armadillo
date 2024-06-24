@@ -103,7 +103,7 @@ typedef enum
 
 // Robotis YM080-230-R099-RH fwd/rev drive
 #define DRIVE_ID 2
-#define DRIVE_OP_MODE 11
+#define DRIVE_OP_MODE 33
 #define DRIVE_MODE_CTL_REG 32
 #define DRIVE_FWD(s) (s&0xFFFE) 
 #define DRIVE_RVS(s) (s|0x1)
