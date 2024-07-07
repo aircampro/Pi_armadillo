@@ -2,7 +2,7 @@
 # ref:- https://github.com/lethic/inspired_pro
 # 
 # The Inspired Pro Humanoid robot controls its leg movement via ROS commands
-# and we have also connected a FLIR camera and activate a moving picture scan in step3 while moving the waist angles from each extreme
+# and we have also connected a 'IIDC'  or 'GigE' Camera via pyflycap library
 #
 import roslib
 roslib.load_manifest('inspired_pro')
@@ -17,13 +17,10 @@ from control_msgs.msg import JointTrajectoryAction, JointTrajectoryGoal, FollowJ
 
 LEG_JOINTS = ['hip_r', 'thigh_r', 'shank_r', 'ankle_r', 'hip_l', 'thigh_l', 'shank_l', 'ankle_l', 'waist']
 
-# uses the following library for FLIR camera https://github.com/elerac/EasyPySpin
- """Example of synchronized capture with multiple cameras.
-
-You need to create a physical connection between the cameras by linking their GPIO pins, as follows:
-https://www.flir.com/support-center/iis/machine-vision/application-note/configuring-synchronized-capture-with-multiple-cameras/
-"""
-import EasyPySpin
+from pyflycap2.interface import Camera
+from pyflycap2.interface import CameraContext
+from pyflycap2.interface import GUI
+import numpy as np
 import cv2
          
 class Joint:
@@ -55,17 +52,32 @@ def set_joint_value(joint_str, setval, val_list):
             
 def main():
     # set up cameras
-    for c in range(0,2):                                  # for both cameras
-        cap = EasyPySpin.VideoCapture(c)
-        cap.set(cv2.CAP_PROP_GAIN, 5)                     # set gain +5dB
-        cap.set(cv2.CAP_PROP_EXPOSURE, -1)                # -1 sets exposure_time to auto
-        cap.release()
-    
-    # initialise the interface to the 2 cameras
-    serial_number_1 = "20541712"                          # primary camera (set your camera's serial number)
-    serial_number_2 = "19412150"                          # secondary camera (set your camera's serial number)
-    cap = EasyPySpin.SynchronizedVideoCapture(serial_number_1, serial_number_2)
-    
+    context_type = 'IIDC'  # or 'GigE'
+
+    cc = CameraContext(context_type)
+    print('# cameras:', cc.get_num_cameras())
+
+    gui = GUI()
+    ret = gui.show_selection()
+    guid = ret[1][0]
+    print(guid)
+
+    c = Camera(guid=guid, context_type=context_type)
+    c.connect()
+    c.start_capture()
+
+    c.read_next_image()
+    frame = c.get_current_image()
+    for key in frame.keys():
+        if key == 'buffer': continue
+        print(key, frame[key])
+
+    # show the 1st image
+    cvimage = cv2.cvtColor(np.array(frame['buffer']).reshape((frame['rows'], frame['cols'])), cv2.COLOR_BayerBGGR2BGR)
+    cv2.imshow('image', cvimage)
+    prev_sec = frame['ts'][0] + frame['ts'][1] / 1e6
+    n = 0
+
     leg = Joint('leg')                                    # connect to Leg on ROS
     flag = 1
     # ['hip_r', 'thigh_r', 'shank_r', 'ankle_r', 'hip_l', 'thigh_l', 'shank_l', 'ankle_l', 'waist']
@@ -206,9 +218,8 @@ def main():
 
             start_positions = [POS_START, POS_STAND, POS_SIT]
             sel_position = 0
-            no_exit_pressed=1
-            fnum = 0            
-            while no_exit_pressed:                                                   # until q comes from the keyboard
+            print('Press Esc to stop')            
+            while lastkey != 27:                                                     # until ESC comes from the keyboard
                 for z in range(angle_start, (angle_pos+a_step), a_step):             # rotate waist and look at both camera outputs
                     joint_pos = start_positions[int(sel_position/2)]                 # defined start stance position for robot
                     set_joint_value('waist', z/100, val_list)                        # waist
@@ -216,26 +227,18 @@ def main():
                     leg.add_point(joint_pos, POS_TIME)                               # add to the trajectory
                     leg.move_joint()                                                 # make the motion per trajectory
                     
-                    if not all(cap.isOpened()):                                      # if we dont have both cams then exit
-                        print("All cameras can't open\nexit")
-                        cv2.destroyAllWindows() 
-                        cap.release()            
-                        return -1
-             
-                    read_values = cap.read()                                         # read both cameras
-
-                    for i, (ret, frame) in enumerate(read_values):                   # process both cameras
-                        if not ret:
-                            continue
-                        frame = cv2.resize(frame, None, fx=0.25, fy=0.25)
-                        cv2.imshow(f"frame-{i}", frame)                              # display both the camera images using openCV
-                        filename_png = f"FLIR{i}_{fnum}{abs(z)}_angle.png"
-                        cv2.imwrite(filename_png, frame)
-                        fnum = fnum + 1   
-                        
-                    key = cv2.waitKey(30)
-                        if key == ord("q"):                                          # operator hits q on keyboard we exit
-                            no_exit_pressed=0
+                    c.read_next_image()
+                    frame = c.get_current_image()
+                    cvimage = cv2.cvtColor(np.array(frame['buffer']).reshape((frame['rows'], frame['cols'])), cv2.COLOR_BayerBGGR2BGR)
+                    sec = frame['ts'][0] + frame['ts'][1] / 1e6
+                    fps = 1.0 / (sec - prev_sec)
+                    text = f'{n:08d} - {fps:0.2f} fps'
+                    cv2.putText(cvimage, text,(10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 128, 32), 2)
+                    cv2.imshow('image', cvimage)
+                    n += 1
+                    prev_sec = sec                       
+                    lastkey = cv2.waitKey(10)
+                        if lastkey == 27:                                             # operator hits ESC on keyboard we exit
                             break        
 
                 if z >= angle_pos:                                                    # reached end change direction
@@ -250,8 +253,9 @@ def main():
                 
             state = 0                                                                 # stop & exit
             print('finish state 0')  
-            cv2.destroyAllWindows() 
-            cap.release()  
+            cv2.destroyAllWindows()
+            c.stop_capture()
+            c.disconnect() 
             joint_pos = POS_SIT                                                       # finally sit
             leg.add_point(joint_pos, 0.5)
             leg.move_joint()            

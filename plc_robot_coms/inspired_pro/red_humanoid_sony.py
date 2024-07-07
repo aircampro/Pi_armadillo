@@ -2,7 +2,7 @@
 # ref:- https://github.com/lethic/inspired_pro
 # 
 # The Inspired Pro Humanoid robot controls its leg movement via ROS commands
-# and we have also connected a FLIR camera and activate a moving picture scan in step3 while moving the waist angles from each extreme
+# and we have also connected a Sony IMX264LLR-C USB3
 #
 import roslib
 roslib.load_manifest('inspired_pro')
@@ -17,14 +17,12 @@ from control_msgs.msg import JointTrajectoryAction, JointTrajectoryGoal, FollowJ
 
 LEG_JOINTS = ['hip_r', 'thigh_r', 'shank_r', 'ankle_r', 'hip_l', 'thigh_l', 'shank_l', 'ankle_l', 'waist']
 
-# uses the following library for FLIR camera https://github.com/elerac/EasyPySpin
- """Example of synchronized capture with multiple cameras.
-
-You need to create a physical connection between the cameras by linking their GPIO pins, as follows:
-https://www.flir.com/support-center/iis/machine-vision/application-note/configuring-synchronized-capture-with-multiple-cameras/
-"""
-import EasyPySpin
+# example from https://www.argocorp.com/UVC_camera/Linux_TIScam_Python.html
+import sys
 import cv2
+import numpy as np
+
+import TIS
          
 class Joint:
     def __init__(self, motor_name):
@@ -55,16 +53,51 @@ def set_joint_value(joint_str, setval, val_list):
             
 def main():
     # set up cameras
-    for c in range(0,2):                                  # for both cameras
-        cap = EasyPySpin.VideoCapture(c)
-        cap.set(cv2.CAP_PROP_GAIN, 5)                     # set gain +5dB
-        cap.set(cv2.CAP_PROP_EXPOSURE, -1)                # -1 sets exposure_time to auto
-        cap.release()
-    
-    # initialise the interface to the 2 cameras
-    serial_number_1 = "20541712"                          # primary camera (set your camera's serial number)
-    serial_number_2 = "19412150"                          # secondary camera (set your camera's serial number)
-    cap = EasyPySpin.SynchronizedVideoCapture(serial_number_1, serial_number_2)
+    Tis = TIS.TIS()
+
+    #　DMK 33UX264 Serial: 16710581 、 640x480＠30 fps
+    # Sony IMX264LLR-C USB3す
+    Tis.openDevice("16710581", 640, 480, "30/1", TIS.SinkFormats.BGRA,True)
+
+    #　DFK 33UX253 Serial: 45120952 、 1920x1080＠30 fps
+    # 1/1.8" Sony CMOS Pregius IMX252 equipped with global shutter  
+    # 2048×1536 @120fps 320 megapixel color or monochrome
+    # Tis.open_device("45120952", 1920,1080, "30/1", TIS.SinkFormats.BGRA,True)
+
+    # https://www.argocorp.com/cam/usb3/tis/common/pdf/trmdmk33ux264.en_US.pdf
+    Tis.Set_Property("GainAuto","Off")                
+    Tis.Set_Property("Gain", 9.6)
+    Tis.Set_Property("ExposureAuto", "Off")           
+    Tis.Set_Property("ExposureTime", 2977)
+    Tis.Set_Property("BalanceWhiteAuto", "Off")       
+    Tis.Set_Property("BalanceWhiteRed", 1.0)
+    Tis.Set_Property("BalanceWhiteBlue", 1.0)
+    Tis.Set_Property("BalanceWhiteGreen", 1.0)
+    Tis.Set_Property("TriggerMode","Off")
+    Tis.Set_Property("BlackLevel",270)
+    Tis.Set_Property("GPOut",True)
+    Tis.Set_Property("StrobeEnable","On")
+    Tis.Set_Property("StrobePolarity","ActiveHigh")
+    Tis.Set_Property("StrobeOperation","Exposure")
+    Tis.Set_Property("StrobeDelay",10)
+    Tis.Set_Property("Gamma",0.1)
+
+    print("Gain Auto : %s " % Tis.Get_Property("GainAuto"))
+    print("Gain : %d" % Tis.Get_Property("Gain"))
+    print("Exposure Auto : %s " % Tis.Get_Property("ExposureAuto"))
+    print("Exposure Time (us) : %d" % Tis.Get_Property("ExposureTime"))
+    print("Whitebalance Auto : %s " % Tis.Get_Property("BalanceWhiteAuto"))
+    print("Whitebalance Red : " ,Tis.Get_Property("BalanceWhiteRed"))
+    print("Whitebalance Blue :  " ,Tis.Get_Property("BalanceWhiteBlue"))
+    print("Whitebalance Green : " ,Tis.Get_Property("BalanceWhiteGreen"))
+    print("BlackLevel : " ,Tis.Get_Property("BlackLevel"))
+    print("Gamma : " ,Tis.Get_Property("Gamma"))
+
+    Tis.Start_pipeline()  
+    lastkey = 0
+    cv2.namedWindow('Window') 
+    kernel = np.ones((5, 5), np.uint8)  
+    imagecounter=0
     
     leg = Joint('leg')                                    # connect to Leg on ROS
     flag = 1
@@ -206,9 +239,8 @@ def main():
 
             start_positions = [POS_START, POS_STAND, POS_SIT]
             sel_position = 0
-            no_exit_pressed=1
-            fnum = 0            
-            while no_exit_pressed:                                                   # until q comes from the keyboard
+            print('Press Esc to stop')            
+            while lastkey != 27:                                                     # until ESC comes from the keyboard
                 for z in range(angle_start, (angle_pos+a_step), a_step):             # rotate waist and look at both camera outputs
                     joint_pos = start_positions[int(sel_position/2)]                 # defined start stance position for robot
                     set_joint_value('waist', z/100, val_list)                        # waist
@@ -216,26 +248,17 @@ def main():
                     leg.add_point(joint_pos, POS_TIME)                               # add to the trajectory
                     leg.move_joint()                                                 # make the motion per trajectory
                     
-                    if not all(cap.isOpened()):                                      # if we dont have both cams then exit
-                        print("All cameras can't open\nexit")
-                        cv2.destroyAllWindows() 
-                        cap.release()            
-                        return -1
-             
-                    read_values = cap.read()                                         # read both cameras
+                    if Tis.Snap_image(1) is True: 
+                        image = Tis.Get_image() 
+                        image = cv2.erode(image, kernel, iterations=5) 
+                        cv2.imshow('Window', image) 
 
-                    for i, (ret, frame) in enumerate(read_values):                   # process both cameras
-                        if not ret:
-                            continue
-                        frame = cv2.resize(frame, None, fx=0.25, fy=0.25)
-                        cv2.imshow(f"frame-{i}", frame)                              # display both the camera images using openCV
-                        filename_png = f"FLIR{i}_{fnum}{abs(z)}_angle.png"
-                        cv2.imwrite(filename_png, frame)
-                        fnum = fnum + 1   
-                        
-                    key = cv2.waitKey(30)
-                        if key == ord("q"):                                          # operator hits q on keyboard we exit
-                            no_exit_pressed=0
+                        imagecounter += 1
+                        filename = "./image{:04}.jpg".format(imagecounter)
+                        cv2.imwrite(filename, image)
+                       
+                    lastkey = cv2.waitKey(10)
+                        if lastkey == 27:                                             # operator hits ESC on keyboard we exit
                             break        
 
                 if z >= angle_pos:                                                    # reached end change direction
@@ -251,7 +274,7 @@ def main():
             state = 0                                                                 # stop & exit
             print('finish state 0')  
             cv2.destroyAllWindows() 
-            cap.release()  
+            Tis.Stop_pipeline()  
             joint_pos = POS_SIT                                                       # finally sit
             leg.add_point(joint_pos, 0.5)
             leg.move_joint()            
