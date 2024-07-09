@@ -1,4 +1,4 @@
-﻿#ifndef OPEN_MANIPULATOR_TELEOP_H
+#ifndef OPEN_MANIPULATOR_TELEOP_H
 #define OPEN_MANIPULATOR_TELEOP_H
 
 #include <ros/ros.h>
@@ -13,6 +13,35 @@
 #define DELTA 0.01
 #define JOINT_DELTA 0.05
 #define PATH_TIME 0.5
+
+/* https://github.com/julius-speech/julius/ */
+/*
+ * Copyright (c) 1991-2016 Kawahara Lab., Kyoto University
+ * Copyright (c) 2000-2005 Shikano Lab., Nara Institute of Science and Technology
+ * Copyright (c) 2005-2016 Julius project team, Nagoya Institute of Technology
+ * All rights reserved
+ */
+#include <julius/juliuslib.h>
+
+/* include top Julius library header for speach regognition */
+#include <julius/juliuslib.h>
+
+/* #define _use_strmatch if you have the imatix library */
+#ifdef _use_strmatch
+/* for strmatch https://imatix-legacy.github.io/sfl/sfldoc.htm#TOC281 */
+#include "sflstr.h"
+/* #define _use_strcmp to use it also a bit legacy now */
+#elif _use_strcmp
+#include <string.h>
+/* use string in c++11 */
+#else
+#include <stdio.h>
+#include <string>
+#include <iostream>
+#endif
+/* define the words spoken to command the robot */
+#define SPK_CLOSE "close"
+#define SPK_OPEN "open"
 
 class OpenManipulatorTeleop
 {
@@ -54,6 +83,16 @@ class OpenManipulatorTeleop
   bool setToolControl(std::vector<double> joint_angle);
 
   void setGoal(const char *str);
+  
+  void status_recready(Recog *recog, void *dummy);
+  
+  void status_recstart(Recog *recog, void *dummy);
+  
+  void voc_command_gripper(Recog* recog, void* dummy);
+  
+  
+  
+  
 };
 
 #endif //OPEN_MANIPULATOR_TELEOP_H
