@@ -352,7 +352,7 @@ static void voc_command_gripper(Recog* recog, void* dummy)
           setGoal("gripper open");		 
       }
 #elif _use_strncmp
-	  if ((std::strlen(winfo->woutput[seq[i]]) == std::strlen(SPK_CLOSE)) &&
+      if ((std::strlen(winfo->woutput[seq[i]]) == std::strlen(SPK_CLOSE)) &&
          (std::strncmp(winfo->woutput[seq[i]], SPK_CLOSE, std::strlen(SPK_CLOSE)) == 0)) {
          setGoal("gripper close");
       } else if ((std::strlen(winfo->woutput[seq[i]]) == std::strlen(SPK_OPEN)) &&
