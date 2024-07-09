@@ -345,12 +345,12 @@ static void voc_command_gripper(Recog* recog, void* dummy)
    for (int i = 0; i < seqnum; i++)
    {
       printf("%s", winfo->woutput[seq[i]]);
-	  /* if we heard open or close then control the gripper as spoken */
+/* if we heard open or close then control the gripper as spoken */
 #ifdef _use_strmatch
-	  if (strmatch(winfo->woutput[seq[i]], SPK_CLOSE))) {
-	    setGoal("gripper close");
+      if (strmatch(winfo->woutput[seq[i]], SPK_CLOSE))) {
+          setGoal("gripper close");
       } else if (strmatch(winfo->woutput[seq[i]], SPK_OPEN))) {
-	    setGoal("gripper open");		 
+          setGoal("gripper open");		 
       }
 #elif _use_strncmp
 	  if ((std::strlen(winfo->woutput[seq[i]]) == std::strlen(SPK_CLOSE)) &&
@@ -358,12 +358,12 @@ static void voc_command_gripper(Recog* recog, void* dummy)
          setGoal("gripper close");
       } else if ((std::strlen(winfo->woutput[seq[i]]) == std::strlen(SPK_OPEN)) &&
          (std::strncmp(winfo->woutput[seq[i]], SPK_OPEN, std::strlen(SPK_OPEN)) == 0)) {
-	     setGoal("gripper open");
+         setGoal("gripper open");
       }
 #else
-	  std::string s1 = std::string(winfo->woutput[seq[i]]);
-      std::string s2 = s1;
-      std::transform(
+       std::string s1 = std::string(winfo->woutput[seq[i]]);
+       std::string s2 = s1;
+       std::transform(
         s1.begin(), 
         s1.end(), 
         s2.begin(),                         
@@ -371,8 +371,8 @@ static void voc_command_gripper(Recog* recog, void* dummy)
       );
       if (s2 == SPK_CLOSE) {
          setGoal("gripper close");
-	  } else if (s2 = SPK_OPEN) {
-	     setGoal("gripper open");		  
+      } else if (s2 = SPK_OPEN) {
+         setGoal("gripper open");		  
       }
 #endif
    }
