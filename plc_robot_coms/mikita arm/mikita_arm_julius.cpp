@@ -444,7 +444,7 @@ int main(int argc, char **argv)
   while(ros::ok()){ 
       /* Initialize the A/D-in device selected in the settings and prepare for recognition */
       if (j_adin_init(recog) == FALSE) {
-         fprintf(stderr, "error with microphobe A/D");	  
+         fprintf(stderr, "error with microphone A/D");	  
          return -1;
       }
   
