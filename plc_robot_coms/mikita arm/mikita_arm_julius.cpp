@@ -78,7 +78,6 @@ void OpenManipulatorTeleop::initClient()
   goal_task_space_path_from_present_position_only_client_ = node_handle_.serviceClient<open_manipulator_msgs::SetKinematicsPose>("goal_task_space_path_from_present_position_only");
   goal_joint_space_path_client_ = node_handle_.serviceClient<open_manipulator_msgs::SetJointPosition>("goal_joint_space_path");
   goal_tool_control_client_ = node_handle_.serviceClient<open_manipulator_msgs::SetJointPosition>("goal_tool_control");
-
 }
 void OpenManipulatorTeleop::initSubscriber()
 {
@@ -472,8 +471,7 @@ int main(int argc, char **argv)
       /* calling j_close_stream(recog) at any time will terminate
          recognition and exit j_recognize_stream() */
       j_close_stream(recog);
-	 
-	 rate.sleep();
+      rate.sleep();
   }
   
   s.stop();
