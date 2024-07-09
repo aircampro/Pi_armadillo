@@ -24,34 +24,6 @@
 
 #include "open_manipulator_teleop_joystick.h"
 
-/* https://github.com/julius-speech/julius/ */
-/*
- * Copyright (c) 1991-2016 Kawahara Lab., Kyoto University
- * Copyright (c) 2000-2005 Shikano Lab., Nara Institute of Science and Technology
- * Copyright (c) 2005-2016 Julius project team, Nagoya Institute of Technology
- * All rights reserved
- */
-
-/* include top Julius library header for speach regognition */
-#include <julius/juliuslib.h>
-
-/* #define _use_strmatch if you have the imatix library */
-#ifdef _use_strmatch
-/* for strmatch https://imatix-legacy.github.io/sfl/sfldoc.htm#TOC281 */
-#include "sflstr.h"
-/* #define _use_strcmp to use it also a bit legacy now */
-#elif _use_strcmp
-#include <string.h>
-/* use string in c++11 */
-#else
-#include <stdio.h>
-#include <string>
-#include <iostream>
-#endif
-/* define the words spoken to command the robot */
-#define SPK_CLOSE "close"
-#define SPK_OPEN "open"
-
 OpenManipulatorTeleop::OpenManipulatorTeleop()
     :node_handle_(""),
      priv_node_handle_("~")
@@ -78,6 +50,7 @@ void OpenManipulatorTeleop::initClient()
   goal_task_space_path_from_present_position_only_client_ = node_handle_.serviceClient<open_manipulator_msgs::SetKinematicsPose>("goal_task_space_path_from_present_position_only");
   goal_joint_space_path_client_ = node_handle_.serviceClient<open_manipulator_msgs::SetJointPosition>("goal_joint_space_path");
   goal_tool_control_client_ = node_handle_.serviceClient<open_manipulator_msgs::SetJointPosition>("goal_tool_control");
+
 }
 void OpenManipulatorTeleop::initSubscriber()
 {
@@ -347,26 +320,26 @@ static void voc_command_gripper(Recog* recog, void* dummy)
 /* if we heard open or close then control the gripper as spoken */
 #ifdef _use_strmatch
       if (strmatch(winfo->woutput[seq[i]], SPK_CLOSE))) {
-          setGoal("gripper close");
+	    setGoal("gripper close");
       } else if (strmatch(winfo->woutput[seq[i]], SPK_OPEN))) {
-          setGoal("gripper open");		 
+	    setGoal("gripper open");		 
       }
 #elif _use_strncmp
-      if ((std::strlen(winfo->woutput[seq[i]]) == std::strlen(SPK_CLOSE)) &&
+     if ((std::strlen(winfo->woutput[seq[i]]) == std::strlen(SPK_CLOSE)) &&
          (std::strncmp(winfo->woutput[seq[i]], SPK_CLOSE, std::strlen(SPK_CLOSE)) == 0)) {
          setGoal("gripper close");
       } else if ((std::strlen(winfo->woutput[seq[i]]) == std::strlen(SPK_OPEN)) &&
          (std::strncmp(winfo->woutput[seq[i]], SPK_OPEN, std::strlen(SPK_OPEN)) == 0)) {
-         setGoal("gripper open");
+          setGoal("gripper open");
       }
 #else
       std::string s1 = std::string(winfo->woutput[seq[i]]);
       std::string s2 = s1;
       std::transform(
-         s1.begin(), 
-         s1.end(), 
-         s2.begin(),                         
-         [](char c) { return std::tolower(c); }
+        s1.begin(), 
+        s1.end(), 
+        s2.begin(),                         
+        [](char c) { return std::tolower(c); }
       );
       if (s2 == SPK_CLOSE) {
          setGoal("gripper close");
@@ -443,7 +416,7 @@ int main(int argc, char **argv)
   while(ros::ok()){ 
       /* Initialize the A/D-in device selected in the settings and prepare for recognition */
       if (j_adin_init(recog) == FALSE) {
-         fprintf(stderr, "error with microphone A/D");	  
+         fprintf(stderr, "error with microphobe A/D");	  
          return -1;
       }
   
@@ -471,7 +444,8 @@ int main(int argc, char **argv)
       /* calling j_close_stream(recog) at any time will terminate
          recognition and exit j_recognize_stream() */
       j_close_stream(recog);
-      rate.sleep();
+	 
+	 rate.sleep();
   }
   
   s.stop();
