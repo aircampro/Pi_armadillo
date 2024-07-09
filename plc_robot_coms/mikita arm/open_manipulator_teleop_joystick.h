@@ -23,9 +23,6 @@
  */
 #include <julius/juliuslib.h>
 
-/* include top Julius library header for speach regognition */
-#include <julius/juliuslib.h>
-
 /* #define _use_strmatch if you have the imatix library */
 #ifdef _use_strmatch
 /* for strmatch https://imatix-legacy.github.io/sfl/sfldoc.htm#TOC281 */
