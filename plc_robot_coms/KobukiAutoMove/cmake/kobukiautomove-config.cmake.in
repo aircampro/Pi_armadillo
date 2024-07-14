@@ -1,0 +1,54 @@
+# KobukiAutoMove CMake config file
+#
+# This file sets the following variables:
+# KobukiAutoMove_FOUND - Always TRUE.
+# KobukiAutoMove_INCLUDE_DIRS - Directories containing the KobukiAutoMove include files.
+# KobukiAutoMove_IDL_DIRS - Directories containing the KobukiAutoMove IDL files.
+# KobukiAutoMove_LIBRARIES - Libraries needed to use KobukiAutoMove.
+# KobukiAutoMove_DEFINITIONS - Compiler flags for KobukiAutoMove.
+# KobukiAutoMove_VERSION - The version of KobukiAutoMove found.
+# KobukiAutoMove_VERSION_MAJOR - The major version of KobukiAutoMove found.
+# KobukiAutoMove_VERSION_MINOR - The minor version of KobukiAutoMove found.
+# KobukiAutoMove_VERSION_REVISION - The revision version of KobukiAutoMove found.
+# KobukiAutoMove_VERSION_CANDIDATE - The candidate version of KobukiAutoMove found.
+
+message(STATUS "Found KobukiAutoMove-@PROJECT_VERSION@")
+set(KobukiAutoMove_FOUND TRUE)
+
+find_package(<dependency> REQUIRED)
+
+#set(KobukiAutoMove_INCLUDE_DIRS
+#    "@CMAKE_INSTALL_PREFIX@/include/@PROJECT_NAME_LOWER@-@PROJECT_VERSION_MAJOR@"
+#    ${<dependency>_INCLUDE_DIRS}
+#    )
+#
+#set(KobukiAutoMove_IDL_DIRS
+#    "@CMAKE_INSTALL_PREFIX@/include/@PROJECT_NAME_LOWER@-@PROJECT_VERSION_MAJOR@/idl")
+set(KobukiAutoMove_INCLUDE_DIRS
+    "@CMAKE_INSTALL_PREFIX@/include/@CPACK_PACKAGE_FILE_NAME@"
+    ${<dependency>_INCLUDE_DIRS}
+    )
+set(KobukiAutoMove_IDL_DIRS
+    "@CMAKE_INSTALL_PREFIX@/include/@CPACK_PACKAGE_FILE_NAME@/idl")
+
+
+if(WIN32)
+    set(KobukiAutoMove_LIBRARIES
+        "@CMAKE_INSTALL_PREFIX@/@LIB_INSTALL_DIR@/@CMAKE_SHARED_LIBRARY_PREFIX@@PROJECT_NAME_LOWER@@CMAKE_STATIC_LIBRARY_SUFFIX@"
+        ${<dependency>_LIBRARIES}
+        )
+else(WIN32)
+    set(KobukiAutoMove_LIBRARIES
+        "@CMAKE_INSTALL_PREFIX@/@LIB_INSTALL_DIR@/@CMAKE_SHARED_LIBRARY_PREFIX@@PROJECT_NAME_LOWER@@CMAKE_SHARED_LIBRARY_SUFFIX@"
+        ${<dependency>_LIBRARIES}
+        )
+endif(WIN32)
+
+set(KobukiAutoMove_DEFINITIONS ${<dependency>_DEFINITIONS})
+
+set(KobukiAutoMove_VERSION @PROJECT_VERSION@)
+set(KobukiAutoMove_VERSION_MAJOR @PROJECT_VERSION_MAJOR@)
+set(KobukiAutoMove_VERSION_MINOR @PROJECT_VERSION_MINOR@)
+set(KobukiAutoMove_VERSION_REVISION @PROJECT_VERSION_REVISION@)
+set(KobukiAutoMove_VERSION_CANDIDATE @PROJECT_VERSION_CANDIDATE@)
+
