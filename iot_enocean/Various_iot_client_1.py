@@ -20,7 +20,7 @@ import pytz
 MY_TZ='Europe/Moscow'
 
 # ------------ here list the choices and options for iOt or monitoring -----------------      
-TELEM_CHOICES=[ "soracom", "beebotte", "mosquito", "ubidots", "machinist", "aws", "azure", "yandex", "twillio", "smtp_email", "ssl_tls_server", "ssl_23_server", "cloud_mqtt", "gcs_blob", "splunk", "gcs_spread", "ambient", "influxdb", "redis", "mongo", "mysql", "sybase", "oracle", "sqllite", "pg", "fluvio", "scyllia", "rocks", "ali", "taiga", "msaccess", "riak", "elas", "neo4j", "cumulocity"  ]
+TELEM_CHOICES=[ "soracom", "beebotte", "mosquito", "ubidots", "machinist", "aws", "azure", "yandex", "twillio", "smtp_email", "ssl_tls_server", "ssl_23_server", "cloud_mqtt", "gcs_blob", "splunk", "gcs_spread", "ambient", "influxdb", "redis", "mongo", "mysql", "sybase", "oracle", "sqllite", "pg", "fluvio", "scyllia", "rocks", "ali", "taiga", "msaccess", "riak", "elas", "neo4j", "cumulocity", "sftp", "coAp" ]
 SORACOM=0
 BEEBOTTE=1
 MOSQUITO=2
@@ -55,8 +55,9 @@ MSACCESS=30
 RIAK=31
 ELAS=32
 NEO4J=33
-CUMULOCITY=34
-
+CUMOLOCITY=34
+SFTP=35
+COAP=36
 # ============= make your choice of cloud service here from list above ================== 
 MY_CURRENT_TELEM=TELEM_CHOICES[SORACOM]
 
@@ -176,6 +177,19 @@ if MY_CURRENT_TELEM == "ambient":
     channelID = 100
     writeKey = 'writeKey'
 
+# sftp
+#
+if MY_CURRENT_TELEM == "sftp":
+    import paramiko
+    SFTP_HOST = 'localhost'
+    SFTP_PORT = 22
+    SFTP_USER = 'sftp_client'
+    SFTP_PASS = 'pass'
+    # SFTP FILE DATA
+    UPLOAD_FILE_PATH = '/upload/test.txt'
+    LOCAL_FILE_PATH = './temperature_data.txt'
+    FILE_CNTR = 0
+
 # pip3 install c8y-api
 if MY_CURRENT_TELEM == "cumulocity":
     from c8y_api import CumulocityApi
@@ -257,6 +271,15 @@ if MY_CURRENT_TELEM == "mysql":
     MY_SQL_TAB="Enocean_Temperatures"
     MYSQLLIB = "MYSQLDB"
 
+# coAp
+#
+if MY_CURRENT_TELEM == "coAp":
+    from aiocoap import *
+    import nest_asyncio
+    nest_asyncio.apply()
+    import asyncio
+    COAP_NAME="coap://[HOST_NAME]/[PATH]"
+    
 # =============================================  use neo4j  ============================================================
 #
 
@@ -524,7 +547,46 @@ def Enocean2Telemetry(s_port, telem_opt):
         for certificate in certificates:
         # this list doesn't include versions of the certificates
             print(certificate.name)
-    
+
+    # SFTP
+    def upload_sftp_client(descrip1,temp_data1,descrip2,temp_data2):
+        # write the data to the file before upload
+        text_2_write=descrip1+" : "+str(temp_data1)+descrip2+" : "+str(temp_data2)
+        f1 = LOCAL_FILE_PATH.split(".")
+        global FILE_CNTR
+        f2 = f1[0] + str(FILE_CNTR) + f1[1]
+        with open(f2, 'w') as local_file:
+            local_file.write(text_2_write)
+            FILE_CNTR = FILE_CNTR + 1
+        client = paramiko.SSHClient()
+        client.set_missing_host_key_policy(paramiko.AutoAddPolicy)
+        client.connect(SFTP_HOST, port=SFTP_PORT, username=SFTP_USER, password=SFTP_PASS)
+        sftp = client.open_sftp()
+        # sftp put file
+        sftp.put(f2, UPLOAD_FILE_PATH)
+        if sftp:
+	        files_info = sftp.listdir(UPLOAD_FILE_PATH)
+            fn = f2.split("/")
+            found_flg = 0
+	        for file_name in files_info:
+                if file_name == fn[1] :
+                    found_flg = 1
+            if found_flg == 0:
+                print("upload error... file not found")
+            sftp.close()
+
+    # coAP
+    def upload_coAp_main(descrip1,temp_data1,descrip2,temp_data2):    
+        text_2_write=descrip1+" : "+str(temp_data1)+descrip2+" : "+str(temp_data2)
+        context = await Context.create_client_context()
+        await asyncio.sleep(2)
+        request = Message(code=POST, payload=text_2_write, uri=COAP_NAME)
+        response = await context.request(request).response
+        print('Result: %s\n%r'%(response.code, response.payload))
+
+    def upload_coAp(descrip1,temp_data1,descrip2,temp_data2):
+        asyncio.run(upload_coAp_main(descrip1,temp_data1,descrip2,temp_data2))
+  
     # YANDEX
     def makeYandexTable(table_name):
 
@@ -1845,6 +1907,10 @@ def Enocean2Telemetry(s_port, telem_opt):
         sendData=sendDataUbiDots
     elif telem_opt == "machinist":
         sendData=sendDataMachinist   
+    elif telem_opt == "sftp":
+        sendData=upload_sftp_client
+    elif telem_opt == "coAp":
+        sendData=upload_coAp    
     elif telem_opt == "aws":
         import boto3
         sendData=sendDataAws    
