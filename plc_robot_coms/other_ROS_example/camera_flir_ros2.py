@@ -14,27 +14,27 @@ import glob
 # Capture a camera and publish to ROS2 channel and save to disk 
 class CaptureCameraNode(Node):
     def __init__(self):
-        # Инициализируем родительский класс Node с именем 'capture_camera'
+        # Initialize the parent Node class named 'capture_camera'
         super().__init__('capture_camera')
         
-        # Создаем объект CvBridge для преобразования изображений между OpenCV и ROS
+        # Create a CvBridge object to convert images between OpenCV and ROS
         self.bridge = CvBridge()
 
-        # Создаем издателей для публикации изображений и текстовых сообщений
+        # Create publishers for publishing images and text messages with info and picture counter
         self.publisher = self.create_publisher(Image, 'camera/image', 10)
         self.text_publisher = self.create_publisher(String, 'camera/info', 10)
         self.number_pics = self.create_publisher(String, 'camera/pic_counter', 10)
         self.pic_counter = 0
         
-        # Создаем таймер, который вызывает функцию capture_and_publish каждую секунду
+        # Create a timer that calls capture_and_publish every second
         self.timer = self.create_timer(1.0, self.capture_and_publish)
 
-        # Определяем путь для сохранения изображений
+        # Define the path to save the images
         self.image_save_path = "/home/pi/images"
-        # Если папка для сохранения изображений не существует, создаем ее
+        # If the folder to save the images does not exist, create it
         os.makedirs(self.image_save_path, exist_ok=True)
         
-        # Создаем таймер, который вызывает функцию save_image каждые 5 секунд
+        # Create a timer that calls the save_image function every 5 seconds
         self.save_timer = self.create_timer(5.0, self.save_image)
 
     # set the camera type
@@ -113,11 +113,11 @@ class CaptureCameraNode(Node):
                 cv2.imwrite(filename, frame)
                 print(f"Saved image to {filename}")
             
-                # Получаем список всех сохраненных изображений
+                # Get a list of all saved images
                 all_images = glob.glob(os.path.join(self.image_save_path, "*.jpg"))
-                # Сортируем список изображений по дате создания
+                # Sort the list of images by creation date
                 sorted_images = sorted(all_images, key=os.path.getmtime)
-                # Удаляем старые изображения, оставляя только 20 последних
+                # Delete old images, leaving only the 20 most recent ones
                 while len(sorted_images) > 20:
                     os.remove(sorted_images[0])
                     del sorted_images[0]
@@ -131,22 +131,22 @@ class CaptureCameraNode(Node):
                 cv2.imwrite(filename, radiometric_image)
                 print(f"Saved image to {filename}")       
 
-                # Получаем список всех сохраненных изображений
+                #  Get a list of all saved images
                 all_images = glob.glob(os.path.join(self.image_save_path, "*.jpg"))
-                # Сортируем список изображений по дате создания
+                # Sort the list of images by creation date
                 sorted_images = sorted(all_images, key=os.path.getmtime)
-                # Удаляем старые изображения, оставляя только 20 последних
+                # Delete old images, leaving only the 20 most recent ones
                 while len(sorted_images) > 20:
                     os.remove(sorted_images[0])
                     del sorted_images[0]
 
 def main(args=None):
-    # Инициализируем ROS
+    # Initialize ROS
     rclpy.init(args=args)
-    # Создаем объект нашей ноды
+    # Create our node object
     capture_camera = CaptureCameraNode()
     capture_camera.set_cam_type(1)                        # set FLIR camera to be the camera used for cv cam on usb change to 0
-    # Запускаем цикл обработки ROS
+    # start the ROS processing loop
     rclpy.spin(capture_camera)
 
 if __name__ == '__main__':
