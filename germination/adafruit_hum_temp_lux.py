@@ -134,7 +134,7 @@ if __name__ == '__main__':
 
         # if humid compensation is on add a litle more to the setpoint
         if (HUM_RSP == 1) and (humidity > HUM_LSP):
-            pid.SetPoint = targetT + (HUM_K * (1.0/humidity))
+            pid.SetPoint = targetT + (HUM_K * (humidity))
         
         # do PID loop
         pid.update(temperature)
