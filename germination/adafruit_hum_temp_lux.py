@@ -44,7 +44,7 @@ def set_up_lcd():
     lcd_columns = 16
     lcd_rows    = 2
     lcd = LCD.Adafruit_CharLCD(lcd_rs, lcd_en, lcd_d4, lcd_d5, lcd_d6, lcd_d7, lcd_columns, lcd_rows)
-	return lcd
+    return lcd
 
 targetT = 35
 P = 10
@@ -57,26 +57,28 @@ HUM_RSP = 1
 
 # read configuration csv
 def readConfig():
-	global targetT
+    global targetT
     global HUM_RSP
     global HUM_LSP
     global HUM_K
-	with open ('/tmp/pid.conf', 'r') as f:
-		config = f.readline().split(',')
-		pid.SetPoint = float(config[0])
-		targetT = pid.SetPoint
-		pid.setKp = (float(config[1]))
-		pid.setKi = (float(config[2]))
-		pid.setKd = (float(config[3]))
-		HUM_K = (float(config[1]))
-		HUM_LSP = (float(config[2]))
-		HUM_RSP = (float(config[3]))
+    with open ('/tmp/pid.conf', 'r') as f:
+        config = f.readline().split(',')
+        pid.SetPoint = float(config[0])
+        targetT = pid.SetPoint
+        pid.setKp = (float(config[1]))
+        pid.setKi = (float(config[2]))
+        pid.setKd = (float(config[3]))
+        HUM_K = (float(config[1]))
+        HUM_LSP = (float(config[2]))
+        HUM_RSP = (float(config[3]))
+    if HUM_LSP == 0:
+        HUM_LSP = 0.1
 
 # use if you want to write the config at the end       
 def createConfig():
-	if not os.path.isfile('/tmp/pid.conf'):
-		with open ('/tmp/pid.conf', 'w') as f:
-			f.write('%s,%s,%s,%s,%s,%s,%s'%(targetT,P,I,D,HUM_K,HUM_LSP,HUM_RSP))
+    if not os.path.isfile('/tmp/pid.conf'):
+        with open ('/tmp/pid.conf', 'w') as f:
+            f.write('%s,%s,%s,%s,%s,%s,%s'%(targetT,P,I,D,HUM_K,HUM_LSP,HUM_RSP))
 
 def set_up_pid():
     readConfig()
@@ -135,9 +137,9 @@ if __name__ == '__main__':
             pid.SetPoint = targetT + (HUM_K * (1.0/humidity))
         
         # do PID loop
-	    pid.update(temperature)
-	    targetPwm = pid.output
-	    targetPwm = max(min( int(targetPwm), 100 ),0)
+        pid.update(temperature)
+        targetPwm = pid.output
+        targetPwm = max(min( int(targetPwm), 100 ),0)
         GPIO.output(HEATER, False)
         time.sleep(targetPwm)
         GPIO.output(HEATER, True)  
