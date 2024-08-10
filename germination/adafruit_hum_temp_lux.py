@@ -18,7 +18,7 @@ import PID
 from scipy.interpolate import BSpline, make_interp_spline #  Switched to BSpline
 import os.path
 
-USE_STEMMA = 0                                # 0=uses board.SCL and board.SDA 1=the built-in STEMMA QT connector
+USE_STEMMA = 0                                          # 0=uses board.SCL and board.SDA 1=the built-in STEMMA QT connector
 def set_up_gpio():
     GPIO.setwarnings(False)
     GPIO.setmode(GPIO.BCM)
@@ -33,9 +33,17 @@ LIGHT_OFF = 90
 def set_up_lights():
     GPIO.setup(LIGHTS, GPIO.OUT)
     GPIO.output(LIGHTS, False)     
+
+DAC_HEATER = 25
+# 2nd heater is on pin25 as a DAC PWM 
+def set_up_dac():
+    GPIO.setup(DAC_HEATER, GPIO.OUT)                     # set GPIO 25 as output for the PWM signal
+    D2A = GPIO.PWM(DAC_HEATER, 1000)                     # create object D2A for PWM on port 25 at 1KHz
+    D2A.start(0)                                         # start the PWM with a 0 percent duty cycle (off)
+    return D2A
     
 def set_up_lcd():
-    lcd_rs        = 21  # Note this might need to be changed to 21 for older revision Pi's.
+    lcd_rs        = 21                                    # Note this might need to be changed to 21 for older revision Pi's.
     lcd_en        = 20
     lcd_d4        = 16
     lcd_d5        = 12
@@ -73,7 +81,7 @@ def readConfig():
         HUM_RSP = (float(config[3]))
     if HUM_LSP == 0:
         HUM_LSP = 0.1
-
+        
 # use if you want to write the config at the end       
 def createConfig():
     if not os.path.isfile('/tmp/pid.conf'):
@@ -107,42 +115,50 @@ if __name__ == '__main__':
     set_up_lights()
     lcd=set_up_lcd()
     pid=set_up_pid()
+    dac=set_up_dac()
     
     # After initial setup, can just use sensors as normal.
-    while True:
-        # get lux and set the light contact
-        print(tsl1.lux, " ", tsl2.lux, " ", time.time())
-        lcd.clear()
-        lcd.set_cursor(0,0)
-        lcd.message('TS11 :'+str(int(tsl1.lux))+' LUX')    
-        lcd.set_cursor(0,8)
-        lcd.message('TS12 :'+str(int(tsl2.lux))+' LUX')
-        if (int(ts11.lux) < LIGHT_ON) and (int(ts12.lux) < LIGHT_ON) :
-            GPIO.output(LIGHTS, True) 
-        elif (int(ts11.lux) > LIGHT_OFF) and (int(ts12.lux) > LIGHT_OFF) :        
-            GPIO.output(LIGHTS, False)        
-        time.sleep(1)
+    try:
+        while True:
+            # get lux and set the light contact
+            print(tsl1.lux, " ", tsl2.lux, " ", time.time())
+            lcd.clear()
+            lcd.set_cursor(0,0)
+            lcd.message('TS11 :'+str(int(tsl1.lux))+' LUX')    
+            lcd.set_cursor(0,8)
+            lcd.message('TS12 :'+str(int(tsl2.lux))+' LUX')
+            if (int(ts11.lux) < LIGHT_ON) and (int(ts12.lux) < LIGHT_ON) :
+                GPIO.output(LIGHTS, True) 
+            elif (int(ts11.lux) > LIGHT_OFF) and (int(ts12.lux) > LIGHT_OFF) :        
+                GPIO.output(LIGHTS, False)        
+            time.sleep(1)
     
-        # get temp and humidity
-        humidity, temperature = Adafruit_DHT.read_retry(11, 4)
-        print(humidity, " ", temperature, " ", time.time())
-        lcd.clear()
-        lcd.set_cursor(0,0)
-        lcd.message('Humidity :'+str(int(humidity))+' %')    
-        lcd.set_cursor(0,8)
-        lcd.message('Temp :'+str(int(temperature))+' C')
+            # get temp and humidity
+            humidity, temperature = Adafruit_DHT.read_retry(11, 4)
+            print(humidity, " ", temperature, " ", time.time())
+            lcd.clear()
+            lcd.set_cursor(0,0)
+            lcd.message('Humidity :'+str(int(humidity))+' %')    
+            lcd.set_cursor(0,8)
+            lcd.message('Temp :'+str(int(temperature))+' C')
 
-        # if humid compensation is on add a litle more to the setpoint
-        if (HUM_RSP == 1) and (humidity > HUM_LSP):
-            pid.SetPoint = targetT + (HUM_K * (humidity))
+            # if humid compensation is on add a litle more to the setpoint
+            if (HUM_RSP == 1) and (humidity > HUM_LSP):
+                pid.SetPoint = targetT + (HUM_K * (humidity))
         
-        # do PID loop
-        pid.update(temperature)
-        targetPwm = pid.output
-        targetPwm = max(min( int(targetPwm), 100 ),0)
-        GPIO.output(HEATER, False)
-        time.sleep(targetPwm)
-        GPIO.output(HEATER, True)  
-        time.sleep(1)
-        
-    createConfig()	
+            # do PID loop
+            pid.update(temperature)
+            targetPwm = pid.output
+            targetPwm = max(min( int(targetPwm), 100 ),0)
+            reversePwm = 100 - targetPwm                                # dac output is reverse to the PID 
+            dac.ChangeDutyCycle(reversePwm)
+            GPIO.output(HEATER, False)
+            time.sleep(targetPwm)
+            GPIO.output(HEATER, True)  
+            time.sleep(1)
+            
+    except (KeyboardInterrupt, ValueError, Exception) as e:
+        print(e)
+        dac.stop()                                                     # stop the PWM output
+        GPIO.cleanup()                                                 # clean up GPIO on CTRL+C exit        
+        createConfig()                                                 # save the set-up to file on hard drive	
