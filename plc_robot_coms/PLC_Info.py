@@ -267,38 +267,42 @@ def connectS7PLC(host='192.168.0.14'):
     import snap7
     from snap7 import util
 
-    client = snap7,client.Client()
+    client = snap7.client.Client()
     client.connect(host,0,1)
     client.get_connected()
+    return client
 
 # read a real 4 bytes long
 #
-def readReal(s7db=2, s7offset=0, s7real=4):
+def readS7Real(client, s7db=2, s7offset=0, s7real=4):
     db = client.db_read(s7db,s7offset,s7real)
     val = util.get_real(db,0)
     return val
 
 # read a int 2 bytes long
 #
-def readInt(s7db=2, s7offset=0, s7int=2):
+def readS7Int(client, s7db=2, s7offset=0, s7int=2):
     db = client.db_read(s7db,s7offset,s7int)
     val = util.get_int(db,0)
     return val
 
 # write a int 2 bytes long
 #    
-def writeInt(s7db=2, s7offset=10, s7int=2, val=987):
+def writeS7Int(client, s7db=2, s7offset=10, s7int=2, val=987):
     db = client.db_read(s7db, s7offset, s7int)
     db2 = util.set_int(db,val)
     client.db_write(s7db,s7offset,db2)
 
 # write a real 4 bytes long
 #
-def writeReal(s7db=2,s7offset=10, s7real=4, val=98.7):
+def writeS7Real(client, s7db=2,s7offset=10, s7real=4, val=98.7):
     db = client.db_read(s7db, s7offset, s7real)
     db2 = util.set_real(db,val)
     client.db_write(s7db,s7offset,db2)    
-    
+
+def closeS7Conn(client):
+    client.disconnect()  
+ 
 #
 #                          Network communication using UDP TCP Socket - use these for mitsubishi and omron communication
 #
@@ -1446,4 +1450,3 @@ def read_Titan_CURDA(a):
     except ValueError:
         rv = int(a[4][1])
     return rv 
-
