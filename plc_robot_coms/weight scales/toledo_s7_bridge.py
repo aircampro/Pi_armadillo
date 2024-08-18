@@ -58,11 +58,11 @@ def get_tol_weight(use_ports=['/dev/ttyUSB0','/dev/ttyUSB1']):
     dev_wts = []
     for i, dev in enumerate(devs):
         print(i, dev)
-		ser_no = dev.get_serial_number()
-		vv = dev.get_weight() + [i] + [ser_no]
+        ser_no = dev.get_serial_number()
+        vv = dev.get_weight() + [i] + [ser_no]
         # [-0.6800, 'g', 'S'] -- if weight is stable
         # [-0.6800, 'g', 'D'] -- if weight is dynamic
-		dev_wts.append(vv)
+        dev_wts.append(vv)
     return dev_wts
 	
 # siemens s7-1500 PLC using snap7 library
