@@ -28,7 +28,7 @@ from pymodbus.client.sync import ModbusTcpClient as ModbusClient_Procon
 import modbus_novus_procon
 
 #---------- this is for the Procon PL101 PLC Webserver or Logic Interface ----------#
-IP_ADDRESS_OF_PROCON_PLC=PROCON_TCP16DI_DEF_IP
+IP_ADDRESS_OF_PROCON_PLC = modbus_novus_procon.PROCON_TCP16DI_DEF_IP
 PROCON_TCP_PORT=5020
 
 # if set to 1 exit if re-connection unsucessful otherwise set to 0
@@ -129,28 +129,28 @@ def read_coils(client, reg=0, cc=9, method="tcp", unit=1):
 if __name__ == '__main__': 
 
     # set up the novus on serial
-    client_novus = ModbusClient_Novus(method = "rtu", port=NOVUS_SER_PRT,stopbits = 1, bytesize = 8, parity = 'E', baudrate= 115200, timeout= 1)
+    client_novus = ModbusClient_Novus(method = "rtu", port=NOVUS_SER_PRT, stopbits = 1, bytesize = 8, parity = 'E', baudrate= 115200, timeout= 1)
     client_novus.connect()
     mthd = "ser"
     
     # set up the novus module -- write the channel type
     # NOVS_DR2A_TYPE1 = NDR2A_Pt100
-    def_addr_novus_d2a = NOVS_DR2A_DEF_ADDR 
-    values = [NDR2A_Pt100, NDR2A_Pt100]
+    def_addr_novus_d2a = modbus_novus_procon.NOVS_DR2A_DEF_ADDR 
+    values = [modbus_novus_procon.NDR2A_Pt100, modbus_novus_procon.NDR2A_Pt100]
    
     # writing as single registers
-    w = write_holding_reg(client_novus, NOVS_DR2A_TYPE1, value=values[0], method=mthd, unit=def_addr_novus_d2a)
-    w = write_holding_reg(client_novus, NOVS_DR2A_TYPE2, value=values[1], method=mthd, unit=def_addr_novus_d2a)
+    w = write_holding_reg(client_novus, modbus_novus_procon.NOVS_DR2A_TYPE1, value=values[0], method=mthd, unit=def_addr_novus_d2a)
+    w = write_holding_reg(client_novus, modbus_novus_procon.NOVS_DR2A_TYPE2, value=values[1], method=mthd, unit=def_addr_novus_d2a)
 
     # might work as multiple write as below - please try it       
     # w = write_holding_regs(client_novus, NOVS_DR2A_TYPE1, values, mthd, def_addr_novus_d2a)  
-    values = [NDR2A_loPt100, NDR2A_ulPt100, NDR2A_loPt100, NDR2A_ulPt100]
+    values = [modbus_novus_procon.NDR2A_loPt100, modbus_novus_procon.NDR2A_ulPt100, modbus_novus_procon.NDR2A_loPt100, modbus_novus_procon.NDR2A_ulPt100]
     
     # writing as single registers
-    w = write_holding_reg(client_novus, NOVS_DR2A_CH1_LOW, value=values[0], method=mthd, unit=def_addr_novus_d2a)
-    w = write_holding_reg(client_novus, NOVS_DR2A_CH1_HIGH, value=values[1], method=mthd, unit=def_addr_novus_d2a)
-    w = write_holding_reg(client_novus, NOVS_DR2A_CH2_LOW, value=values[2], method=mthd, unit=def_addr_novus_d2a)
-    w = write_holding_reg(client_novus, NOVS_DR2A_CH2_HIGH, value=values[3], method=mthd, unit=def_addr_novus_d2a)
+    w = write_holding_reg(client_novus, modbus_novus_procon.NOVS_DR2A_CH1_LOW, value=values[0], method=mthd, unit=def_addr_novus_d2a)
+    w = write_holding_reg(client_novus, modbus_novus_procon.NOVS_DR2A_CH1_HIGH, value=values[1], method=mthd, unit=def_addr_novus_d2a)
+    w = write_holding_reg(client_novus, modbus_novus_procon.NOVS_DR2A_CH2_LOW, value=values[2], method=mthd, unit=def_addr_novus_d2a)
+    w = write_holding_reg(client_novus, modbus_novus_procon.NOVS_DR2A_CH2_HIGH, value=values[3], method=mthd, unit=def_addr_novus_d2a)
 
     # might work as multiple write as below - please try it    
     # w = write_holding_regs(client_novus, NOVS_DR2A_CH1_LOW, values, mthd, def_addr_novus_d2a)
@@ -165,12 +165,12 @@ if __name__ == '__main__':
             try:        
                 while True:
                     # get the pt100 values from the novus module unscaled and scaled for each of the 2 channels         
-                    results = read_input_regs(client_novus, NOVS_DR2A_PV_CH1, mthd, 4, def_addr_novus_d2a)
+                    results = read_input_regs(client_novus, modbus_novus_procon.NOVS_DR2A_PV_CH1, mthd, 4, def_addr_novus_d2a)
                     print(results) 
                     # write those values to the Battery Backed RAM in the PLC for frequent storage        
-                    w = write_holding_regs(client_pro, PROCON_PL101_BBRAM_START, results, mthd_pro) 
+                    w = write_holding_regs(client_pro, modbus_novus_procon.PROCON_PL101_BBRAM_START, results, mthd_pro) 
                     # read them back         
-                    r = read_holding_regs(client_pro, PROCON_PL101_BBRAM_START, mthd_pro, 4) 
+                    r = read_holding_regs(client_pro, modbus_novus_procon.PROCON_PL101_BBRAM_START, mthd_pro, 4) 
             except (ValueError, Exception) as e:
                 print(e)
                 steps_in_error = 0
