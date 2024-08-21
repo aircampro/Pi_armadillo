@@ -664,6 +664,8 @@ class twe(threading.Thread):
 #------------------------------------------------------------------------------- 
 @buttonshim.on_press(BUTTONS)
 def button_p_handler(button, pressed):
+    global PERIOD_BIAS
+    global SET_PATTERN
     # button A pressed use pyadio to stereo
     if (button == 0):
         buttonshim.set_pixel(0x00, 0x00, 0xff)                           # LED to blue  
@@ -741,6 +743,7 @@ def button_p_handler(button, pressed):
 
 @buttonshim.on_hold(buttonshim.BUTTON_D, hold_time=2)
 def hold_handler(button):
+    global PERIOD_BIAS
     # button D pressed for 2 seconds or more than reset the bias on the lights delay back to fastest
     PERIOD_BIAS = 1  
     
