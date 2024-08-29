@@ -14,3 +14,5 @@ Can query resnet from a picture or get information from Google Cloud API, haskel
 eSSP and CCtalk protocol examples for communication with money machines and gaming dispensers AES encrpytion and Diffie Hellman key exchange
 visual odometry example allowing the feature detection algorithm to be changed.
 .................have fun it is still in development.....
+
+concept pics directory shows overview pictures of interfaces
