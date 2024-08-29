@@ -1,0 +1,5 @@
+# ,config/bluebutton
+keyup=/home/sound/play_sample.py
+keydown=echo DOWN
+longup=echo LONG UP
+longdown=sudo /home/sound/simplesynth.py
