@@ -1,4 +1,4 @@
-#ifdef defined(_WIN32) || defined(defined(_WIN64))
+#ifdef defined(_WIN32) 
 /**************************************************************************************************************************************
  Academic sCala Robot C Language Sample [Cartesian Coordinate Conversion]
 
