@@ -101,7 +101,7 @@ int main() {
             std::cout << "the ini file exists" << "\n";
             settings_def = Get_starting_Settings;
         } else {
-            cli::tout << "the ini file is not existing" << "\n";
+            std::cout << "the ini file is not existing" << "\n";
             settings_def = No_Settings;
         }
     }
@@ -109,10 +109,10 @@ int main() {
     // if we set settings_def to xml mode then check for a mavlink xml file existing
     if (settings_def == CameraDefaultSource_e::Settings_From_Xml) {
         if (boost_fs::is_regular_file(PHOXI_XML_FILE)) {
-            cli::tout << "the xml file exists" << "\n";
+            std::cout << "the xml file exists" << "\n";
         }
         else {
-            cli::tout << "the mavlink xml file is not existing" << "\n";
+            std::cout << "the mavlink xml file is not existing" << "\n";
             settings_def = No_Settings;
         }
 	}
