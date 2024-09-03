@@ -85,9 +85,9 @@ int main() {
     usleep(sleepPhoXiFactory);
 
     int settings_def = 0;
-	int mode = 0;
+    int mode = 0;
     bool auto_start = true;
-	int resolut=0;
+    int resolut=0;
     int coord_space = 0;
     pho::api::PhoXiCoordinateTransformation transformation;
 	
@@ -115,7 +115,7 @@ int main() {
             std::cout << "the mavlink xml file is not existing" << "\n";
             settings_def = No_Settings;
         }
-	}
+    }
 	// read all the xml settings if we using an xml file 
     if (settings_def == CameraDefaultSource_e::Settings_From_Xml) {	
         std::string xml_file(PHOXI_XML_FILE);
@@ -190,7 +190,7 @@ int main() {
                 std::cout << "found " << cit->option_name << " similar to trans_coord_space with value : " << cit->xml_val << " using as a default " << std::endl;
             }			
         }
-	}
+    }
 	
     if (settings_def == CameraDefaultSource_e::Get_starting_Settings) {
         mode = clamp(get_ini_int_component("pHoxI", "mode"), 0, CameraConnectionModes_e::Number_of_modes-1);		
@@ -204,98 +204,98 @@ int main() {
 	switch(mode) {
 		case CameraConnectionModes_e::Software:
 		{
-	        // connect to the camera in software mode and start aquisition
-	        phoxi_interface.connectCamera(camera_ID, pho::api::PhoXiTriggerMode::Software, auto_start);
-	        // check we are conencted
-            if (phoxi_interface.isConnected()) {
-               std::cout << "Interface to camera is connected" << std::endl;
-            } else {
-               std::cout << "Interface to camera is not connected" << std::endl;   
-               exit(-1);	
-            }
-            if (phoxi_interface.isAcquiring()) {
-                std::cout << "Phoxi camera is aquiring" << std::endl;
-            } else {		
-                std::cout << "Phoxi camera failed to start aquisition" << std::endl;
-            }
-	    }
+	           // connect to the camera in software mode and start aquisition
+	           phoxi_interface.connectCamera(camera_ID, pho::api::PhoXiTriggerMode::Software, auto_start);
+	           // check we are conencted
+                   if (phoxi_interface.isConnected()) {
+                      std::cout << "Interface to camera is connected" << std::endl;
+                   } else {
+                      std::cout << "Interface to camera is not connected" << std::endl;   
+                      exit(-1);	
+                    }
+                    if (phoxi_interface.isAcquiring()) {
+                       std::cout << "Phoxi camera is aquiring" << std::endl;
+                    } else {		
+                       std::cout << "Phoxi camera failed to start aquisition" << std::endl;
+                    }
+	        }
 		break;
 		
 		case CameraConnectionModes_e::Freerun:
 		{
-	        // connect to the camera in freerun mode and start aquisition
-	        phoxi_interface.connectCamera(camera_ID, pho::api::PhoXiTriggerMode::Freerun, auto_start);
-	        // check we are conencted
-            if (phoxi_interface.isConnected()) {
-               std::cout << "Interface to camera is connected" << std::endl;
-            } else {
-               std::cout << "Interface to camera is not connected" << std::endl;   
-               exit(-1);	
-            }
-            if (phoxi_interface.isAcquiring()) {
-                std::cout << "Phoxi camera is aquiring" << std::endl;
-            } else {		
-                std::cout << "Phoxi camera failed to start aquisition" << std::endl;
-            }
-	    }
+	          // connect to the camera in freerun mode and start aquisition
+	          phoxi_interface.connectCamera(camera_ID, pho::api::PhoXiTriggerMode::Freerun, auto_start);
+	          // check we are conencted
+                  if (phoxi_interface.isConnected()) {
+                      std::cout << "Interface to camera is connected" << std::endl;
+                  } else {
+                     std::cout << "Interface to camera is not connected" << std::endl;   
+                     exit(-1);	
+                  }
+                  if (phoxi_interface.isAcquiring()) {
+                    std::cout << "Phoxi camera is aquiring" << std::endl;
+                  } else {		
+                    std::cout << "Phoxi camera failed to start aquisition" << std::endl;
+                  }
+	        }
 		break;
 		
 		case CameraConnectionModes_e::Hardware:
 		{
-	        // connect to the camera in hardware mode and start aquisition
-	        phoxi_interface.connectCamera(camera_ID, pho::api::PhoXiTriggerMode::Hardware, auto_start);
+	         // connect to the camera in hardware mode and start aquisition
+	         phoxi_interface.connectCamera(camera_ID, pho::api::PhoXiTriggerMode::Hardware, auto_start);
 	        // check we are conencted
-            if (phoxi_interface.isConnected()) {
-               std::cout << "Interface to camera is connected" << std::endl;
-            } else {
-               std::cout << "Interface to camera is not connected" << std::endl;   
-               exit(-1);	
-            }
-            if (phoxi_interface.isAcquiring()) {
-                std::cout << "Phoxi camera is aquiring" << std::endl;
-            } else {		
-                std::cout << "Phoxi camera failed to start aquisition" << std::endl;
-            }
-	    }
+                 if (phoxi_interface.isConnected()) {
+                   std::cout << "Interface to camera is connected" << std::endl;
+                 } else {
+                   std::cout << "Interface to camera is not connected" << std::endl;   
+                   exit(-1);	
+                 }
+                 if (phoxi_interface.isAcquiring()) {
+                    std::cout << "Phoxi camera is aquiring" << std::endl;
+                 } else {		
+                    std::cout << "Phoxi camera failed to start aquisition" << std::endl;
+                 }
+	        }
 		break;
 		
 		case CameraConnectionModes_e::NoValue:
 		{
-	        // connect to the camera in no value mode and start aquisition
-	        phoxi_interface.connectCamera(camera_ID, pho::api::PhoXiTriggerMode::NoValue, auto_start);
-	        // check we are conencted
-            if (phoxi_interface.isConnected()) {
-               std::cout << "Interface to camera is connected" << std::endl;
-            } else {
-               std::cout << "Interface to camera is not connected" << std::endl;   
-               exit(-1);	
-            }
-            if (phoxi_interface.isAcquiring()) {
-                std::cout << "Phoxi camera is aquiring" << std::endl;
-            } else {		
-                std::cout << "Phoxi camera failed to start aquisition" << std::endl;
-            }
-	    }
+	         // connect to the camera in no value mode and start aquisition
+	         phoxi_interface.connectCamera(camera_ID, pho::api::PhoXiTriggerMode::NoValue, auto_start);
+	         // check we are conencted
+                 if (phoxi_interface.isConnected()) {
+                  std::cout << "Interface to camera is connected" << std::endl;
+                 } else {
+                   std::cout << "Interface to camera is not connected" << std::endl;   
+                   exit(-1);	
+                 }
+                 if (phoxi_interface.isAcquiring()) {
+                   std::cout << "Phoxi camera is aquiring" << std::endl;
+                 } else {		
+                   std::cout << "Phoxi camera failed to start aquisition" << std::endl;
+                 }
+	        }
 		break;
 		
-    }	
+        }	
 	// ----------------- set resolution of the camera --------------------------------- 	
-    if (settings_def == CameraDefaultSource_e::Get_starting_Settings) {
-        resolut = clamp(get_ini_int_component("pHoxI", "resolut"), 0, 1);					
-    }
+        if (settings_def == CameraDefaultSource_e::Get_starting_Settings) {
+           resolut = clamp(get_ini_int_component("pHoxI", "resolut"), 0, 1);					
+        }
 	if (resolut == 0) {
-		phoxi_interface.setHighResolution();
-		pho::api::PFrame f = phoxi_interface.getPFrame(-1);
-		if ((GetResolution().Width == 2064) && (f->GetResolution().Height == 1544)) {
-            std::cout << "resolution high : 2064x1544" << std::endl;	
-        }				
+	     phoxi_interface.setHighResolution();
+	     pho::api::PFrame f = phoxi_interface.getPFrame(-1);
+	     if ((GetResolution().Width == 2064) && (f->GetResolution().Height == 1544)) {
+               std::cout << "resolution high : 2064x1544" << std::endl;	
+             }				
 	} else {
-		phoxi_interface.setLowResolution();
-		pho::api::PFrame f = phoxi_interface.getPFrame(-1);
-		if ((GetResolution().Width == 1032) && (f->GetResolution().Height == 772)) {
-            std::cout << "resolution low : 1032x772" << std::endl;	
-        }		
-    }
+              phoxi_interface.setLowResolution();
+              pho::api::PFrame f = phoxi_interface.getPFrame(-1);
+              if ((GetResolution().Width == 1032) && (f->GetResolution().Height == 772)) {
+                   std::cout << "resolution low : 1032x772" << std::endl;	
+              }		
+        }
 
     // ----------------- control aquisition ----------------------------------------------
     // phoxi_interface.startAcquisition();
@@ -319,15 +319,15 @@ int main() {
         transformation.Rotation[2][1] = clamp(get_ini_float_component("pHoxI_trans_mat", "rot21"), ROT_LO_VAL_CLAMP, ROT_HI_VAL_CLAMP);	
         transformation.Rotation[2][2] = clamp(get_ini_float_component("pHoxI_trans_mat", "rot22"), ROT_LO_VAL_CLAMP, ROT_HI_VAL_CLAMP);
     }
-	switch(coord_space) {
+    switch(coord_space) {
 		case CameraTransCoordSpace_e::Custom:
 		{
 	        // CustomSpace
 	        phoxi_interface.setTransformation(transformation, pho::api::PhoXiCoordinateSpace::CustomSpace, true, false);
 	        // trigger image
-            int frameID = phoxi_interface.triggerImage(true);
-			pho::api::PFrame f = phoxi_interface.getPFrame(frameID);
-	    }
+                int frameID = phoxi_interface.triggerImage(true);
+		pho::api::PFrame f = phoxi_interface.getPFrame(frameID);
+	        }
 		break;
 		
 		case CameraTransCoordSpace_e::Robot:
@@ -335,9 +335,9 @@ int main() {
 	        // RobotSpace
 	        phoxi_interface.setTransformation(transformation, pho::api::PhoXiCoordinateSpace::RobotSpace, true, false);
 	        // trigger image
-            int frameID = phoxi_interface.triggerImage(true);
-			pho::api::PFrame f = phoxi_interface.getPFrame(frameID);
-	    }
+                int frameID = phoxi_interface.triggerImage(true);
+		pho::api::PFrame f = phoxi_interface.getPFrame(frameID);
+	        }
 		break;
 		
 		case CameraTransCoordSpace_e::Marker:
@@ -345,9 +345,9 @@ int main() {
 	        // MarkerSpace
 	        phoxi_interface.setTransformation(transformation, pho::api::PhoXiCoordinateSpace::MarkerSpace, true, false);
 	        // trigger image
-            int frameID = phoxi_interface.triggerImage(true);
-			pho::api::PFrame f = phoxi_interface.getPFrame(frameID);
-	    }
+                int frameID = phoxi_interface.triggerImage(true);
+		pho::api::PFrame f = phoxi_interface.getPFrame(frameID);
+	        }
 		break;
 		
 		case CameraTransCoordSpace_e::Camera:
@@ -355,9 +355,9 @@ int main() {
 	        // CameraSpace
 	        phoxi_interface.setTransformation(transformation, pho::api::PhoXiCoordinateSpace::Camera, true, false);
 	        // trigger image
-            int frameID = phoxi_interface.triggerImage(true);
-			pho::api::PFrame f = phoxi_interface.getPFrame(frameID);
-	    }
+                int frameID = phoxi_interface.triggerImage(true);
+		pho::api::PFrame f = phoxi_interface.getPFrame(frameID);
+	        }
 		break;
 		
 		case CameraTransCoordSpace_e::NoValue:
@@ -365,12 +365,12 @@ int main() {
 	        // CameraSpace
 	        phoxi_interface.setTransformation(transformation, pho::api::PhoXiCoordinateSpace::NoValue, true, false);
 	        // trigger image
-            int frameID = phoxi_interface.triggerImage(true);
-			pho::api::PFrame f = phoxi_interface.getPFrame(frameID);
-	    }
+                int frameID = phoxi_interface.triggerImage(true);
+		pho::api::PFrame f = phoxi_interface.getPFrame(frameID);
+	        }
 		break;
 		
-    }	
+        }	
 	// ----------------- set co-ordinate space of the camera --------------------------------- 
 	switch(coord_space) {
 		case CameraTransCoordSpace_e::Camera:
@@ -378,9 +378,9 @@ int main() {
 	        // Camera Space
 	        phoxi_interface.setCoordinateSpace(pho::api::PhoXiCoordinateSpace::CameraSpace);
 	        // trigger image
-            int frameID = phoxi_interface.triggerImage(true);
-			pho::api::PFrame f = phoxi_interface.getPFrame(frameID);
-	    }
+                int frameID = phoxi_interface.triggerImage(true);
+		pho::api::PFrame f = phoxi_interface.getPFrame(frameID);
+	        }
 		break;
 		
 		case CameraTransCoordSpace_e::Custom:
@@ -388,9 +388,9 @@ int main() {
 	        // Custom Space
 	        phoxi_interface.setCoordinateSpace(pho::api::PhoXiCoordinateSpace::CustomSpace);
 	        // trigger image
-            int frameID = phoxi_interface.triggerImage(true);
-			pho::api::PFrame f = phoxi_interface.getPFrame(frameID);
-	    }
+                int frameID = phoxi_interface.triggerImage(true);
+		pho::api::PFrame f = phoxi_interface.getPFrame(frameID);
+	        }
 		break;
 		
 		case CameraTransCoordSpace_e::Marker:
@@ -398,9 +398,9 @@ int main() {
 	        // MarkerSpace
 	        phoxi_interface.setCoordinateSpace(pho::api::PhoXiCoordinateSpace::MarkerSpace);
 	        // trigger image
-            int frameID = phoxi_interface.triggerImage(true);
-			pho::api::PFrame f = phoxi_interface.getPFrame(frameID);
-	    }
+                int frameID = phoxi_interface.triggerImage(true);
+		pho::api::PFrame f = phoxi_interface.getPFrame(frameID);
+	        }
 		break;
 		
 		case CameraTransCoordSpace_e::Robot:
@@ -408,9 +408,9 @@ int main() {
 	        // RobotSpace
 	        phoxi_interface.setCoordinateSpace(pho::api::PhoXiCoordinateSpace::RobotSpace);
 	        // trigger image
-            int frameID = phoxi_interface.triggerImage(true);
-			pho::api::PFrame f = phoxi_interface.getPFrame(frameID);
-	    }
+                int frameID = phoxi_interface.triggerImage(true);
+		pho::api::PFrame f = phoxi_interface.getPFrame(frameID);
+	        }
 		break;
 		
 		case CameraTransCoordSpace_e::NoValue:
@@ -418,21 +418,21 @@ int main() {
 	        // NoValueSpace
 	        phoxi_interface.setCoordinateSpace(pho::api::PhoXiCoordinateSpace::NoValue);
 	        // trigger image
-            int frameID = phoxi_interface.triggerImage(true);
-			pho::api::PFrame f = phoxi_interface.getPFrame(frameID);
-	    }
+                int frameID = phoxi_interface.triggerImage(true);
+		pho::api::PFrame f = phoxi_interface.getPFrame(frameID);
+	        }
 		break;
 		
-    }	
+        }	
 	
 	// get frame and point cloud for NUM_FRAMES
-    int organised = true;
+        int organised = true;
 	for (int y=0; y < NUM_FRAMES; y++) {
-        int frameID = phoxi_interface.triggerImage(true);
-        pho::api::PFrame f = phoxi_interface.getPFrame(frameID);
-        std::shared_ptr<pcl::PointCloud<pcl::PointNormal>>  pcl_ptr = phoxi_interface.getPointCloudFromFrame(f, organised);
-        usleep(sleepPhoXiFactory);
-    }
+            int frameID = phoxi_interface.triggerImage(true);
+            pho::api::PFrame f = phoxi_interface.getPFrame(frameID);
+            std::shared_ptr<pcl::PointCloud<pcl::PointNormal>>  pcl_ptr = phoxi_interface.getPointCloudFromFrame(f, organised);
+            usleep(sleepPhoXiFactory);
+        }
 	
 	// disconnect the camera
 	phoxi_interface.disconnectCamera();
