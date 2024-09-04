@@ -139,23 +139,23 @@ def control(msg, twist_pub, srv_connect, srv_dicsonnect, srv_connected, srv_star
     elif msg.buttons[6] == 1 and responce.connected == True:       # press L2 Co-ord space NoValue
         res = srv_setSpace(DD["NoValue"])
         if True == res.success :
-            print("set marker space to NoValue")
+            print("set coord space to NoValue")
     elif msg.buttons[7] == 1 and responce.connected == True:       # press R2 Co-ord space CameraSpace
         res = srv_setSpace(DD["CameraSpace"])
         if True == res.success :
-            print("set marker space to CameraSpace")
+            print("set coord space to CameraSpace")
     elif msg.buttons[10] == 1 and responce.connected == True:      # press L3 Co-ord space MarkerSpace
         res = srv_setSpace(DD["MarkerSpace"])
         if True == res.success :
-            print("set marker space to MarkerSpace")
+            print("set coord space to MarkerSpace")
     elif msg.buttons[11] == 1 and responce.connected == True:      # press R3 Co-ord space RobotSpace
         res = srv_setSpace(DD["RobotSpace"])
         if True == res.success :
-            print("set marker space to RobotSpace")
+            print("set coord space to RobotSpace")
     elif msg.buttons[12] == 1 and responce.connected == True:      # press PS button Co-ord space CustomSpace
         res = srv_setSpace(DD["CustomSpace"])
         if True == res.success :
-            print("set marker space to CustomSpace")
+            print("set coord space to CustomSpace")
             
 def main():
     global CAM_ID
