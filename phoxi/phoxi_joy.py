@@ -27,16 +27,12 @@
 # axes[7]: Accelerometer Front (the front direction of the controller is the positive direction)
 # axes[8]: Accelerometer Up (Controller up direction is positive)
 # axes[9]: Axis button(十字キー) LR（L=＋１, R=−１）
-# axes[10]:Axis button(十字キー) Up/Down（Up=＋１, Down=−１）
-# axes[11]: Jyrometer Roll (clockwise from the front: +, counterclockwise: ー)
-# axes[12]: Jyrometer Yaw (clockwise from top: ー, clockwise: +)
-# axes[13]: Jyrometer Pitch (Raise the light bar side: ー, lower: +)
+# axes[10]: Axis button(十字キー) Up/Down（Up=＋１, Down=−１）
+# axes[11]: Gyrometer Roll (clockwise from the front: +, counterclockwise: ー)
+# axes[12]: Gyrometer Yaw (clockwise from top: ー, clockwise: +)
+# axes[13]: Gyrometer Pitch (Raise the light bar side: ー, lower: +)
 #
 ######################################################################
-
-joy_to_twist.py
-#! /usr/bin/env python3
-
 import rospy
 from sensor_msgs.msg import Joy
 from geometry_msgs.msg import Twist
@@ -45,6 +41,7 @@ import std_srvs.srv
 import sensor_msgs.msg
 import phoxi_camera.srv as phoxi_camera_srv
 import os
+import time
 
 CAM_ID="the camera ID for your camera"
 # DD for co-ordinate space
@@ -124,7 +121,7 @@ def control(msg, twist_pub, srv_connect, srv_dicsonnect, srv_connected, srv_star
         res = srv_acquiring()  
         if res.value == True:
             print("pHoXi aquiring")
-    elif msg.buttons[3] == 1 and res.value == True:                 # press circle to stop acq to pHoXi
+    elif msg.buttons[3] == 1 and res.value == True:                 # press triangle to stop acq to pHoXi
         srv_stopAcq()   
         res = srv_acquiring()    
         if res.value == False:
@@ -139,23 +136,23 @@ def control(msg, twist_pub, srv_connect, srv_dicsonnect, srv_connected, srv_star
     elif msg.buttons[6] == 1 and responce.connected == True:       # press L2 Co-ord space NoValue
         res = srv_setSpace(DD["NoValue"])
         if True == res.success :
-            print("set coord space to NoValue")
+            print("set marker space to NoValue")
     elif msg.buttons[7] == 1 and responce.connected == True:       # press R2 Co-ord space CameraSpace
         res = srv_setSpace(DD["CameraSpace"])
         if True == res.success :
-            print("set coord space to CameraSpace")
+            print("set marker space to CameraSpace")
     elif msg.buttons[10] == 1 and responce.connected == True:      # press L3 Co-ord space MarkerSpace
         res = srv_setSpace(DD["MarkerSpace"])
         if True == res.success :
-            print("set coord space to MarkerSpace")
+            print("set marker space to MarkerSpace")
     elif msg.buttons[11] == 1 and responce.connected == True:      # press R3 Co-ord space RobotSpace
         res = srv_setSpace(DD["RobotSpace"])
         if True == res.success :
-            print("set coord space to RobotSpace")
+            print("set marker space to RobotSpace")
     elif msg.buttons[12] == 1 and responce.connected == True:      # press PS button Co-ord space CustomSpace
         res = srv_setSpace(DD["CustomSpace"])
         if True == res.success :
-            print("set coord space to CustomSpace")
+            print("set marker space to CustomSpace")
             
 def main():
     global CAM_ID
