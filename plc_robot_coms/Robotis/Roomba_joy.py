@@ -27,7 +27,7 @@ class SimpleController:
 
         # Subscriber for odometry
         odom_sub = rospy.Subscriber('/odom', Odometry, self.callback_odom)
-		# Subscriber for joystick
+        # Subscriber for joystick
         joy_sub = rospy.Subscriber('/joy', Joy, self.control)
 		
         self.x = None
