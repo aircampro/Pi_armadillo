@@ -27,7 +27,7 @@ def make_zipfile(files_list, file_out='amd_data.zip'):
 # uzip file which was zipped on the ftp server
 #
 def unload_zipfile(in_file='act_temp_data.zip'):
-    with zipfile.ZipFile(in_file,'r') as inputFile:
+    with ZipFile(in_file,'r') as inputFile:
         inputFile.extractall()
 
 # ftp client 
