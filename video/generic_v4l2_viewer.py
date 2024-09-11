@@ -10,6 +10,7 @@ import multiprocessing
 import multiprocessing.sharedctypes
 import time
 import numpy
+import sys
 
 # set frame size
 if sys.argc > 2:
