@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-# Use case: In the RCP5 scenario predicted by the MIROC5 model, to obtain a daily maximum temperature and DVI of 35°N and 135°E between 2020 and 2030. 
+# Use case: In the RCP5 scenario predicted by the MIROC5 model, to obtain a daily maximum temperature and DVI of 35°N and 135°E between 20 days before and 15 after this date
+# or with the parameters specified as 4 command line arguments °N, °E, days_before, days_after
 #
 # Global Climate Model	MRI-CGCM3、MIROC5、CSIRO-Mk3-6-0*、GFDL-CM3*、HadGEM2-ES*
 # Warming scenario	RCP 8.5, RCP 2.6
@@ -7,7 +8,6 @@
 # https://github.com/ky0on/simriw/blob/master/AMD_Tools3.py
 # https://github.com/ky0on/simriw/tree/master
 # queries data from here https://amd.rd.naro.go.jp/opendap/AMD/
-#
 #
 import AMD_Tools3 as AMD
 import DayLength as DL                         
@@ -24,6 +24,8 @@ def make_zipfile(files_list, file_out='amd_data.zip'):
         for f in files_list:
             zf.write(f)                                  
 
+# uzip file which was zipped on the ftp server
+#
 def unload_zipfile(in_file='act_temp_data.zip'):
     with zipfile.ZipFile(in_file,'r') as inputFile:
         inputFile.extractall()
@@ -34,6 +36,8 @@ from ftplib import FTP
 from datetime import datetime
 import shutil
 
+# connect to ftp server and perform the actions as spedified in the list
+#
 def ftp_client_actions(ftp_host = '10.0.1.5', ftp_user = 'root', ftp_pwd = 'passwdド', commands_list):
 
     with FTP(ftp_host, ftp_user, ftp_pwd) as ftp:
@@ -85,7 +89,7 @@ def create_json_zip(d = {'name': 'deep insider', 'addr': 'japan'}):
         zf.writestr('data.bin', content) 
         
 # Para=[ Gv0, Th , A , Lc , B ,DVI*]
-# Function name: ʼHorie et al. (1995)ʼ
+# Function name: 'Horie et al. (1995)'
 # Varid phase: emergence to heading
 # Description:
 # Gv0 [days]: the minimum number of days required for heading (GV)
@@ -111,7 +115,7 @@ def DVR01(DVI, Ta, Ld, Para=[51.3,17.8,0.365,16.0,0.566,0.23] ):
 
 def DVR12(Ta, Para=[0.0, 1000.0]):
 # Para=[ T0, EDDd ]
-# Function name: ʼNormalized Effective Degree Daysʼ
+# Function name: 'Normalized Effective Degree Days'
 # Varid phase: not specified
 # Description:
 # T0 [degC]: threshold temperature of development
@@ -127,7 +131,7 @@ def DVR12(Ta, Para=[0.0, 1000.0]):
 model_list = [MRI-CGCM3,、MIROC5,、CSIRO-Mk3-6-0,、GFDL-CM3,、HadGEM2-ES]
 # choose the model e.g. MICROC5
 model_chose = 1
-scenario_list = ['RCP 8.5', 'RCP 2.6']
+scenario_list = ['RCP8.5', 'RCP2.6'] 
 # choose the scenrio e.g. RCP 8.5
 scen_chose=0
 
@@ -171,10 +175,13 @@ Tmax, tim0, lat0, lon0 = AMD.GetData(met_ele_list[met_ele_sel], area, timedomain
 # select measured temperature e.g. TMP_mea to get DVI
 met_ele_sel = 0
 Tmea, tim, lat, lon = AMD.GetData(met_ele_list[met_ele_sel], area, timedomain, lalodomain, model, scenario)
+Tacc = AMD.accumulation_of_effective_temperature( Ta, To=5.0 )
+tacc_file = str(datetime.datetime.now()).split(' ')[0].replace('-','_')
+AMD.PutNC_3D( Tacc, tim, lat, lon, description='Effective Degree Day Temperature', symbol='DDT', unit='degC day', filename=f'{tacc_file}_DDT.nc')
 
 Tmea[Tmea.mask == True] = np.nan
 Ld = DL.daylength(tim, lat, lon)                                          # Calculate the day length of the entire target space-time with the module daylengthd.
-DATA_ON_USB = 0                                                           # data from usb-1 else server
+DATA_ON_USB = 0                                                           # data from usb=1 else server url='http://mesh.dc.affrc.go.jp/opendap to change set url variable
 if DATA_ON_USB == 1:
     Pref, lat, lon = AMD.GetGeoData(pref, area, lalodomain, url='./AMD')  # When using prefecture data stored on a USB stick
 else:．
@@ -230,9 +237,9 @@ linking_df = pd.DataFrame({'DVI':DVI, 'time':tim, 'lat':lat, 'lon':lon})
 excel_df = pd.concat([df, linking_df], axis=1)
 pd.io.formats.excel.ExcelFormatter.header_style = None
 name = str(datetime.datetime.now()).replace(' ','_').replace(":","_").replace(".","_").replace("-","_")
-excel_df.to_excel(f'{name}(DVI).xlsx', sheet_name='dvi')                  # write out the new file data with appended data to a new file named after datetime
+excel_df.to_excel(f'{name}_DVI.xlsx', sheet_name='dvi')                  # write out the new file data with appended data to a new file named after datetime
 shutil.copyfile("dvi.xlsx", "dvi_backup.xlsx")
-shutil.copyfile(f'{name}(DVI).xlsx', "dvi.xlsx")
+shutil.copyfile(f'{name}_DVI.xlsx', "dvi.xlsx")
 
 # plot the data and save those plots as png files for upload to the ftp server 
 import matplotlib.pyplot as plt
@@ -281,10 +288,8 @@ gjd = get_mlit_info()
 create_json_zip(gjd)
 
 # zip this data and upload it, then download the actual data from the frp server and unzip it
-zip_list = [ f'{name}(DVI).xlsx', 'temperature.xlsx', 'mlit_data.zip', 'Date_of_Heading.png', 'Date_of_Ripen.png', 'DVI.nc' ]
+zip_list = [ f'{name}_DVI.xlsx', 'temperature.xlsx', 'mlit_data.zip', 'Date_of_Heading.png', 'Date_of_Ripen.png', 'DVI.nc', f'{tacc_file}_DDT.nc' ]
 make_zipfile( zip_list )
 ftp_action_lst = [ "change_udir", "put_files", "change_ddir", "get_files" ]
 ftp_client_actions( ftp_action_lst )
-
-
 
