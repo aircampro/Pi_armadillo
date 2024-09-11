@@ -13,7 +13,7 @@ import numpy
 import sys
 
 # set frame size
-if sys.argc > 2:
+if sys.argc >= 2:
     WIDTH=int(sys.argv[1])
     HEIGHT=int(sys.argv[2])
 else:
