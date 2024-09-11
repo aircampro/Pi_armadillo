@@ -44,7 +44,7 @@ def ftp_client_actions(ftp_host = '10.0.1.5', ftp_user = 'root', ftp_pwd = 'pass
         for commnd in commands_list:
             if commnd == "change_udir":
 	            ftp.cwd('/upload/')
-            if commnd == "change_ddir":
+            elif commnd == "change_ddir":
 	            ftp.cwd('/download/')
             elif commnd == "get_files":
 	            file_list = []
