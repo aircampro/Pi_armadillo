@@ -66,6 +66,7 @@ def ftp_client_actions(ftp_host = '10.0.1.5', ftp_user = 'root', ftp_pwd = 'pass
 # Data is pulled from the Ministry of Land, Infrastructure, Transport and Tourism's administrative area information
 # Goal is to extract .geojson of the contents
 import urllib
+import urllib.request
 import json
 
 def get_mlit_info(url = 'https://nlftp.mlit.go.jp/ksj/gml/data/N03/N03-2019/N03-190101_47_GML.zip'):
