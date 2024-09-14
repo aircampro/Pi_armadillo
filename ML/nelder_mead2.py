@@ -147,10 +147,11 @@ def sum_power(x):
 def griewank(x):
     n = len(x)
     sum1 = 0
-    for num in range(1, len(x)):
+    sum2 = []
+    for num in range(0, len(x)):
         sum1 += x[num]**2
-        sum2 += np.coa(x[num]/np.sqrt(num))
-    return 1 + ((1.0/4000.0)*sum1) - sum2  
+        sum2.append(np.coa(x[num]/np.sqrt(num+1)))
+    return 1 + ((1.0/4000.0)*sum1) - np.prod(sum2)  
     
 '''
     Pure Python/Numpy implementation of the Nelder-Mead algorithm.
