@@ -74,7 +74,7 @@ elif ml_model == 12 :
     from sklearn.ensemble import RandomForestRegressor
     clf = RandomForestRegressor(n_estimators=100,criterion='mse',max_depth=None,min_samples_split=2,min_samples_leaf=1,min_weight_fraction_leaf=0.0,max_features='auto',max_leaf_nodes=None,min_impurity_decrease=0.0,bootstrap=True,oob_score=False,n_jobs=None,random_state=None,verbose=0,warm_start=False,ccp_alpha=0.0,max_samples=None)
 else:
-    print("number of models is 0-7")
+    print("number of models is 0-12")
     sys.exit(-1)
 	
 # for chosen model fit the training data
