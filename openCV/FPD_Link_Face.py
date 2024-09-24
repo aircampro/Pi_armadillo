@@ -299,11 +299,11 @@ if(ic.IC_IsDevValid(hGrabber)):
                 ic.IC_ReleaseGrabber(hGrabber)
                 sys.exit(-1)
         elif key == "k" and stream_started == True:
-                ic.IC_enableAVICapturePause(hGrabber, 0)  
-                ic.IC_MsgBox(tis.T("Stopped the stream"), tis.T("AVI Capture"))
-                ic.IC_StopLive(hGrabber)
-                stream_started = False
-                ic.IC_Codec_Release(codec)
+            ic.IC_enableAVICapturePause(hGrabber, 0)  
+            ic.IC_MsgBox(tis.T("Stopped the stream"), tis.T("AVI Capture"))
+            ic.IC_StopLive(hGrabber)
+            stream_started = False
+            ic.IC_Codec_Release(codec)
         elif key == "f":
             if ic.IC_SnapImage(hGrabber, 2000) == tis.IC_SUCCESS:
                 # define c function return types
