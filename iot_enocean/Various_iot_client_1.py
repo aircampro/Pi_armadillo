@@ -190,14 +190,6 @@ if MY_CURRENT_TELEM == "sms_gsm_modem":
     SMS_PIN = None                                                                       # SIM card PIN (if any)
     SMS_DATA_SEND_STATE = 0
     SMS_BODY_DATA = " $ : £, % : !"
-
-    def write_to_sms_message( desc1, temp1, desc2, temp2 ):
-        global SMS_DATA_SEND_STATE
-        while SMS_DATA_SEND_STATE == 2:
-            time.sleep(0.05)
-        SMS_DATA_SEND_STATE = 1
-        SMS_BODY_DATA.replace("£",str(desc1)).replace("!",str(temp1)).replace("$",str(desc2)).replace("%",str(temp2))
-        SMS_DATA_SEND_STATE = 0
     
     # handle sms incoming message and if over 20 chars long reply with the enOcean data else send a blank message back
     #
@@ -1934,6 +1926,14 @@ def Enocean2Telemetry(s_port, telem_opt):
             return	
 
         setAlarmInCumulocity(descrip_temp, temp_val)
+
+    def write_to_sms_message( desc1, temp1, desc2, temp2 ):
+        global SMS_DATA_SEND_STATE
+        while SMS_DATA_SEND_STATE == 2:
+            time.sleep(0.05)
+        SMS_DATA_SEND_STATE = 1
+        SMS_BODY_DATA.replace("£",str(desc1)).replace("!",str(temp1)).replace("$",str(desc2)).replace("%",str(temp2))
+        SMS_DATA_SEND_STATE = 0
         
     # Choose the iOt you want to use according to the define in top section        
     if telem_opt == "soracom":
