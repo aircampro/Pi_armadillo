@@ -20,7 +20,7 @@ import pytz
 MY_TZ='Europe/Moscow'
 
 # ------------ here list the choices and options for iOt or monitoring -----------------      
-TELEM_CHOICES=[ "soracom", "beebotte", "mosquito", "ubidots", "machinist", "aws", "azure", "yandex", "twillio", "smtp_email", "ssl_tls_server", "ssl_23_server", "cloud_mqtt", "gcs_blob", "splunk", "gcs_spread", "ambient", "influxdb", "redis", "mongo", "mysql", "sybase", "oracle", "sqllite", "pg", "fluvio", "scyllia", "rocks", "ali", "taiga", "msaccess", "riak", "elas", "neo4j", "cumulocity", "sftp", "coAp" ]
+TELEM_CHOICES=[ "soracom", "beebotte", "mosquito", "ubidots", "machinist", "aws", "azure", "yandex", "twillio", "smtp_email", "ssl_tls_server", "ssl_23_server", "cloud_mqtt", "gcs_blob", "splunk", "gcs_spread", "ambient", "influxdb", "redis", "mongo", "mysql", "sybase", "oracle", "sqllite", "pg", "fluvio", "scyllia", "rocks", "ali", "taiga", "msaccess", "riak", "elas", "neo4j", "cumulocity", "sftp", "coAp", "sms_gsm_modem" ]
 SORACOM=0
 BEEBOTTE=1
 MOSQUITO=2
@@ -58,6 +58,8 @@ NEO4J=33
 CUMOLOCITY=34
 SFTP=35
 COAP=36
+SMS_GSM_MODEM=37
+
 # ============= make your choice of cloud service here from list above ================== 
 MY_CURRENT_TELEM=TELEM_CHOICES[SORACOM]
 
@@ -177,6 +179,51 @@ if MY_CURRENT_TELEM == "ambient":
     channelID = 100
     writeKey = 'writeKey'
 
+# soracom
+if MY_CURRENT_TELEM == "sms_gsm_modem":
+    #
+    # library https://github.com/faucamp/python-gsmmodem/blob/master/examples/sms_handler_demo.py
+    #
+    from gsmmodem.modem import GsmModem
+    SMS_PORT = '/dev/ttyUSB2'
+    SMS_BAUDRATE = 115200
+    SMS_PIN = None                                                                       # SIM card PIN (if any)
+    SMS_DATA_SEND_STATE = 0
+    SMS_BODY_DATA = " $ : £, % : !"
+
+    def write_to_sms_message( desc1, temp1, desc2, temp2 ):
+        global SMS_DATA_SEND_STATE
+        while SMS_DATA_SEND_STATE == 2:
+            time.sleep(0.05)
+        SMS_DATA_SEND_STATE = 1
+        SMS_BODY_DATA.replace("£",str(desc1)).replace("!",str(temp1)).replace("$",str(desc2)).replace("%",str(temp2))
+        SMS_DATA_SEND_STATE = 0
+    
+    # handle sms incoming message and if over 20 chars long reply with the enOcean data else send a blank message back
+    #
+    def handleSms(sms):
+        print(u'== SMS message received ==\nFrom: {0}\nTime: {1}\nMessage:\n{2}\n'.format(sms.number, sms.time, sms.text))
+        print('Replying to SMS...')
+        while SMS_DATA_SEND_STATE == 1:
+            time.sleep(0.05)
+        SMS_DATA_SEND_STATE = 2
+        sms.reply(u'SMS received: "{0}{1}"'.format(SMS_BODY_DATA, '...' if len(sms.text) > 20 else ''))
+        SMS_DATA_SEND_STATE = 0
+        print('SMS sent.\n')
+
+    # starts sms handler as a thread and replies to incoming messages with the current data
+    #    
+    def start_sms_daemon():
+        print('Initializing modem...')
+        modem = GsmModem(SMS_PORT, SMS_BAUDRATE, smsReceivedCallbackFunc=handleSms)
+        modem.smsTextMode = False 
+        modem.connect(SMS_PIN)
+        print('Waiting for SMS message...')    
+        try:    
+            modem.rxThread.join(2**31)                                  # Specify a (huge) timeout so that it essentially blocks indefinitely, but still receives CTRL+C interrupt signal
+        finally:
+            modem.close()
+    
 # sftp
 #
 if MY_CURRENT_TELEM == "sftp":
@@ -271,7 +318,7 @@ if MY_CURRENT_TELEM == "mysql":
     MY_SQL_TAB="Enocean_Temperatures"
     MYSQLLIB = "MYSQLDB"
 
-# coAp
+# coAp - google colab secure UDP
 #
 if MY_CURRENT_TELEM == "coAp":
     from aiocoap import *
@@ -2030,7 +2077,10 @@ def Enocean2Telemetry(s_port, telem_opt):
         sendData=addData2Elastic       
     elif telem_opt == "neo4j":
         initNeo4j()
-        sendData=recordAdd2Neo4j           
+        sendData=recordAdd2Neo4j     
+    elif telem_opt == "sms_gsm_modem":
+        start_sms_daemon()
+        sendData=write_to_sms_message            
     else:                                                    # we asume its for mosquito broker internally running on host e.g. raspberry pi 4
         client = mqtt.Client()
         client.on_connect = on_connect
