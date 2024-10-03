@@ -10,7 +10,8 @@ import time
 import cv2                                        # OpenCV
 import numpy as np
 
-LOW_COLOR1 = np.array([0, 50, 50])                # color selection range hardcoded
+# color selection range hardcoded (use instead of trackbar color selection
+LOW_COLOR1 = np.array([0, 50, 50])                
 HIGH_COLOR1 = np.array([6, 255, 255])             
 LOW_COLOR2 = np.array([174, 50, 50])
 HIGH_COLOR2 = np.array([180, 255, 255])
@@ -18,9 +19,12 @@ HIGH_COLOR2 = np.array([180, 255, 255])
 W_S=480
 H_S=360
 
+if_save=True
+if_show=True
+
 # main program
 def main():
-    # Connect to the tello drone
+    # Connect to the tello drone using the communication class
     drone = tello.Tello('', 8889, command_timeout=.01)  
 
     current_time = time.time()  # get current time
@@ -90,7 +94,7 @@ def main():
             v2_max = cv2.getTrackbarPos("V2_max", "OpenCV Window")
 
             pb = cv2.getTrackbarPos("P_CONTROL", "OpenCV Window")
-            if pb == 0:
+            if pb == 0:                                                                            # not set then use unity
                 pb = 1.0
                 
             # Use the inRange function to specify the range for binarization
@@ -147,9 +151,11 @@ def main():
                     drone.send_command('rc %s %s %s %s'%(int(a), int(b), int(c), int(d)) )
             else:
                 print("Target not found!!")
-                
-            cv2.imwrite("out_img.jpg", out_img)             
-            cv2.imshow('OpenCV Window', out_img)  
+
+            if if_save == True:                
+                cv2.imwrite("out_img.jpg", out_img)             # save image to disk  
+            if if_show == True:                
+                cv2.imshow('OpenCV Window', out_img)            # show image
 
             # read keyboard
             key = cv2.waitKey(1)
@@ -158,7 +164,15 @@ def main():
             elif key == ord('t'):
                 drone.takeoff()            
             elif key == ord('l'):
-                drone.land()                
+                drone.land()  
+            elif key == ord('z'):
+                drone.flip('b')  
+            elif key == ord('c'):
+                drone.flip('f')
+            elif key == ord('v'):
+                drone.flip('r')
+            elif key == ord('x'):
+                drone.flip('l')                 
             elif key == ord('w'):
                 drone.move_forward(0.3)     
             elif key == ord('s'):
@@ -179,10 +193,38 @@ def main():
                 flag = 1                    # Tracking mode ON
             elif key == ord('2'):
                 flag = 0                    # Tracking mode OFF
-            elif key == ord('t'):
-                use_trackbar = 1           # use trackbar for color selction
-            elif key == ord('c'):
-                use_trackbar = 0           # use program defined hsv range of colors
+            elif key == ord('T'):
+                use_trackbar = 1            # use trackbar for color selection
+            elif key == ord('C'):
+                use_trackbar = 0            # use program defined hsv range of colors for selection
+            elif key == ord('#'):
+                drone.esd()                 # emergency land
+            elif key == ord('h'):
+                drone.hover()               # hover
+            elif key == ord('B'):
+                drone.get_battery()                  # battery                
+            elif key == ord('P'):
+                drone.get_barometer()                # pressure 
+            elif key == ord('H'):
+                drone.get_height()                   # ht                
+            elif key == ord('T'):
+                drone.get_temperature()              # temp 
+            elif key == ord('A'):
+                drone.get_attitude()                 # attitude 
+            elif key == ord('G'):
+                drone.get_acceleration()             # acceleration
+            elif key == ord('X'):
+                drone.get_tof()                      # tof 
+            elif key == ord('F'):
+                drone.get_flight_time()              # flight time
+            elif key == ord('D'):
+                if_save = True                       # save iamges to disk on
+            elif key == ord('N'):
+                if_save = False                      # do not save iamges to disk                 
+            elif key == ord('S'):
+                if_show = True
+            elif key == ord('W'):
+                if_show = False                
                 
             # (Z) Send 'command' every 5 seconds and check if alive
             current_time = time.time()         
