@@ -186,7 +186,13 @@ def main():
             elif key == ord('e'):
                 drone.rotate_cw(20)         
             elif key == ord('r'):
-                drone.move_up(0.3)          
+                drone.move_up(0.3)    
+            elif key == ord('u'):
+                gas += 0.3
+                drone.rc(0,0,gas,0)  
+            elif key == ord('i'):
+                gas -= 0.3
+                drone.rc(0,0,gas,0)   
             elif key == ord('f'):
                 drone.move_down(0.3)        
             elif key == ord('1'):
