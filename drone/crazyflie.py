@@ -41,6 +41,10 @@ h/k : increase/decrease yaw
 1-9 change LED Color
 
 space key, s : force stop
+t reset yaw only
+g reset pitch only
+b reset roll only
+y reset thrust only
 
 CTRL-C to quit
 """
