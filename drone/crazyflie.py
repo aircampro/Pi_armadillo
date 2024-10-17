@@ -156,6 +156,11 @@ if __name__=="__main__":
     cmdmess["ctrl"]["yaw"] = 0.0
     sender.send_json(cmdmess)
     time.sleep(0.01)
+
+    target_crazy_thrust = CRAZY_MIN_THRUST
+    target_crazy_roll = 0.0
+    target_crazy_pitch = 0.0
+    target_crazy_yaw = 0.0
                 
     # control the pitch roll yaw and thrust from the keyboard keys
     #
@@ -249,36 +254,36 @@ if __name__=="__main__":
                     sender.send_json(zmess)
                     time.sleep(0.1)
             elif key == ' ' or key == 's' :
-               target_crazy_thrust = 0.0 
-               target_crazy_pitch = 0.0 
-               target_crazy_roll = 0.0 
-               target_crazy_yaw = 0.0 
-               cmdmess["ctrl"]["yaw"] = target_crazy_yaw
-               cmdmess["ctrl"]["pitch"] = target_crazy_pitch  
-               cmdmess["ctrl"]["roll"] = target_crazy_roll
-               cmdmess["ctrl"]["thrust"] = target_crazy_thrust   
-               sender.send_json(cmdmess)
-               time.sleep(0.01)   
+                target_crazy_thrust = CRAZY_MIN_THRUST
+                target_crazy_pitch = 0.0
+                target_crazy_roll = 0.0 
+                target_crazy_yaw = 0.0 
+                cmdmess["ctrl"]["yaw"] = target_crazy_yaw
+                cmdmess["ctrl"]["pitch"] = target_crazy_pitch  
+                cmdmess["ctrl"]["roll"] = target_crazy_roll
+                cmdmess["ctrl"]["thrust"] = target_crazy_thrust   
+                sender.send_json(cmdmess)
+                time.sleep(0.01)   
             elif key == 't' :
-               target_crazy_yaw = 0.0 
-               cmdmess["ctrl"]["yaw"] = target_crazy_yaw   
-               sender.send_json(cmdmess)
-               time.sleep(0.01)  
+                target_crazy_yaw = 0.0 
+                cmdmess["ctrl"]["yaw"] = target_crazy_yaw   
+                sender.send_json(cmdmess)
+                time.sleep(0.01)  
             elif key == 'g' :
-               target_crazy_pitch = 0.0 
-               cmdmess["ctrl"]["pitch"] = target_crazy_pitch    
-               sender.send_json(cmdmess)
-               time.sleep(0.01) 
+                target_crazy_pitch = 0.0 
+                cmdmess["ctrl"]["pitch"] = target_crazy_pitch    
+                sender.send_json(cmdmess)
+                time.sleep(0.01) 
             elif key == 'b' :
-               target_crazy_roll = 0.0             
-               cmdmess["ctrl"]["roll"] = target_crazy_roll  
-               sender.send_json(cmdmess)
-               time.sleep(0.01) 
+                target_crazy_roll = 0.0             
+                cmdmess["ctrl"]["roll"] = target_crazy_roll  
+                sender.send_json(cmdmess)
+                time.sleep(0.01) 
             elif key == 'y':
-               target_crazy_thrust = 0.0 
-               cmdmess["ctrl"]["thrust"] = target_crazy_thrust    
-               sender.send_json(cmdmess)
-               time.sleep(0.01)                
+                target_crazy_thrust = CRAZY_MIN_THRUST 
+                cmdmess["ctrl"]["thrust"] = target_crazy_thrust    
+                sender.send_json(cmdmess)
+                time.sleep(0.01)                
             else:
                 if (key == '\x03'):
                     break
