@@ -191,7 +191,7 @@ class _CtrlThread(Thread):
                 self._socket.send_json(self._cmd)
                 time.sleep(0.01)
             elif key == 'y':
-                self._thrusr = 0.0  
+                self._thrust = 0.0  
                 self._cmd["thrust"] = self._thrust   
                 self._socket.send_json(self._cmd)
                 time.sleep(0.01)      
