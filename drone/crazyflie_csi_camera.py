@@ -194,7 +194,9 @@ class _CtrlThread(Thread):
                 self._thrusr = 0.0  
                 self._cmd["thrust"] = self._thrust   
                 self._socket.send_json(self._cmd)
-                time.sleep(0.01)             
+                time.sleep(0.01)      
+            elif key == 27:
+                break
 
 # camera class gsml CSI camera            
 class CSI_Camera:
