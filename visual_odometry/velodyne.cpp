@@ -238,31 +238,31 @@ int main(int argc, char *argv[])
     //}
 
     int exit_grabber = 0;
-	bool apply_coloring = true;                                  // Apply color mapping to point cloud (configurable)
-	while (exit_grabber == 0) {
+    bool apply_coloring = true;                                  // Apply color mapping to point cloud (configurable)
+    while (exit_grabber == 0) {
         boost::mutex::scoped_try_lock lock(mutex);
         if (lock.owns_lock() && cloud)
         {
-            // Initialize viewer with predefined configuration parameters
-            PointCloudViewer viewer(Config::WINDOW_WIDTH, Config::WINDOW_HEIGHT, Config::WINDOW_TITLE);
+             // Initialize viewer with predefined configuration parameters
+             PointCloudViewer viewer(Config::WINDOW_WIDTH, Config::WINDOW_HEIGHT, Config::WINDOW_TITLE);
 
-            // Launch async thread to load and stream PCD data to the viewer
-            std::thread loader_thread(loadPCDAsyncToViewer, g_filename, std::ref(viewer), apply_coloring);
+             // Launch async thread to load and stream PCD data to the viewer
+             std::thread loader_thread(loadPCDAsyncToViewer, g_filename, std::ref(viewer), apply_coloring);
 
-            // Execute the main viewer loop (blocks until viewer window is closed)
-            viewer.run();
+             // Execute the main viewer loop (blocks until viewer window is closed)
+             viewer.run();
 
-            // Ensure the loader thread is properly joined before exiting
-            if (loader_thread.joinable()) {
+             // Ensure the loader thread is properly joined before exiting
+             if (loader_thread.joinable()) {
                 loader_thread.join();
 		std::cout << "enter 0 to continue or 1 to exit") << std::endl;
 		std::cin >> exit_grabber;
 		// do it once ! exit_grabber = 1;
-            }
-	    if (exit_grabber != 0) {
+             }
+	     if (exit_grabber != 0) {
                 std::cerr << "Viewer has been closed. Exiting application! " << std::endl;
-            }
-        }			
+             }
+          }			
     }
 	
     // Stop Grabber
