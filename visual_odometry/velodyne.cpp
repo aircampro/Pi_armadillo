@@ -180,10 +180,10 @@ int main(int argc, char *argv[])
 
             cloud = ptr;
             std::cerr << "Got new frame with " << cloud->points.size() << " points" << std::endl;
-	        for (int i = 0; i < cloud->points.size(); i++) {
-		        unsigned int col = RGB(cloud->points[i].z * 5, 128 + 3*cloud->points[i].x, 128 + 3 * cloud->points[i].y);
-		        std::cerr << "    " << cloud->points[i].x << " " << cloud->points[i].y << " " << cloud->points[i].z << " color: " << col << std::endl;
-	        }            
+            for (int i = 0; i < cloud->points.size(); i++) {
+                unsigned int col = RGB(cloud->points[i].z * 5, 128 + 3*cloud->points[i].x, 128 + 3 * cloud->points[i].y);
+		std::cerr << "    " << cloud->points[i].x << " " << cloud->points[i].y << " " << cloud->points[i].z << " color: " << col << std::endl;
+            }            
             // Save each frame to .pcd file
             if (g_saveframes)
             {
@@ -191,9 +191,8 @@ int main(int argc, char *argv[])
                 if (frame_counter > FRAME_CNT_START)
                 {
                     //pcl::io::savePCDFileBinary(g_filename, *cloud);
-					pcl::io::savePCDFile(g_filename, *cloud);
-                }
-                
+                    pcl::io::savePCDFile(g_filename, *cloud);
+                }                
                 g_frame_counter++;
                 std::cerr << "Saved " << cloud->points.size () << " data points to " << g_filename << std::endl;
             }
@@ -256,13 +255,13 @@ int main(int argc, char *argv[])
             // Ensure the loader thread is properly joined before exiting
             if (loader_thread.joinable()) {
                 loader_thread.join();
-				std::cout << "enter 0 to continue or 1 to exit") << std::endl;
-				std::cin >> exit_grabber;
-				// do it once ! exit_grabber = 1;
+		std::cout << "enter 0 to continue or 1 to exit") << std::endl;
+		std::cin >> exit_grabber;
+		// do it once ! exit_grabber = 1;
             }
-			if (exit_grabber != 0) {
+	    if (exit_grabber != 0) {
                 std::cerr << "Viewer has been closed. Exiting application! " << std::endl;
-			}
+            }
         }			
     }
 	
