@@ -89,11 +89,11 @@ inline void make_pcd() {
 	// make vector of the point types
 	std::vector<pt_t> pts;
 
-    // initialise variable for the data generation
+        // initialise variable for the data generation
 	pt_t pt(7,23,35);
 	float s = 10, b = 1.8, r = 20, dt = 0.0001;
 
-    // generate the data
+       // generate the data
 	for (int i = 0; i < 500000; i++) {
 		pt = pt_t(
 			pt.x - dt * s*(pt.x - pt.y),
@@ -118,7 +118,7 @@ inline void make_pcd() {
 		fwrite(&col, sizeof(unsigned int), 1, fp);
 	}
 	fclose(fp);
-    std::cout << "Saved " << pts.size() << " data points to example_point_cloud.pcd" << std::endl;
+        std::cout << "Saved " << pts.size() << " data points to example_point_cloud.pcd" << std::endl;
 	for (int i = 0; i < pts.size(); i++) {
 		unsigned int col = RGB(pts[i].z * 5, 128 + 3*pts[i].x, 128 + 3 * pts[i].y);
 		std::cout << "    " << pts[i].x << " " << pts[i].y << " " << pts[i].z << " color:" << col << std::endl;
