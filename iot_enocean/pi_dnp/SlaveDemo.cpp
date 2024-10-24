@@ -120,7 +120,7 @@ CommandStatus SlaveDemoApp::HandleControl(Setpoint& aControl, size_t aIndex)
     printf("input(PU_IN): %d\n", val); 
     int val1 = gpio_read(MY_PD_IN);            
     printf("input(PD_IN): %d\n", val1); 
-	float val2 = static_cast<float>(val) + (static_cast<float>(val1)*2.0f)
+	float val2 = (static_cast<float>(val) + (static_cast<float>(val1)*2.0f);
 	Analog a(val2, AQ_ONLINE);
 	a.SetToNow();
 
@@ -151,11 +151,33 @@ CommandStatus SlaveDemoApp::HandleControl(BinaryOutput& aControl, size_t aIndex)
 	LOG_BLOCK(LEV_INFO, "Received " << aControl.ToString() << " on index: " << aIndex);
 
 	// set the binary to ON if the command  code was LATCH_ON, otherwise set it off (LATCH_OFF)
-    if (aControl.GetCode() == CC_LATCH_ON) {
-        gpio_set(MY_OUT);                   //  1 を出力（3.3V）
-    } else {
-		gpio_clear(MY_OUT);                 //  0 を出力（0V）
+	// PULSE_OUT mode do a one shot rising edge pulse for period of PLS_DURATION (s)
+#if defined(PULSE_OUT)
+    if ((aControl.GetCode() == CC_LATCH_ON) && (m_timer_act == false)) {
+        gpio_set(MY_OUT);                       //  1 =（3.3V）
+        m_t.restart();
+		m_timer_act = true;
+    } 
+    while (m_t.elapsed() <= PLS_DURATION) {
+        usleep(50);  
+        if (aControl.GetCode() != CC_LATCH_ON) {
+            break;
+        }			
     }
+    if (m_t.elapsed() >= PLS_DURATION) {
+	    gpio_clear(MY_OUT);     		         //  0 =（0V） pulse duration is expired	
+    }
+    if (aControl.GetCode() != CC_LATCH_ON) {
+        gpio_clear(MY_OUT);     		         //  0 =（0V） command from other side to reset			
+        m_timer_act = false;
+    } 		
+#else
+    if (aControl.GetCode() == CC_LATCH_ON) {
+        gpio_set(MY_OUT);                       //  1 =（3.3V）
+    } else {
+		gpio_clear(MY_OUT);                     //  0 =（0V）
+    }
+#endif
     int val = gpio_read(MY_OUT_FB); 
 	apl::Binary b((val & 0x1), BQ_ONLINE);
 	b.SetToNow();

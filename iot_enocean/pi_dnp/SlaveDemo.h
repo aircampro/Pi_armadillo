@@ -34,6 +34,14 @@
 #include <opendnp3/DNP3/SlaveStackConfig.h>
 #include <opendnp3/DNP3/AsyncStackManager.h>
 
+// uncomment to activate pulse output 
+// #define PULSE_OUT
+// #define PLS_DURATION 5.0f
+
+#if defined(PULSE_OUT)
+#include <boost/timer.hpp>
+#endif
+
 namespace apl
 {
 namespace dnp
@@ -57,7 +65,7 @@ public:
 	void Shutdown();
 	
 	// initialize the gpio
-	void SlaveDemoBase::RaspiGpioInit();
+	void RaspiGpioInit();
 
 private:
 
@@ -74,6 +82,7 @@ private:
 	TimerSourceASIO mTimerSource;		// boost timer source, interface into the io service system
 	ITimer* mpInfiniteTimer;			// timer used to keep the boost io service alive
 	ICommandSource* mpCommandSource;	// The source for getting and executing commands.
+
 };
 
 
@@ -102,10 +111,14 @@ public:
 	CommandStatus HandleControl(BinaryOutput& aControl, size_t aIndex);
 
 private:
-	int mCountSetPoints;    // count how many setpoints we recieve to demonstrate counters
-	int mCountBinaryOutput; // count how many binary controls we recieve to demonstrate counters
-
+	int mCountSetPoints;        // count how many setpoints we recieve to demonstrate counters
+	int mCountBinaryOutput;     // count how many binary controls we recieve to demonstrate counters
 	IDataObserver* mpObserver;  // The data sink for updating the slave database.
+#if defined(PULSE_OUT)
+    bool m_timer_act = false;   // global to record whether internal timer is running for pulse outputs
+    boost::timer m_t;           // boost timer for pulse output
+#endif
+
 };
 
 }
