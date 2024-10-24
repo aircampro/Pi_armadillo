@@ -104,11 +104,11 @@ CommandStatus SlaveDemoApp::HandleControl(Setpoint& aControl, size_t aIndex)
 	std:: cerr << " master sent analog value @ " << aControl.GetValue() << std::endl;
 #if defined(LCD_ATTACHED)
     display.init();
-	char line[LINE_LEN + 1];
+    char line[LINE_LEN + 1];
     for (int i = 0; i < LINE_LEN; i++)
         line[i] = ' ';
     display.locate(2, 0);
-	int result = snprintf(&line,  sizeof(line), "%.2f", aControl.GetValue());
+    int result = snprintf(&line,  sizeof(line), "%.2f", aControl.GetValue());
     if (result >= sizeof(buffer)) {
         std::cerr << "Warning: Truncated output!" << std::endl;
     }
