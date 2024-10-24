@@ -97,11 +97,11 @@ void SlaveDemoApp::SetDataObserver(IDataObserver* apObserver)
 
 CommandStatus SlaveDemoApp::HandleControl(Setpoint& aControl, size_t aIndex)
 {
-	LOG_BLOCK(LEV_INFO, "Received " << aControl.ToString() << " on index: " << aIndex);
+    LOG_BLOCK(LEV_INFO, "Received " << aControl.ToString() << " on index: " << aIndex);
 
-	// Update a  feedback point that has the same value as the setpoint we were
-	// given from the master. Configure it with the current time and good quality
-	std:: cerr << " master sent analog value @ " << aControl.GetValue() << std::endl;
+    // Update a  feedback point that has the same value as the setpoint we were
+    // given from the master. Configure it with the current time and good quality
+    std:: cerr << " master sent analog value @ " << aControl.GetValue() << std::endl;
 #if defined(LCD_ATTACHED)
     display.init();
     char line[LINE_LEN + 1];
