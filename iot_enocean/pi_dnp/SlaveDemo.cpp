@@ -148,10 +148,10 @@ CommandStatus SlaveDemoApp::HandleControl(Setpoint& aControl, size_t aIndex)
 // read the pi input and send it back as the binary
 CommandStatus SlaveDemoApp::HandleControl(BinaryOutput& aControl, size_t aIndex)
 {
-	LOG_BLOCK(LEV_INFO, "Received " << aControl.ToString() << " on index: " << aIndex);
+    LOG_BLOCK(LEV_INFO, "Received " << aControl.ToString() << " on index: " << aIndex);
 
-	// set the binary to ON if the command  code was LATCH_ON, otherwise set it off (LATCH_OFF)
-	// PULSE_OUT mode do a one shot rising edge pulse for period of PLS_DURATION (s)
+    // set the binary to ON if the command  code was LATCH_ON, otherwise set it off (LATCH_OFF)
+    // PULSE_OUT mode do a one shot rising edge pulse for period of PLS_DURATION (s)
 #if defined(PULSE_OUT)
     if ((aControl.GetCode() == CC_LATCH_ON) && (m_timer_act == false)) {
        gpio_set(MY_OUT);                       //  1 =（3.3V）
