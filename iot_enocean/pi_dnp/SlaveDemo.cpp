@@ -120,27 +120,27 @@ CommandStatus SlaveDemoApp::HandleControl(Setpoint& aControl, size_t aIndex)
     printf("input(PU_IN): %d\n", val); 
     int val1 = gpio_read(MY_PD_IN);            
     printf("input(PD_IN): %d\n", val1); 
-	float val2 = (static_cast<float>(val) + (static_cast<float>(val1)*2.0f);
-	Analog a(val2, AQ_ONLINE);
-	a.SetToNow();
+    float val2 = (static_cast<float>(val) + (static_cast<float>(val1)*2.0f);
+    Analog a(val2, AQ_ONLINE);
+    a.SetToNow();
 
-	// Create an additional counter to let the master know how many setpoints
-	// we've receieved
-	Counter c(++mCountSetPoints, CQ_ONLINE);
-	c.SetToNow();
+    // Create an additional counter to let the master know how many setpoints
+    // we've receieved
+    Counter c(++mCountSetPoints, CQ_ONLINE);
+    c.SetToNow();
 
-	// We would like all updates to be sent at one time.When the Transaction object
-	// goes out of scope, all updates will be sent in one block to do the slave database.
-	Transaction t(mpObserver);
+    // We would like all updates to be sent at one time.When the Transaction object
+    // goes out of scope, all updates will be sent in one block to do the slave database.
+    Transaction t(mpObserver);
 
-	// Push the prepared datapoints to the database of this slave. The slave
-	// can now transmit the changes to the master (polling or unsol)
-	mpObserver->Update(a, aIndex);
-	mpObserver->Update(c, 0);
+    // Push the prepared datapoints to the database of this slave. The slave
+    // can now transmit the changes to the master (polling or unsol)
+    mpObserver->Update(a, aIndex);
+    mpObserver->Update(c, 0);
 
-	// This is the control code returned to the slave stack, and forwared
-	// on to the master. These are DNP3 control codes.
-	return CS_SUCCESS;
+    // This is the control code returned to the slave stack, and forwared
+    // on to the master. These are DNP3 control codes.
+    return CS_SUCCESS;
 }
 
 // same as for the setpoint
@@ -154,9 +154,9 @@ CommandStatus SlaveDemoApp::HandleControl(BinaryOutput& aControl, size_t aIndex)
 	// PULSE_OUT mode do a one shot rising edge pulse for period of PLS_DURATION (s)
 #if defined(PULSE_OUT)
     if ((aControl.GetCode() == CC_LATCH_ON) && (m_timer_act == false)) {
-        gpio_set(MY_OUT);                       //  1 =（3.3V）
-        m_t.restart();
-		m_timer_act = true;
+       gpio_set(MY_OUT);                       //  1 =（3.3V）
+       m_t.restart();
+       m_timer_act = true;
     } 
     while (m_t.elapsed() <= PLS_DURATION) {
         usleep(50);  
@@ -165,7 +165,7 @@ CommandStatus SlaveDemoApp::HandleControl(BinaryOutput& aControl, size_t aIndex)
         }			
     }
     if (m_t.elapsed() >= PLS_DURATION) {
-	    gpio_clear(MY_OUT);     		         //  0 =（0V） pulse duration is expired	
+	gpio_clear(MY_OUT);     		         //  0 =（0V） pulse duration is expired	
     }
     if (aControl.GetCode() != CC_LATCH_ON) {
         gpio_clear(MY_OUT);     		         //  0 =（0V） command from other side to reset			
@@ -175,22 +175,22 @@ CommandStatus SlaveDemoApp::HandleControl(BinaryOutput& aControl, size_t aIndex)
     if (aControl.GetCode() == CC_LATCH_ON) {
         gpio_set(MY_OUT);                       //  1 =（3.3V）
     } else {
-		gpio_clear(MY_OUT);                     //  0 =（0V）
+	gpio_clear(MY_OUT);                     //  0 =（0V）
     }
 #endif
     int val = gpio_read(MY_OUT_FB); 
-	apl::Binary b((val & 0x1), BQ_ONLINE);
-	b.SetToNow();
+    apl::Binary b((val & 0x1), BQ_ONLINE);
+    b.SetToNow();
 
-	// count how many BinaryOutput commands we recieve
-	apl::Counter c(++mCountBinaryOutput, CQ_ONLINE);
-	c.SetToNow();
+    // count how many BinaryOutput commands we recieve
+    apl::Counter c(++mCountBinaryOutput, CQ_ONLINE);
+    c.SetToNow();
 
-	Transaction t(mpObserver);
-	mpObserver->Update(b, aIndex);
-	mpObserver->Update(c, 1);
+    Transaction t(mpObserver);
+    mpObserver->Update(b, aIndex);
+    mpObserver->Update(c, 1);
 
-	return CS_SUCCESS;
+    return CS_SUCCESS;
 }
 
 }
