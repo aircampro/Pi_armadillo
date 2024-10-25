@@ -74,7 +74,7 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 
-    int num_args = argc;
+        int num_args = argc;
 	switch (num_args) {
 	case 5:
 		{
