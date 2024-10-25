@@ -38,10 +38,6 @@
 // #define PULSE_OUT
 // #define PLS_DURATION 5.0f
 
-#if defined(PULSE_OUT)
-#include <boost/timer.hpp>
-#endif
-
 #include "raspGPIO.h"
 
 #if defined(LCD_ATTACHED)
@@ -56,6 +52,17 @@
     #include <cstdio>
     #define OLED_SPI "/dev/spidev0.0"
 #endif
+
+#if defined(PULSE_OUT)
+#include <boost/timer.hpp>
+#endif
+
+// PID loop
+#include "PID.h"
+#include <math.h>
+#include <vector>
+#include "raspADC.h"
+#define ADC_SPI "/dev/spidev0.1"
 
 namespace apl
 {
@@ -81,6 +88,14 @@ public:
 	
 	// initialize the gpio
 	void RaspiGpioInit();
+
+    // for the PID	
+    void PidLoopInit(double p, double i, double d);
+    void ReadAllMeasInput();
+    void ReadMeasInput( int chan_no );
+    double ScaleInput(int inp, double range);
+    int ScaleOutput(double inp, double range);
+    void RunPidLoop();
 
 private:
 
@@ -129,6 +144,17 @@ private:
 	int mCountSetPoints;        // count how many setpoints we recieve to demonstrate counters
 	int mCountBinaryOutput;     // count how many binary controls we recieve to demonstrate counters
 	IDataObserver* mpObserver;  // The data sink for updating the slave database.
+	double mPidSpt;             // PID Loop setpoint
+    PID mPid;                   // PID object
+    double mPidIn;              // measured input
+    double mPidOut;             // PID output
+    ADC mAdc;                   // analog to digital conv object
+    int mAdcRaw[8];             // 8 channel raw analog read over SPI bus
+    int mRawPidOut;             // PID output representeed as RAW counts 0-4095
+#if defined(PULSE_OUT)
+    bool m_timer_act = false;   // global to record whether internal timer is running for pulse outputs
+    boost::timer m_t;           // boost timer for pulse output
+#endif
 
 };
 

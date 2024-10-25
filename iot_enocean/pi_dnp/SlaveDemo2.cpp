@@ -18,14 +18,6 @@
 // under the License.
 //
 #include "SlaveDemo.h"
-#include "raspGPIO.h"
-
-#if defined(LCD_ATTACHED)
-    // LCD Display attached 
-    CLCD display;
-#elif defined(OLED_ATTACHED)
-    OLED display;
-#endif
 
 // define your raspi i/o
 #define MY_OUT 24                                // drive the output
@@ -33,6 +25,24 @@
 #define MY_PU_IN 25                              // pull-up DIN feedback
 #define MY_PD_IN 18                              // pull-dwn DIN feedback
 
+#define MY_ANI_UR 100.0                          // analog inputs upper range
+
+#if defined(LCD_ATTACHED)
+    // LCD Display attached 
+    CLCD display;
+#elif defined(OLED_ATTACHED)
+    // OLED Display attached 
+    OLED display;
+#endif
+
+// PID loop
+double mPidSpt;             // PID Loop setpoint
+PID mPid;                   // PID object
+double mPidIn;              // measured input
+double mPidOut;             // PID output
+ADC mAdc;                   // analog to digital conv object
+int mAdcRaw[8];             // 8 channel raw analog read over SPI bus
+int mRawPidOut;             // PID output representeed as RAW counts 0-4095
 #if defined(PULSE_OUT)
     bool m_timer_act = false;   // global to record whether internal timer is running for pulse outputs
     boost::timer m_t;           // boost timer for pulse output
@@ -78,13 +88,57 @@ void SlaveDemoBase::RaspiGpioInit()
     gpio_configure_pull(MY_OUT_FB, GPIO_PULLUP);   
 #if defined(LCD_ATTACHED)
     display.init();
+#elif defined(OLED_ATTACHED)
+    OLED display;
+    display.init(OLED_SPI);
 #endif
 }
 
+void SlaveDemoBase::PidLoopInit(double p, double i, double d)
+{
+    mPid.Init(p,i,d);
+    mAdc.init(ADC_SPI, ADC_3208);       // SPI_DEVICE with ADC attached
+    for (int i = 0; i < 8; i++)
+        mAdcRaw[i] = 0.0;	
+}
+
+void SlaveDemoBase::ReadAllMeasInput()
+{
+    for (int i = 0; i < 8; i++)
+        mAdcRaw[i] = mAdc.get(i);
+}
+
+void SlaveDemoBase::ReadMeasInput( int chan_no )
+{
+    mAdcRaw[chan_no] = mAdc.get(chan_no);
+}
+
+double SlaveDemoBase::ScaleInput(int inp, double range)
+{
+    return (range * (static_cast<double>(inp) / 4095.0));
+}
+
+int SlaveDemoBase::ScaleOutput(double inp, double range)
+{
+    return static_cast<int>(4095.0 * (static_cast<double>(inp) / range));
+}
+	
+void SlaveDemoBase::RunPidLoop()
+{
+    ReadMeasInput(0);
+    mPidIn = ScaleInput(mAdcRaw[0], MY_ANI_UR);
+    mPid.UpdateSpeedError(mPidIn, mPidSpt);
+    mPidOut = mPid.TotalError();
+	mRawPidOut = ScaleOutput(mPidOut, MY_ANI_UR);
+}
+		  
 void SlaveDemoBase::OnCommandNotify()
 {
 	// execute a single command
 	mCommandQueue.ExecuteCommand(this);
+	
+	// run the pid loop
+    RunPidLoop();
 }
 
 SlaveDemoApp::SlaveDemoApp(Logger* apLogger) :
@@ -103,9 +157,10 @@ CommandStatus SlaveDemoApp::HandleControl(Setpoint& aControl, size_t aIndex)
 {
 	LOG_BLOCK(LEV_INFO, "Received " << aControl.ToString() << " on index: " << aIndex);
 
-	// Update a  feedback point that has the same value as the setpoint we were
-	// given from the master. Configure it with the current time and good quality
+	// set the PID setpoint to the same value as the setpoint we were
+	// given from the master. reply with DIN and Configure it with the current time and good quality
 	std:: cerr << " master sent analog value @ " << aControl.GetValue() << std::endl;
+	mPidSpt = aControl.GetValue();
 #if defined(LCD_ATTACHED)
     display.init();
 	char line[LINE_LEN + 1];
@@ -113,18 +168,29 @@ CommandStatus SlaveDemoApp::HandleControl(Setpoint& aControl, size_t aIndex)
         line[i] = ' ';
     display.locate(2, 0);
 	int result = snprintf(&line,  sizeof(line), "%.2f", aControl.GetValue());
-    if (result >= sizeof(buffer)) {
+    if (result >= sizeof(line)) {
         std::cerr << "Warning: Truncated output!" << std::endl;
     }
     display.print(line);
     display.locate(0, 1);
     display.print("= Raspberry Pi =");
+#elif defined(OLED_ATTACHED)
+    display.clear(display.color(255, 255, 255));
+    display.text( 0, 12, (char *) "Setpoint from DNP", display.color(128, 255, 128) );
+	char line[LINE_LEN + 1];
+    for (int i = 0; i < LINE_LEN; i++)
+        line[i] = ' ';
+	int result = snprintf(&line,  sizeof(line), "%.2f", aControl.GetValue());
+    if (result >= sizeof(line)) {
+        std::cerr << "Warning: Truncated output!" << std::endl;
+    }
+    display.text( 9, 40, &line, display.color(128, 255, 128));	
 #endif	
     int val = gpio_read(MY_PU_IN);            
     printf("input(PU_IN): %d\n", val); 
     int val1 = gpio_read(MY_PD_IN);            
     printf("input(PD_IN): %d\n", val1); 
-	float val2 = (static_cast<float>(val) + (static_cast<float>(val1)*2.0f);
+	double val2 = (static_cast<double>(val) + (static_cast<double>(val1)*2.0f);
 	Analog a(val2, AQ_ONLINE);
 	a.SetToNow();
 
@@ -182,6 +248,7 @@ CommandStatus SlaveDemoApp::HandleControl(BinaryOutput& aControl, size_t aIndex)
 		gpio_clear(MY_OUT);                     //  0 =（0V）
     }
 #endif
+    usleep(10000);
     int val = gpio_read(MY_OUT_FB); 
 	apl::Binary b((val & 0x1), BQ_ONLINE);
 	b.SetToNow();
