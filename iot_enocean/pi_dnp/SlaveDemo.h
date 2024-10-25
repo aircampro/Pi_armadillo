@@ -44,6 +44,9 @@
 
 #include "raspGPIO.h"
 
+// uncomment to use display 
+// #define LCD_ATTACHED
+// #define OLED_ATTACHED
 #if defined(LCD_ATTACHED)
     // LCD Display attached 
     #include "raspCLCD.h"
