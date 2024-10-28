@@ -156,7 +156,7 @@ int main(int argc, char* argv[])
 
 	// Configure signal handlers so we can exit gracefully
 	SetDemo(&app);
-    std::thread pid1([&]{app.RunPidLoop();});
+        std::thread pid1([&]{app.RunPidLoop();});
 	signal(SIGTERM, &Terminate);
 	signal(SIGABRT, &Terminate);
 	signal(SIGINT,  &Terminate);
