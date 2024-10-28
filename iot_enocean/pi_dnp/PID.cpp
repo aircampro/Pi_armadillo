@@ -43,8 +43,12 @@ void PID::UpdateSpeedError(double set_s, double desired) {
   i_error +=p_error;
 }
 
-double PID::TotalError() {
-  return -Kp*p_error - Ki*i_error - Kd*d_error;
-
-
+double PID::TotalError(double max_pid_out, double min_pid_out) {
+  int val = -Kp*p_error - Ki*i_error - Kd*d_error;
+  if (val > max_pid_out) {
+      val = max_pid_out;
+  } else if (val < min_pid_out) {
+      val = min_pid_out
+  }
+  return val;
 }

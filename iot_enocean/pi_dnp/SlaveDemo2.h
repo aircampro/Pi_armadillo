@@ -57,12 +57,14 @@
 #include <boost/timer.hpp>
 #endif
 
-// PID loop
+// PID loop with AIN on SPI
 #include "PID.h"
 #include <math.h>
 #include <vector>
 #include "raspADC.h"
-#define ADC_SPI "/dev/spidev0.1"
+
+// DAC on I2C
+#include "..dac/mcp4725.h"
 
 namespace apl
 {
@@ -96,6 +98,7 @@ public:
     double ScaleInput(int inp, double range);
     int ScaleOutput(double inp, double range);
     void RunPidLoop();
+    void doPidLoop();
 
 private:
 
@@ -144,17 +147,6 @@ private:
 	int mCountSetPoints;        // count how many setpoints we recieve to demonstrate counters
 	int mCountBinaryOutput;     // count how many binary controls we recieve to demonstrate counters
 	IDataObserver* mpObserver;  // The data sink for updating the slave database.
-	double mPidSpt;             // PID Loop setpoint
-    PID mPid;                   // PID object
-    double mPidIn;              // measured input
-    double mPidOut;             // PID output
-    ADC mAdc;                   // analog to digital conv object
-    int mAdcRaw[8];             // 8 channel raw analog read over SPI bus
-    int mRawPidOut;             // PID output representeed as RAW counts 0-4095
-#if defined(PULSE_OUT)
-    bool m_timer_act = false;   // global to record whether internal timer is running for pulse outputs
-    boost::timer m_t;           // boost timer for pulse output
-#endif
 
 };
 

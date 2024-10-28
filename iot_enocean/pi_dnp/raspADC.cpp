@@ -28,20 +28,35 @@ void ADC::init(const char *spiDevice, int adc320X)
     spi.init(spiDevice, ADC_CLOCK);
     adcChip = adc320X;
 }
+void ADC::quit()
+{
+    spi.quit();
+}
 
-//  謖�ｮ壹メ繝｣繝阪Ν��0縲�7�峨�繧｢繝翫Ο繧ｰ繝��繧ｿ繧貞叙蠕暦ｼ�0縲�4095��
 int ADC::get(int channel)
 {
     //  ADC_3204 or ADC_3208
     //  SPI 3byte (4ch/8ch; 12bit data = 0..4095)
     unsigned char send[3], rec[3];
+    int ret = -1;
     send[0] = (channel & 0x04)? 0x07: 0x06;
     send[1] = (channel & 0x03) << 6;
     send[2] = 0;
     //  send and receive
-    spi.sendRecN(send, rec, 3);
+	//  uncomment not to try to re-connect after error
+    //  spi.sendRecN(send, rec, 3);
+	if ((spi.sendRecNRetrys(send, rec, 3) == -1) {              // was error
+       usleep(10000);
+	   init(ADC_SPI, ADC_3208);
+       usleep(10000);
+	   if ((spi.sendRecNRetrys(send, rec, 3) != -1) {           // now no error
+          ret = ((rec[1] & 0x0f) << 8) | rec[2];		   
+       }
+	} else {
+      ret = ((rec[1] & 0x0f) << 8) | rec[2];
+    }	  
     //  return the 12bit result
-    return ((rec[1] & 0x0f) << 8) | rec[2];
+    return ret;
 }
 
 //

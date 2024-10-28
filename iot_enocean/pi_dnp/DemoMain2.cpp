@@ -1,4 +1,3 @@
-
 //
 // Licensed to Green Energy Corp (www.greenenergycorp.com) under one
 // or more contributor license agreements. See the NOTICE file
@@ -25,6 +24,9 @@
 
 #include <opendnp3/APL/Log.h>
 #include <opendnp3/APL/Lock.h>
+
+#include <iostream>
+#include <thread>
 
 using namespace std;
 using namespace apl;
@@ -74,7 +76,7 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 
-        int num_args = argc;
+    int num_args = argc;
 	switch (num_args) {
 	case 5:
 		{
@@ -154,13 +156,15 @@ int main(int argc, char* argv[])
 
 	// Configure signal handlers so we can exit gracefully
 	SetDemo(&app);
+    std::thread pid1([&]{app.RunPidLoop();});
 	signal(SIGTERM, &Terminate);
 	signal(SIGABRT, &Terminate);
 	signal(SIGINT,  &Terminate);
 
 	app.Run();
-
+    
+	pid1.join();                  // wait for termination of the pid thread
 	SetDemo(NULL);
-
+		
 	return 0;
 }

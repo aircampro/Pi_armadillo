@@ -25,7 +25,7 @@
 #define MY_PU_IN 25                              // pull-up DIN feedback
 #define MY_PD_IN 18                              // pull-dwn DIN feedback
 
-#define MY_ANI_UR 100.0                          // analog inputs upper range
+#define MY_ANI_UR 100.0                          // analog inputs upper range in our case speed
 
 #if defined(LCD_ATTACHED)
     // LCD Display attached 
@@ -47,6 +47,15 @@ int mRawPidOut;             // PID output representeed as RAW counts 0-4095
     bool m_timer_act = false;   // global to record whether internal timer is running for pulse outputs
     boost::timer m_t;           // boost timer for pulse output
 #endif
+
+#define PID_LOOP_TIME 2.0            // loop time for the PID loop s
+boost::timer m_pid_loop_t;           // boost timer for reading AIN doing PID and writing AOT
+	
+// global run flag for the PID processing
+int mRunPid = 1;
+
+// define the i2c bus which the DAC is attached e.g. /dev/i2c-1
+const U08 m_i2c_dac_bus 1
 
 using namespace std;
 
@@ -72,7 +81,12 @@ void SlaveDemoBase::Shutdown()
 {
 	// this is the only outstanding event, so this will cause the
 	// io_service thread to exit cleanly
-	mpInfiniteTimer->Cancel();
+    mpInfiniteTimer->Cancel();
+	// close the open i2c device and then spi device
+    mRunPid = 0;
+    usleep(100);
+    I2cCtl_Close();
+    mAdc.quit();
 }
 
 // initialise the raspi gpio
@@ -96,8 +110,9 @@ void SlaveDemoBase::RaspiGpioInit()
 
 void SlaveDemoBase::PidLoopInit(double p, double i, double d)
 {
-    mPid.Init(p,i,d);
+    mPid.Init(p,i,d);                   // make PID loop object with p i d as paramters
     mAdc.init(ADC_SPI, ADC_3208);       // SPI_DEVICE with ADC attached
+	I2cCtl_Init(m_i2c_dac_bus);         // I2C bus with DAC attached
     for (int i = 0; i < 8; i++)
         mAdcRaw[i] = 0.0;	
 }
@@ -108,9 +123,15 @@ void SlaveDemoBase::ReadAllMeasInput()
         mAdcRaw[i] = mAdc.get(i);
 }
 
-void SlaveDemoBase::ReadMeasInput( int chan_no )
+int SlaveDemoBase::ReadMeasInput( int chan_no )
 {
     mAdcRaw[chan_no] = mAdc.get(chan_no);
+    if (mAdcRaw[chan_no] == -1) {                  // on error retry
+        mAdc.init(ADC_SPI, ADC_3208);              // re-init the ADC with the specified parameters 
+        usleep(10000);
+        mAdcRaw[chan_no] = mAdc.get(chan_no);      // get the data return -1 if there is still and error		
+    }
+	return mAdcRaw[chan_no];
 }
 
 double SlaveDemoBase::ScaleInput(int inp, double range)
@@ -121,15 +142,36 @@ double SlaveDemoBase::ScaleInput(int inp, double range)
 int SlaveDemoBase::ScaleOutput(double inp, double range)
 {
     return static_cast<int>(4095.0 * (static_cast<double>(inp) / range));
+} 	
+
+void SlaveDemoBase::doPidLoop()
+{
+    if (ReadMeasInput(0) != -1) {
+        mPidIn = ScaleInput(mAdcRaw[0], MY_ANI_UR);
+        mPid.UpdateSpeedError(mPidIn, mPidSpt);
+        mPidOut = mPid.TotalError(MY_ANI_UR, 0.0);
+	    mRawPidOut = ScaleOutput(mPidOut, MY_ANI_UR);
+	    if (setRawDACValue(static_cast<uint16_t>(mRawPidOut), MCP4725_FastMode, MCP4725_PowerDown_Off, m_i2c_dac_bus) == false) {
+            I2cCtl_Close();  
+            I2cCtl_Init(m_i2c_dac_bus);
+	        if (setRawDACValue(static_cast<uint16_t>(mRawPidOut), MCP4725_FastMode, MCP4725_PowerDown_Off, m_i2c_dac_bus) == false) {
+                printf("Error writing to the DAC");
+            }
+        }
+    } else {
+        printf("Error reading the ADC");		
+    } 		
 }
-	
+
 void SlaveDemoBase::RunPidLoop()
 {
-    ReadMeasInput(0);
-    mPidIn = ScaleInput(mAdcRaw[0], MY_ANI_UR);
-    mPid.UpdateSpeedError(mPidIn, mPidSpt);
-    mPidOut = mPid.TotalError();
-	mRawPidOut = ScaleOutput(mPidOut, MY_ANI_UR);
+	while(mRunPid) {
+		if (m_pid_loop_t.elapsed() >= PID_LOOP_TIME) {
+            doPidLoop();
+            m_pid_loop_t.restart();
+        }
+        usleep(100);
+	}
 }
 		  
 void SlaveDemoBase::OnCommandNotify()
@@ -137,8 +179,8 @@ void SlaveDemoBase::OnCommandNotify()
 	// execute a single command
 	mCommandQueue.ExecuteCommand(this);
 	
-	// run the pid loop
-    RunPidLoop();
+	// run the pid loop (seems like only above can run so i will do this via a thread in the Main)
+    // RunPidLoop();
 }
 
 SlaveDemoApp::SlaveDemoApp(Logger* apLogger) :
@@ -186,6 +228,7 @@ CommandStatus SlaveDemoApp::HandleControl(Setpoint& aControl, size_t aIndex)
     }
     display.text( 9, 40, &line, display.color(128, 255, 128));	
 #endif	
+
     int val = gpio_read(MY_PU_IN);            
     printf("input(PU_IN): %d\n", val); 
     int val1 = gpio_read(MY_PD_IN);            

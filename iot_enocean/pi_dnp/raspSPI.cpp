@@ -143,4 +143,28 @@ void SPI::sendRecN (unsigned char *send, unsigned char *rec, int n)
     }
 }
 
+int SPI::sendRecNRetrys(unsigned char *send, unsigned char *rec, int n)
+{
+    //  setup a block
+    int ret = 0;
+    struct spi_ioc_transfer tr[1];
+    tr[0].tx_buf = (unsigned int) send;
+    tr[0].rx_buf = (unsigned int) rec;
+    tr[0].len    = n;
+    tr[0].speed_hz      = clock;
+    tr[0].delay_usecs   = SPI_DELAY;
+    tr[0].bits_per_word = SPI_BITS;
+    tr[0].cs_change     = 0;
+    //  send this byte
+    int ret = ioctl(fd, SPI_IOC_MESSAGE(1), tr);
+    if (ret < 0) {
+        printf("error: cannot send spi message (SPI::sendRecN)\n");
+        //exit(-1);
+		close(fd);                                  // close the handle for retry
+        usleep(10000);
+        ret = -1;        		
+    }
+	return ret;
+}
+
 //

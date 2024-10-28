@@ -32,6 +32,7 @@ public:
     void send1 (unsigned char data);
     //  receiveN: �ｮ繝舌う繝医ョ繝ｼ繧ｿ縺ｮ蜿嶺ｿ｡
     void sendRecN (unsigned char *send, unsigned char *rec, int n);
+    int sendRecNRetrys(unsigned char *send, unsigned char *rec, int n);
 private:
     //  繝輔ぃ繧､繝ｫ繝�ぅ繧ｹ繧ｯ繝ｪ繝励ち / 繧ｯ繝ｭ繝�け(Hz)
     int fd;
