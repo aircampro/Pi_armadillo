@@ -37,6 +37,8 @@
 // uncomment to activate pulse output 
 // #define PULSE_OUT
 // #define PLS_DURATION 5.0f
+#include <cmath>
+#include <iostream>
 
 #include "raspGPIO.h"
 
