@@ -38,7 +38,7 @@ uint16_t readRegister(MCP4725_ReadType_e readType, U08 i2c_bus)
 
 		case MCP4725_ReadDACReg: // Read 3 bytes  DAC register data, skip first 1 don't care
 			// ReturnCode = i2c_read_timeout_us(_i2c, _i2cAddress, dataBuffer, 3, false, MCP4725_I2C_DELAY);
-			ReturnCode = I2cCtl_Read(_dev_addr, (void *)&dataBuffer, sizeof(dataBuffer, i2c_bus));
+			ReturnCode = I2cCtl_Read(_dev_addr, (void *)&dataBuffer, sizeof(dataBuffer), i2c_bus));
 			if (ReturnCode == false) {
 		        if (_serialDebug == true)
 		        {
@@ -264,11 +264,11 @@ bool setVoltage(double voltage, MCP4725_CmdType_e mode, MCP4725_PowerDownType_e 
 		else if (voltage <= 0)
 			voltageValueRaw = 0; //make sure value never below zero
 		else
-			voltageValueRaw = static_cast<uint16_t>(voltage * _bitsPerVolt);
+			voltageValueRaw = static_cast<uint16_t>(std::round(voltage * _bitsPerVolt));
 	}
 	else if (_safetyCheck ==  false)
 	{
-		voltageValueRaw = static_cast<uint16_t>(voltage * _bitsPerVolt);
+		voltageValueRaw = static_cast<uint16_t>(std::round(voltage * _bitsPerVolt));
 	}
 
 	return writeCommand2(voltageValueRaw, mode, powerType, i2c_bus);
@@ -292,3 +292,5 @@ bool setRawDACValue(uint16_t InputCode, MCP4725_CmdType_e mode, MCP4725_PowerDow
 
 	return writeCommand2(InputCode, mode, powerType, i2c_bus);
 }
+
+
