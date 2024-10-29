@@ -141,7 +141,7 @@ double SlaveDemoBase::ScaleInput(int inp, double range)
 
 int SlaveDemoBase::ScaleOutput(double inp, double range)
 {
-    return static_cast<int>(4095.0 * (static_cast<double>(inp) / range));
+    return static_cast<int>(std::round(4095.0 * (static_cast<double>(inp) / range)));
 } 	
 
 void SlaveDemoBase::doPidLoop()
