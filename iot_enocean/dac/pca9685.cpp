@@ -24,7 +24,7 @@ PCA9685::PCA9685(uint32_t period_us, uint8_t adapter_number, uint8_t device_addr
 
     //set PRE_SCALE
     //device.write(0xFE, pre_scale);
-	I2cCtl_PcaInit(_adapter_number);                     // open the device driver
+    I2cCtl_PcaInit(_adapter_number);                     // open the device driver
 }
 
 int PCA9685::close( )
@@ -49,15 +49,15 @@ int PCA9685::init( )
 
 		uint8_t msgs = 0;
 		struct i2c_msg msgv;                                     // sends to messages to the PWM chip
-        uint8_t bb[2];                                           // bytes to send to the device
+                uint8_t bb[2];                                           // bytes to send to the device
 		
-        bb[0] = 0xFE;
-        bb[0] = pre_scale;
+                bb[0] = 0xFE;
+                bb[0] = pre_scale;
 		
-        msgv.addr = _device_address;
-        msgv.flags = 0;
-        msgv.buf = &bb;                                         // set PRE_SCALE
-        msgv.len = 2;
+                msgv.addr = _device_address;
+                msgv.flags = 0;
+                msgv.buf = &bb;                                         // set PRE_SCALE
+                msgv.len = 2;
 
 		struct i2c_rdwr_ioctl_data packets;
 		packets.msgs  = &msgv;
@@ -92,15 +92,15 @@ int PCA9685::start()
 
 		uint8_t msgs = 0;
 		struct i2c_msg msgv;                                     // sends to messages to the PWM chip
-        uint8_t bb[2];                                                  // bytes to send to the device
+                uint8_t bb[2];                                                  // bytes to send to the device
 		
-        bb[0] = 0x00;
-        bb[0] = 0x01;
+               bb[0] = 0x00;
+               bb[0] = 0x01;
 		
-        msgv.addr = _device_address;
-        msgv.flags = 0;
-        msgv.buf = &bb;                                         // turn off SLEEP bit on MODE1
-        msgv.len = 2;
+               msgv.addr = _device_address;
+               msgv.flags = 0;
+               msgv.buf = &bb;                                         // turn off SLEEP bit on MODE1
+               msgv.len = 2;
 
 		struct i2c_rdwr_ioctl_data packets;
 		packets.msgs  = &msgv;
@@ -136,15 +136,15 @@ int PCA9685::reset()
 
 		uint8_t msgs = 0;
 		struct i2c_msg msgv;                                     // sends to messages to the PWM chip
-        uint8_t bb[2];                                                  // bytes to send to the device
+                uint8_t bb[2];                                                  // bytes to send to the device
 		
-        bb[0] = 0x00;
-        bb[0] = 0x91;
+                bb[0] = 0x00;
+                bb[0] = 0x91;
         
-        msgv.addr = _device_address;
-        msgv.flags = 0;
-        msgv.buf = &bb;                                         // turn on RESTART bit on MODE1
-        msgv.len = 2;
+                msgv.addr = _device_address;
+                msgv.flags = 0;
+                msgv.buf = &bb;                                         // turn on RESTART bit on MODE1
+                msgv.len = 2;
 
 		struct i2c_rdwr_ioctl_data packets;
 		packets.msgs  = &msgv;
@@ -184,25 +184,25 @@ int PCA9685::set_pulse(uint8_t channel, uint32_t width_us)
 
 		uint8_t msgs = 0;
 		struct i2c_msg msgv[2] {};                                      // sends to messages to the PWM chip
-        uint8_t bb[2];                                                  // bytes to send to the device
+                uint8_t bb[2];                                                  // bytes to send to the device
 		
-        bb[0] = register_address;
-        bb[0] = reg_value & 0xFF;
+                bb[0] = register_address;
+                bb[0] = reg_value & 0xFF;
 		
-        msgv[msgs].addr = _device_address;
-        msgv[msgs].flags = 0;
-        msgv[msgs].buf = &bb;                                          // set LED{channel}_OFF_L
-        msgv[msgs].len = 2;
-        msgs++;
+                msgv[msgs].addr = _device_address;
+                msgv[msgs].flags = 0;
+                msgv[msgs].buf = &bb;                                          // set LED{channel}_OFF_L
+                msgv[msgs].len = 2;
+                msgs++;
 
-        bb[0] = register_address + 1;
-        bb[0] = reg_value >> 8;
+                bb[0] = register_address + 1;
+                bb[0] = reg_value >> 8;
 		
-        msgv[msgs].addr = _device_address;
-        msgv[msgs].flags = 0;
-        msgv[msgs].buf = &bb;                                          // set LED{channel}_OFF_H
-        msgv[msgs].len = 2;
-        msgs++;
+                msgv[msgs].addr = _device_address;
+                msgv[msgs].flags = 0;
+                msgv[msgs].buf = &bb;                                          // set LED{channel}_OFF_H
+                msgv[msgs].len = 2;
+                msgs++;
 
 		struct i2c_rdwr_ioctl_data packets{};
 		packets.msgs  = &msgv;
@@ -237,20 +237,17 @@ int PCA9685::read(uint8_t register_address, uint8_t &value)
 		uint8_t msgs = 0;
 		struct i2c_msg msgv[2] {};                                      // sends to messages to the PWM chip
 		
-        bb[0] = register_address;
-        bb[0] = reg_value & 0xFF;
+                msgv[msgs].addr = _device_address;
+                msgv[msgs].flags = 0;
+                msgv[msgs].buf = &register_address;                              // set register to read
+                msgv[msgs].len = 1;
+                msgs++;
 		
-        msgv[msgs].addr = _device_address;
-        msgv[msgs].flags = 0;
-        msgv[msgs].buf = &register_address;                              // set register to read
-        msgv[msgs].len = 1;
-        msgs++;
-		
-        msgv[msgs].addr = _device_address;
-        msgv[msgs].flags = I2C_M_RD;
-        msgv[msgs].buf = &value;                                          // set LED{channel}_OFF_H
-        msgv[msgs].len = 1;
-        msgs++;
+                msgv[msgs].addr = _device_address;
+                msgv[msgs].flags = I2C_M_RD;
+                msgv[msgs].buf = &value;                                          // set LED{channel}_OFF_H
+                msgv[msgs].len = 1;
+                msgs++;
 
 		struct i2c_rdwr_ioctl_data packets{};
 		packets.msgs  = &msgv;
@@ -259,11 +256,11 @@ int PCA9685::read(uint8_t register_address, uint8_t &value)
 		int ret_ioctl = ioctl(_pca_fd, I2C_RDWR, &packets);
 
 		if (ret_ioctl == -1) {
-			ret = _ERROR;
+		    ret = _ERROR;
 		} else {
 			// success
-			ret = 1;
-			break;
+		    ret = 1;
+	            break;
 		}
 
 	} while (retry_count++ < _retries);
