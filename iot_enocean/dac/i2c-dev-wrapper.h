@@ -63,8 +63,8 @@ static S32 _pca_fd = FD_INIT_VAL;
 BOOL I2cCtl_Init(U08 bus_no)
 {
     BOOL status = true;
-	char dev_path[16] {};
-	snprintf(dev_path, sizeof(dev_path), "/dev/i2c-%i", bus_no);
+    char dev_path[16] {};
+    snprintf(dev_path, sizeof(dev_path), "/dev/i2c-%i", bus_no);
 	
     /* open if not already open */
     if (_fd == (S32)FD_INIT_VAL)
@@ -98,8 +98,8 @@ void I2cCtl_Close()
 BOOL I2cCtl_PcaInit(U08 bus_no)
 {
     BOOL status = true;
-	char dev_path[16] {};
-	snprintf(dev_path, sizeof(dev_path), "/dev/i2c-%i", bus_no);
+    char dev_path[16] {};
+    snprintf(dev_path, sizeof(dev_path), "/dev/i2c-%i", bus_no);
 	
     /* open if not already open */
     if (_pca_fd == (S32)FD_INIT_VAL)
