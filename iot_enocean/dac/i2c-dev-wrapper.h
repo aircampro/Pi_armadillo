@@ -2,6 +2,20 @@
 #define __I2C_DEV_WRAP_H
 
 /* -----------------------------------------------------------------------------
+ If you are using a Raspberry Pi, please note that the Raspberry Pi’s hardware I²C module 
+ has a bug that causes this code to not work reliably. 
+ As a workaround, we recommend enabling the i2c-gpio overlay and using the I²C device 
+ that it provides. To do this, add the line dtoverlay=i2c-gpio to /boot/config.txt and reboot. 
+ The overlay documentation has information about the parameters you can put on that line,
+ but those parameters are not required. 
+ Connect the i2c devices SDA line to GPIO23 and connect the Tic’s SCL line to GPIO24. 
+ The i2c-gpio overlay creates a new I²C device which is usually named /dev/i2c-3, and the 
+ code below uses that device. To give your user permission to 
+ access I²C busses without being root, you might have to add yourself to the i2c group by 
+ running sudo usermod -a -G i2c $(whoami) and restarting.
+------------------------------------------------------------------------------*/
+
+/* -----------------------------------------------------------------------------
  Include
 ------------------------------------------------------------------------------*/
 #include <stdio.h>
@@ -39,6 +53,7 @@ typedef double D64;
  Global
 ------------------------------------------------------------------------------*/
 static S32 _fd = FD_INIT_VAL;
+static S32 _pca_fd = FD_INIT_VAL;
 
 /* -----------------------------------------------------------------------------
  Function   : I2C Init
@@ -70,9 +85,44 @@ BOOL I2cCtl_Init(U08 bus_no)
  Memo       : I2C close
  Date       : 2021.08.28
 ------------------------------------------------------------------------------*/
-BOOL I2cCtl_Close()
+void I2cCtl_Close()
 {
     close(_fd);	
+}
+
+/* -----------------------------------------------------------------------------
+ Function   : I2C PcaInit
+ Memo       : I2C initialise for Pca
+ Date       : 2021.08.28
+------------------------------------------------------------------------------*/
+BOOL I2cCtl_PcaInit(U08 bus_no)
+{
+    BOOL status = true;
+	char dev_path[16] {};
+	snprintf(dev_path, sizeof(dev_path), "/dev/i2c-%i", bus_no);
+	
+    /* open if not already open */
+    if (_pca_fd == (S32)FD_INIT_VAL)
+    {
+        _pca_fd = open(dev_path, O_RDWR);
+        if (_pca_fd < 0)
+        {
+            perror(dev_path);
+            status = false;
+        }
+    }
+
+    return status;
+}
+
+/* -----------------------------------------------------------------------------
+ Function   : I2cCtl_PcaClose for pca
+ Memo       : I2C close
+ Date       : 2021.08.28
+------------------------------------------------------------------------------*/
+void I2cCtl_PcaClose()
+{
+    close(_pca_fd);	
 }
 
 /* -----------------------------------------------------------------------------
@@ -139,6 +189,8 @@ BOOL I2cCtl_Read(U08 dev_adr, void *buf, U32 buf_length, U08 bus_no)
 
     return status;
 }
+
+
 
 #endif
 
