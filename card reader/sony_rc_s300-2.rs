@@ -517,7 +517,7 @@ fn main() {
                 // header is delimeted by DF 22 0F
                 if (*rest_of_msg.get(j).unwrap() == 0xDF) && (header1 == 0) {
                     let header1 = header1 + 1;
-	            } else {
+	        } else {
                     //set ss_hdr[j] = *rest_of_msg.get(j).unwrap();
                     let rcv_u = *rest_of_msg.get(j).unwrap());	
                     let rcv_str = to_ascii(&rcv_u);
@@ -525,8 +525,8 @@ fn main() {
                        let s2_collection: Vec<char> = rcv_str.chars().collect();
                        ss_hdr.push(s2_collection[1]);
                     }		
-	            }
-	            if (*rest_of_msg.get(j).unwrap() == 0x22) && (header1 == 1) {
+	        }
+	        if (*rest_of_msg.get(j).unwrap() == 0x22) && (header1 == 1) {
                     let header1 = header1 + 1;
                 } else {
                     //let hdr_buf[j-1] = 0xDF;	
@@ -536,7 +536,7 @@ fn main() {
                     ss_hdr.push(s2_collection[1]);
                     let header1 = 0;
                 }
-	            if (*rest_of_msg.get(j).unwrap() == 0x0F) && (header1 == 2) {
+	        if (*rest_of_msg.get(j).unwrap() == 0x0F) && (header1 == 2) {
                     let header1 = 3;
                     let name1 = 0;
                 } else {
@@ -555,7 +555,7 @@ fn main() {
                 // name string parse delim = DF 23 39
                 if (*rest_of_msg.get(j).unwrap() == 0xDF) && (name1 == 0) {
                     let name1 = name1 + 1;
-	            } else {
+	        } else {
                     //name_buf[j] = *rest_of_msg.get(j).unwrap();
                     let rcv_u = *rest_of_msg.get(j).unwrap());	
                     let rcv_str = to_ascii(&rcv_u);
@@ -573,7 +573,7 @@ fn main() {
                     ss_nm.push(s2_collection[1]);
                     let name1 = 0;
                 }
-	            if (*rest_of_msg.get(j).unwrap() == 0x39) && (name1 == 2) {
+	        if (*rest_of_msg.get(j).unwrap() == 0x39) && (name1 == 2) {
                     let name1 = 3;
                     let address1 = 0;
                 } else {
@@ -592,7 +592,7 @@ fn main() {
                 // address string parse delim = DF 24 08
                 if (*rest_of_msg.get(j).unwrap() == 0xDF) && (address1 == 0) {
                     let address1 = address1 + 1;
-	            } else {
+	        } else {
                     //address_buf[j] = *rest_of_msg.get(j).unwrap();
                     let rcv_u = *rest_of_msg.get(j).unwrap());	
                     let rcv_str = to_ascii(&rcv_u);
@@ -601,7 +601,7 @@ fn main() {
                        ss_adr.push(s2_collection[1]);
                     }
                 }
-	            if (*rest_of_msg.get(j).unwrap() == 0x24) && (address1 == 1) {
+	        if (*rest_of_msg.get(j).unwrap() == 0x24) && (address1 == 1) {
                     let address1 = address1 + 1;
                 } else {
                     //address_buf[j-1] = 0xDF;
@@ -610,7 +610,7 @@ fn main() {
                     ss_adr.push(s2_collection[1]);
                     let address1 = 0;
                 }
-	            if (*rest_of_msg.get(j).unwrap() == 0x08) && (address1 == 2) {
+	        if (*rest_of_msg.get(j).unwrap() == 0x08) && (address1 == 2) {
                     let address1 = 3;
                     let dob1 = 0;
                 } else {
@@ -628,7 +628,7 @@ fn main() {
                 // Date of Birth delimeted by DF 25 01
                 if (*rest_of_msg.get(j).unwrap() == 0xDF) && (dob1 == 0) {
                     let dob1 = dob1 + 1;
-	            } else {
+	        } else {
                     //dob_buf[j] = *rest_of_msg.get(j).unwrap();	
                     let rcv_u = *rest_of_msg.get(j).unwrap());	
                     let rcv_str = to_ascii(&rcv_u);
@@ -637,7 +637,7 @@ fn main() {
                         ss_dob.push(s2_collection[1]);
                     }
                 }
-	            if (*rest_of_msg.get(j).unwrap() == 0x25) && (dob1 == 1) {
+	        if (*rest_of_msg.get(j).unwrap() == 0x25) && (dob1 == 1) {
                     let dob1 = dob1 + 1;
                 } else {
                     //dob_buf[j-1] = 0xDF;
@@ -646,7 +646,7 @@ fn main() {
                     ss_dob.push(s2_collection[1]);
                     let dob1 = 0;
                 }
-	            if (*rest_of_msg.get(j).unwrap() == 0x01) && (dob1 == 2) {
+	        if (*rest_of_msg.get(j).unwrap() == 0x01) && (dob1 == 2) {
                     dob1 = 3;
                 } else {
                     //dob_buf[j-2] = 0xDF;
@@ -659,7 +659,7 @@ fn main() {
                     ss_dob.push(s2_collection[1]);
                     let dob1 = 0;	
                 }
-			}
+            }
         }
         // print the results read from the card
         println!("From Card {} {} {} {}",ss_hdr,ss_nm,ss_adr,ss_dob);
