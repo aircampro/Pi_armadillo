@@ -515,31 +515,10 @@ fn main() {
             // parse the message received for the above fields using the given delimeters
             for j in 0..rest_of_msg.len() {
                 // header is delimeted by DF 22 0F
-                if (*rest_of_msg.get(j).unwrap() == 0xDF) && (header1 == 0) {
-                    let header1 = header1 + 1;
-	        } else {
-                    //set ss_hdr[j] = *rest_of_msg.get(j).unwrap();
-                    let rcv_u = *rest_of_msg.get(j).unwrap());	
-                    let rcv_str = to_ascii(&rcv_u);
-                    if (rcv_str.len() > 1) {
-                       let s2_collection: Vec<char> = rcv_str.chars().collect();
-                       ss_hdr.push(s2_collection[1]);
-                    }		
-	        }
-	        if (*rest_of_msg.get(j).unwrap() == 0x22) && (header1 == 1) {
-                    let header1 = header1 + 1;
-                } else {
-                    //let hdr_buf[j-1] = 0xDF;	
-                    let rcv_u = 0xDF;	
-                    let rcv_str = to_ascii(&rcv_u);
-                    let s2_collection: Vec<char> = rcv_str.chars().collect();
-                    ss_hdr.push(s2_collection[1]);
-                    let header1 = 0;
-                }
-	        if (*rest_of_msg.get(j).unwrap() == 0x0F) && (header1 == 2) {
+	            if (*rest_of_msg.get(j).unwrap() == 0x0F) && (header1 == 2) {
                     let header1 = 3;
                     let name1 = 0;
-                } else {
+                } else if (header1 == 2) {
                     //let hdr_buf[j-2] = 0xDF;
                     //let hdr_buf[j-1] = 0x22;
 		            // put the 2 collections back to the header string	
@@ -549,34 +528,43 @@ fn main() {
                     let rcv_str = to_ascii(&0x22);
                     let s2_collection: Vec<char> = rcv_str.chars().collect();
                     ss_hdr.push(s2_collection[1]);
-                    let header1 = 0;	
-                }
-	
-                // name string parse delim = DF 23 39
-                if (*rest_of_msg.get(j).unwrap() == 0xDF) && (name1 == 0) {
-                    let name1 = name1 + 1;
-	        } else {
-                    //name_buf[j] = *rest_of_msg.get(j).unwrap();
                     let rcv_u = *rest_of_msg.get(j).unwrap());	
                     let rcv_str = to_ascii(&rcv_u);
                     if (rcv_str.len() > 1) {
-                        let s2_collection: Vec<char> = rcv_str.chars().collect();
-                        ss_nm.push(s2_collection[1]);
+                       let s2_collection: Vec<char> = rcv_str.chars().collect();
+                       ss_hdr.push(s2_collection[1]);
                     }
+                    let header1 = 4;	
                 }
-	            if (*rest_of_msg.get(j).unwrap() == 0x23) && (name1 == 1) {
-                    let name1 = name1 + 1;
-                } else {
-                    //name_buf[j-1] = 0xDF;	
-                    let rcv_str = to_ascii(&0xDF);
+	            if (*rest_of_msg.get(j).unwrap() == 0x22) && (header1 == 1) {
+                    let header1 = header1 + 1;
+                } else if (header1 == 1) {
+                    //let hdr_buf[j-1] = 0xDF;	
+                    let rcv_u = 0xDF;	
+                    let rcv_str = to_ascii(&rcv_u);
                     let s2_collection: Vec<char> = rcv_str.chars().collect();
-                    ss_nm.push(s2_collection[1]);
-                    let name1 = 0;
+                    ss_hdr.push(s2_collection[1]);
+                    let header1 = 4;
                 }
-	        if (*rest_of_msg.get(j).unwrap() == 0x39) && (name1 == 2) {
+				if (*rest_of_msg.get(j).unwrap() == 0xDF) && (header1 == 0) {
+                    let header1 = header1 + 1;
+	            } else if (header1 == 0) {
+                    //set ss_hdr[j] = *rest_of_msg.get(j).unwrap();
+                    let rcv_u = *rest_of_msg.get(j).unwrap());	
+                    let rcv_str = to_ascii(&rcv_u);
+                    if (rcv_str.len() > 1) {
+                       let s2_collection: Vec<char> = rcv_str.chars().collect();
+                       ss_hdr.push(s2_collection[1]);
+                    }		
+	            } else if (header1 == 4) {
+                    let header1 = 0;
+				}
+
+                // name string parse delim = DF 23 39
+	            if (*rest_of_msg.get(j).unwrap() == 0x39) && (name1 == 2) {
                     let name1 = 3;
                     let address1 = 0;
-                } else {
+                } else if (name1 == 2) {
                     //name_buf[j-2] = 0xDF;
                     //name_buf[j-1] = 0x23;	
                     let rcv_str = to_ascii(&0xDF);
@@ -585,35 +573,50 @@ fn main() {
                     let rcv_str = to_ascii(&0x23);
                     let s2_collection: Vec<char> = rcv_str.chars().collect();
                     ss_nm.push(s2_collection[1]);
-                    let name1 = 0;	
-                }    
-
-	
-                // address string parse delim = DF 24 08
-                if (*rest_of_msg.get(j).unwrap() == 0xDF) && (address1 == 0) {
-                    let address1 = address1 + 1;
-	        } else {
-                    //address_buf[j] = *rest_of_msg.get(j).unwrap();
+                    //name_buf[j] = *rest_of_msg.get(j).unwrap();
                     let rcv_u = *rest_of_msg.get(j).unwrap());	
                     let rcv_str = to_ascii(&rcv_u);
                     if (rcv_str.len() > 1) {
-                       let s2_collection: Vec<char> = rcv_str.chars().collect();
-                       ss_adr.push(s2_collection[1]);
+                        let s2_collection: Vec<char> = rcv_str.chars().collect();
+                        ss_nm.push(s2_collection[1]);
                     }
+                    let name1 = 4;	
                 }
-	        if (*rest_of_msg.get(j).unwrap() == 0x24) && (address1 == 1) {
-                    let address1 = address1 + 1;
-                } else {
-                    //address_buf[j-1] = 0xDF;
+	            if (*rest_of_msg.get(j).unwrap() == 0x23) && (name1 == 1) {
+                    let name1 = name1 + 1;
+                } else if (name1 == 1) {
+                    //name_buf[j-1] = 0xDF;	
                     let rcv_str = to_ascii(&0xDF);
                     let s2_collection: Vec<char> = rcv_str.chars().collect();
-                    ss_adr.push(s2_collection[1]);
-                    let address1 = 0;
+                    ss_nm.push(s2_collection[1]);
+                    //name_buf[j] = *rest_of_msg.get(j).unwrap();
+                    let rcv_u = *rest_of_msg.get(j).unwrap());	
+                    let rcv_str = to_ascii(&rcv_u);
+                    if (rcv_str.len() > 1) {
+                        let s2_collection: Vec<char> = rcv_str.chars().collect();
+                        ss_nm.push(s2_collection[1]);
+                    }
+                    let name1 = 4;
                 }
-	        if (*rest_of_msg.get(j).unwrap() == 0x08) && (address1 == 2) {
+                if (*rest_of_msg.get(j).unwrap() == 0xDF) && (name1 == 0) {
+                    let name1 = name1 + 1;
+	            } else if (name1 == 0) {
+                    //name_buf[j] = *rest_of_msg.get(j).unwrap();
+                    let rcv_u = *rest_of_msg.get(j).unwrap());	
+                    let rcv_str = to_ascii(&rcv_u);
+                    if (rcv_str.len() > 1) {
+                        let s2_collection: Vec<char> = rcv_str.chars().collect();
+                        ss_nm.push(s2_collection[1]);
+                    }
+                } else if (name1 == 4) {
+                    let name1 = 0;
+				}
+
+                // address string parse delim = DF 24 08
+	            if (*rest_of_msg.get(j).unwrap() == 0x08) && (address1 == 2) {
                     let address1 = 3;
                     let dob1 = 0;
-                } else {
+                } else if (address1 == 2) {
                     //address_buf[j-2] = 0xDF;
                     //address_buf[j-1] = 0x24;	
                     let rcv_str = to_ascii(&0xDF);
@@ -622,33 +625,48 @@ fn main() {
                     let rcv_str = to_ascii(&0x24);
                     let s2_collection: Vec<char> = rcv_str.chars().collect();
                     ss_adr.push(s2_collection[1]);
-                    let address1 = 0;	
-                }
-	
-                // Date of Birth delimeted by DF 25 01
-                if (*rest_of_msg.get(j).unwrap() == 0xDF) && (dob1 == 0) {
-                    let dob1 = dob1 + 1;
-	        } else {
-                    //dob_buf[j] = *rest_of_msg.get(j).unwrap();	
                     let rcv_u = *rest_of_msg.get(j).unwrap());	
                     let rcv_str = to_ascii(&rcv_u);
                     if (rcv_str.len() > 1) {
-                        let s2_collection: Vec<char> = rcv_str.chars().collect();
-                        ss_dob.push(s2_collection[1]);
+                       let s2_collection: Vec<char> = rcv_str.chars().collect();
+                       ss_adr.push(s2_collection[1]);
                     }
+                    let address1 = 4;	
                 }
-	        if (*rest_of_msg.get(j).unwrap() == 0x25) && (dob1 == 1) {
-                    let dob1 = dob1 + 1;
-                } else {
-                    //dob_buf[j-1] = 0xDF;
+	            if (*rest_of_msg.get(j).unwrap() == 0x24) && (address1 == 1) {
+                    let address1 = address1 + 1;
+                } else if (address1 == 1) {
+                    //address_buf[j-1] = 0xDF;
                     let rcv_str = to_ascii(&0xDF);
                     let s2_collection: Vec<char> = rcv_str.chars().collect();
-                    ss_dob.push(s2_collection[1]);
-                    let dob1 = 0;
+                    ss_adr.push(s2_collection[1]);
+                    let rcv_u = *rest_of_msg.get(j).unwrap());	
+                    let rcv_str = to_ascii(&rcv_u);
+                    if (rcv_str.len() > 1) {
+                       let s2_collection: Vec<char> = rcv_str.chars().collect();
+                       ss_adr.push(s2_collection[1]);
+                    }
+                    let address1 = 4;
                 }
-	        if (*rest_of_msg.get(j).unwrap() == 0x01) && (dob1 == 2) {
+                if (*rest_of_msg.get(j).unwrap() == 0xDF) && (address1 == 0) {
+                    let address1 = address1 + 1;
+	            } else if (address1 == 0) {
+                    //address_buf[j] = *rest_of_msg.get(j).unwrap();
+                    let rcv_u = *rest_of_msg.get(j).unwrap());	
+                    let rcv_str = to_ascii(&rcv_u);
+                    if (rcv_str.len() > 1) {
+                       let s2_collection: Vec<char> = rcv_str.chars().collect();
+                       ss_adr.push(s2_collection[1]);
+                    }
+                } else if (address1 == 4) {
+                    let address1 = 0;
+                }
+
+	
+                // Date of Birth delimeted by DF 25 01
+	            if (*rest_of_msg.get(j).unwrap() == 0x01) && (dob1 == 2) {
                     dob1 = 3;
-                } else {
+                } else if (dob1 == 2) {
                     //dob_buf[j-2] = 0xDF;
                     //dob_buf[j-1] = 0x25;
                     let rcv_str = to_ascii(&0xDF);
@@ -657,9 +675,45 @@ fn main() {
                     let rcv_str = to_ascii(&0x25);
                     let s2_collection: Vec<char> = rcv_str.chars().collect();
                     ss_dob.push(s2_collection[1]);
-                    let dob1 = 0;	
+                    let rcv_u = *rest_of_msg.get(j).unwrap());	
+                    let rcv_str = to_ascii(&rcv_u);
+                    if (rcv_str.len() > 1) {
+                        let s2_collection: Vec<char> = rcv_str.chars().collect();
+                        ss_dob.push(s2_collection[1]);
+                    }
+                    let dob1 = 4;	
                 }
-            }
+	            if (*rest_of_msg.get(j).unwrap() == 0x25) && (dob1 == 1) {
+                    let dob1 = dob1 + 1;
+                } else if (dob1 == 1) {
+                    //dob_buf[j-1] = 0xDF;
+                    let rcv_str = to_ascii(&0xDF);
+                    let s2_collection: Vec<char> = rcv_str.chars().collect();
+                    ss_dob.push(s2_collection[1]);
+                    let rcv_u = *rest_of_msg.get(j).unwrap());	
+                    let rcv_str = to_ascii(&rcv_u);
+                    if (rcv_str.len() > 1) {
+                        let s2_collection: Vec<char> = rcv_str.chars().collect();
+                        ss_dob.push(s2_collection[1]);
+                    }
+                    let dob1 = 4;
+                }
+                if (*rest_of_msg.get(j).unwrap() == 0xDF) && (dob1 == 0) {
+                    let dob1 = dob1 + 1;
+	            } else if (dob1 == 0) {
+                    //dob_buf[j] = *rest_of_msg.get(j).unwrap();	
+                    let rcv_u = *rest_of_msg.get(j).unwrap());	
+                    let rcv_str = to_ascii(&rcv_u);
+                    if (rcv_str.len() > 1) {
+                        let s2_collection: Vec<char> = rcv_str.chars().collect();
+                        ss_dob.push(s2_collection[1]);
+                    }
+                } else if (dob1 == 4) {
+                    let dob1 = 0;
+				}
+
+
+			}
         }
         // print the results read from the card
         println!("From Card {} {} {} {}",ss_hdr,ss_nm,ss_adr,ss_dob);
