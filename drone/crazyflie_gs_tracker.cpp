@@ -82,10 +82,10 @@ int main(int argc, char **argv)
     // Added 'videoconvert' at the end to convert the images into proper format for appsink, without
     // 'videoconvert' the receiver will not read the frames, even though 'videoconvert' is not present
     // in the original working pipeline
-	VideoCapture cap("udpsrc port=5000 ! application/x-rtp,media=video,payload=26,clock-rate=90000,encoding-name=JPEG,framerate=30/1 ! rtpjpegdepay ! jpegdec ! videoconvert ! appsink", CAP_GSTREAMER);
+    VideoCapture cap("udpsrc port=5000 ! application/x-rtp,media=video,payload=26,clock-rate=90000,encoding-name=JPEG,framerate=30/1 ! rtpjpegdepay ! jpegdec ! videoconvert ! appsink", CAP_GSTREAMER);
 
     // output stream tcp server
-    VideoWriter writer("appsrc ! gdppay ! tcpserversink host=10.0.0.10',  0, 30, Size(640, 480), true);
+    VideoWriter writer("appsrc ! gdppay ! tcpserversink host=10.0.0.10",  0, 30, Size(640, 480), true);
 		
 	if (!cap.isOpened()) {
         cerr <<"VideoCapture not opened"<<endl;
@@ -157,12 +157,12 @@ int main(int argc, char **argv)
     imshow("Tracking", frame); 
     tracker->init(frame, bbox);
      
-//    while(video.read(frame))    -- for test
+    //    while(video.read(frame))    -- for test
     while(cap.read(frame))
     {  
 
-	    // pipe out stream
-	    writer.write(frame);
+	// pipe out stream
+	writer.write(frame);
 	
         // Start timer
         double timer = (double)getTickCount();
@@ -182,10 +182,10 @@ int main(int argc, char **argv)
                 flag = flag | THRUST;
                 counter[3] = 0;
             }
-			if (flag && THRUST) {
-			    thrust += tDelta;
+	    if (flag && THRUST) {
+		thrust += tDelta;
                 flag = flag ^ THRUST;            // one shot
-			}				
+	    }				
         }
         else
         {
@@ -202,21 +202,21 @@ int main(int argc, char **argv)
                 flag = flag | YAW;
                 counter[2] = 0;
             }				
-			if (flag && PITCH) {
-			    pitch += pDelta;
+	    if (flag && PITCH) {
+		 pitch += pDelta;
                 pitch ^= PITCH;
-			} else if (flag && YAW) {
-			    yaw += yDelta;
+	    } else if (flag && YAW) {
+		yaw += yDelta;
                 yaw ^= YAW;
-			} else if (flag && ROLL) {
-			    roll += rDelta;
+	     } else if (flag && ROLL) {
+		roll += rDelta;
                 roll ^= ROLL;
             }
-			for (int j=0; j<3 ; j++) {                               // increment counters
+	    for (int j=0; j<3 ; j++) {                               // increment counters
                 counter[j]++;
             }
             if (reset_counter == 1) || (counter[4] > cLim) {         // send a reset counter to advance the next timed movement	- either from key or timer		
-			    for (int j=0; j<3 ; j++) {                           // reset counters
+		 for (int j=0; j<3 ; j++) {                           // reset counters
                     counter[j] = 0;
                 }
                 reset_counter = 0;
