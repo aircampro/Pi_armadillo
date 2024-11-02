@@ -7,7 +7,6 @@ sudo apt-get install libgstreamer1.0-0 gstreamer1.0-plugins-base gstreamer1.0-pl
 sudo apt-get install libgstreamer-plugins-base1.0-0 
 sudo apt-get install gstreamer-video-1.0
 sudo apt-get install libgstreamer-plugins-base1.0-dev
-
 g++ `pkg-config --cflags opencv` <prog_name>.cpp -std=c++11 -g `pkg-config --libs opencv`
 */
 #include <opencv2/opencv.hpp>
@@ -83,20 +82,20 @@ int main(int argc, char **argv)
     // Added 'videoconvert' at the end to convert the images into proper format for appsink, without
     // 'videoconvert' the receiver will not read the frames, even though 'videoconvert' is not present
     // in the original working pipeline
-    // for remote host udpsrc host=10.0.0.20 port=5000 ! application/x-rtp,media=video,payload=26,clock-rate=90000,encoding-name=JPEG,framerate=30/1 ! rtpjpegdepay ! jpegdec ! videoconvert ! appsink", CAP_GSTREAMER
-    // input stream
 	VideoCapture cap("udpsrc port=5000 ! application/x-rtp,media=video,payload=26,clock-rate=90000,encoding-name=JPEG,framerate=30/1 ! rtpjpegdepay ! jpegdec ! videoconvert ! appsink", CAP_GSTREAMER);
+
     // output stream tcp server
-        VideoWriter writer("appsrc ! gdppay ! tcpserversink host=10.0.0.10',  0, 30, Size(640, 480), true);	
-	
+    VideoWriter writer("appsrc ! gdppay ! tcpserversink host=10.0.0.10',  0, 30, Size(640, 480), true);
+		
 	if (!cap.isOpened()) {
-           cerr <<"VideoCapture not opened"<<endl;
-           exit(-1);
-	}
-        if (!writer.isOpened()) {
-           cerr <<"VideoWriter not opened"<<endl;
-           exit(-1);
-        }
+        cerr <<"VideoCapture not opened"<<endl;
+        exit(-1);
+    }
+
+	if (!writer.isOpened()) {
+        cerr <<"VideoCapture not opened"<<endl;
+        exit(-1);
+    }
 	
     // List of tracker types in OpenCV 3.4.1
     string trackerTypes[8] = {"BOOSTING", "MIL", "KCF", "TLD","MEDIANFLOW", "GOTURN", "MOSSE", "CSRT"};
@@ -161,9 +160,10 @@ int main(int argc, char **argv)
 //    while(video.read(frame))    -- for test
     while(cap.read(frame))
     {  
-	// pipe out stream
-	writer.write(frame);
-	    
+
+	    // pipe out stream
+	    writer.write(frame);
+	
         // Start timer
         double timer = (double)getTickCount();
          
@@ -180,12 +180,12 @@ int main(int argc, char **argv)
 
             if (counter[3] > tLim) {
                 flag = flag | THRUST;
-	        counter[3] = 0;
+                counter[3] = 0;
             }
-	    if (flag && THRUST) {
-	        thrust += tDelta;
+			if (flag && THRUST) {
+			    thrust += tDelta;
                 flag = flag ^ THRUST;            // one shot
-	    }				
+			}				
         }
         else
         {
@@ -197,26 +197,26 @@ int main(int argc, char **argv)
                 counter[0] = 0;
             } else if (counter[1] > rLim) {
                 flag = flag | ROLL;
-	        counter[1] = 0;
+                counter[1] = 0;
             } else if (counter[2] > yLim) {
                 flag = flag | YAW;
                 counter[2] = 0;
             }				
-	    if (flag && PITCH) {
-	        pitch += pDelta;
+			if (flag && PITCH) {
+			    pitch += pDelta;
                 pitch ^= PITCH;
-	     } else if (flag && YAW) {
-		yaw += yDelta;
+			} else if (flag && YAW) {
+			    yaw += yDelta;
                 yaw ^= YAW;
-	     } else if (flag && ROLL) {
-		roll += rDelta;
+			} else if (flag && ROLL) {
+			    roll += rDelta;
                 roll ^= ROLL;
             }
-	    for (int j=0; j<3 ; j++) {                               // increment counters
+			for (int j=0; j<3 ; j++) {                               // increment counters
                 counter[j]++;
             }
             if (reset_counter == 1) || (counter[4] > cLim) {         // send a reset counter to advance the next timed movement	- either from key or timer		
-		for (int j=0; j<3 ; j++) {                           // reset counters
+			    for (int j=0; j<3 ; j++) {                           // reset counters
                     counter[j] = 0;
                 }
                 reset_counter = 0;
