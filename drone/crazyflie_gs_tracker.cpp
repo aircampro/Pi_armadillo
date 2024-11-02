@@ -29,11 +29,16 @@ char * messageFmt = "{" \
     "}" \
 "}";
 char message[512];
+
 #define NOMOVE 0
-#define PITCH 1          # pitch bit 0
-#define ROLL 2           # roll bit 1
-#define YAW 4            # yaw bit 2
-#define THRUST 8         # thrust bit 8
+// pitch bit 0
+#define PITCH 1    
+// roll bit 1
+#define ROLL 2   
+// yaw bit 2
+#define YAW 4   
+// thrust bit 8
+#define THRUST 8         
 
 using namespace cv;
 using namespace std;
