@@ -160,6 +160,7 @@ int main(int argc, char **argv)
 
             if (counter[3] > tLim) {
                 flag = flag | THRUST;
+	        counter[3] = 0;
             }
 	    if (flag && THRUST) {
 	        thrust += tDelta;
@@ -173,10 +174,13 @@ int main(int argc, char **argv)
 			// use counters to trigger movement in the event of nothing tracked
             if (counter[0] > pLim) {
                 flag = flag | PITCH;
+                counter[0] = 0;
             } else if (counter[1] > rLim) {
                 flag = flag | ROLL;
+	        counter[1] = 0;
             } else if (counter[2] > yLim) {
                 flag = flag | YAW;
+                counter[2] = 0;
             }				
 	    if (flag && PITCH) {
 	        pitch += pDelta;
