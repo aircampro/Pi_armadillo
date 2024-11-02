@@ -82,6 +82,7 @@ int main(int argc, char **argv)
     // Added 'videoconvert' at the end to convert the images into proper format for appsink, without
     // 'videoconvert' the receiver will not read the frames, even though 'videoconvert' is not present
     // in the original working pipeline
+    // to add host ip udpsrc host=10.0.0.1 port=5000
     VideoCapture cap("udpsrc port=5000 ! application/x-rtp,media=video,payload=26,clock-rate=90000,encoding-name=JPEG,framerate=30/1 ! rtpjpegdepay ! jpegdec ! videoconvert ! appsink", CAP_GSTREAMER);
 
     // output stream tcp server
