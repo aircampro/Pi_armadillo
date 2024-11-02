@@ -161,10 +161,10 @@ int main(int argc, char **argv)
             if (counter[3] > tLim) {
                 flag = flag | THRUST;
             }
-			if (flag && THRUST) {
-			    thrust += tDelta;
+	    if (flag && THRUST) {
+	        thrust += tDelta;
                 flag = flag ^ THRUST;            // one shot
-			}				
+	    }				
         }
         else
         {
@@ -178,21 +178,21 @@ int main(int argc, char **argv)
             } else if (counter[2] > yLim) {
                 flag = flag | YAW;
             }				
-			if (flag && PITCH) {
-			    pitch += pDelta;
+	    if (flag && PITCH) {
+	        pitch += pDelta;
                 pitch ^= PITCH;
-			} else if (flag && YAW) {
-			    yaw += yDelta;
+	     } else if (flag && YAW) {
+		yaw += yDelta;
                 yaw ^= YAW;
-			} else if (flag && ROLL) {
-			    roll += rDelta;
+	     } else if (flag && ROLL) {
+		roll += rDelta;
                 roll ^= ROLL;
             }
-			for (int j=0; j<3 ; j++) {                               // increment counters
+	    for (int j=0; j<3 ; j++) {                               // increment counters
                 counter[j]++;
             }
             if (reset_counter == 1) || (counter[4] > cLim) {         // send a reset counter to advance the next timed movement	- either from key or timer		
-			    for (int j=0; j<3 ; j++) {                           // reset counters
+		for (int j=0; j<3 ; j++) {                           // reset counters
                     counter[j] = 0;
                 }
                 reset_counter = 0;
