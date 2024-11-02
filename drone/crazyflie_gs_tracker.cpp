@@ -83,12 +83,20 @@ int main(int argc, char **argv)
     // Added 'videoconvert' at the end to convert the images into proper format for appsink, without
     // 'videoconvert' the receiver will not read the frames, even though 'videoconvert' is not present
     // in the original working pipeline
+    // for remote host udpsrc host=10.0.0.20 port=5000 ! application/x-rtp,media=video,payload=26,clock-rate=90000,encoding-name=JPEG,framerate=30/1 ! rtpjpegdepay ! jpegdec ! videoconvert ! appsink", CAP_GSTREAMER
+    // input stream
 	VideoCapture cap("udpsrc port=5000 ! application/x-rtp,media=video,payload=26,clock-rate=90000,encoding-name=JPEG,framerate=30/1 ! rtpjpegdepay ! jpegdec ! videoconvert ! appsink", CAP_GSTREAMER);
-    
+    // output stream tcp server
+        VideoWriter writer("appsrc ! gdppay ! tcpserversink host=10.0.0.10',  0, 30, Size(640, 480), true);	
+	
 	if (!cap.isOpened()) {
-        cerr <<"VideoCapture not opened"<<endl;
-        exit(-1);
-    }
+           cerr <<"VideoCapture not opened"<<endl;
+           exit(-1);
+	}
+        if (!writer.isOpened()) {
+           cerr <<"VideoWriter not opened"<<endl;
+           exit(-1);
+        }
 	
     // List of tracker types in OpenCV 3.4.1
     string trackerTypes[8] = {"BOOSTING", "MIL", "KCF", "TLD","MEDIANFLOW", "GOTURN", "MOSSE", "CSRT"};
@@ -152,7 +160,10 @@ int main(int argc, char **argv)
      
 //    while(video.read(frame))    -- for test
     while(cap.read(frame))
-    {     
+    {  
+	// pipe out stream
+	writer.write(frame);
+	    
         // Start timer
         double timer = (double)getTickCount();
          
