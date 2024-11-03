@@ -2,9 +2,9 @@
 //
 //       Use v4l2 to grab frames and write them jpg files 
 //
-// ref:- https://github.com/yutyan0119/v4l2_createImage/blob/main/v4l2sample.c
+//       ref:- https://github.com/yutyan0119/v4l2_createImage/blob/main/v4l2sample.c
 //       https://zenn.dev/turing_motors/articles/programming-v4l2
-//      command line parser library https://github.com/tanakh/cmdline
+//       command line parser library https://github.com/tanakh/cmdline
 //
 */
 
@@ -117,7 +117,7 @@ void request_buffer(){
 void map_buffer(){
     buffers = (struct buffer*)calloc(n_buffers, sizeof(*buffers));
     if (buffers == NULL){
-        printf("okasii");
+        printf("could not allocate memory");
     }
     for (int n_buffer = 0; n_buffer < n_buffers; n_buffer++){
         struct v4l2_buffer buff = {0};
@@ -247,16 +247,16 @@ int main(int argc, char *argv[]) {
     map_buffer();
     enqueue_buffers();
     stream_start();
-	/* now capture the frames */
+    /* now capture the frames */
     int cnt = 1;
-	while (no_of_frms) {
-		string out_file_name = out_file + "_" + to_string(cnt) + ".jpg";
+    while (no_of_frms) {
+	string out_file_name = out_file + "_" + to_string(cnt) + ".jpg";
         int enqueue_index = make_image(out_file_name.c_str());
         if (enqueue_index == -1){
             return EXIT_FAILURE;
         }
         enqueue_buffer(enqueue_index);
-		no_of_frms--;
+	no_of_frms--;
         cnt++;
     }
     stream_stop();
