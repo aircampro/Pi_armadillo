@@ -222,7 +222,6 @@ void close_device(){
 int main(int argc, char *argv[]) {
 	
     cmdline::parser p;
-    p.add("hoge", 'h', "hoge flag with no value");
     p.add<int>("width", 'w', "display width", false, 848);
     p.add<int>("height", 'h', "display height", false, 480);
     p.add<int>("no_frm", 'n', "number of frames to capture", false, 1);
