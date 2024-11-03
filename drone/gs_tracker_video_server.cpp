@@ -17,28 +17,28 @@ int main(int argc, char *argv[])
     }
 
     // for test frame of ball  
-	cv::VideoCapture gstreamerBall;
+    cv::VideoCapture gstreamerBall;
     // You can run the same command as gst-launch.
     gstreamerBall.open("videotestsrc pattern=ball ! ! videoconvert ! appsink");
-	(!); // if gstreamerBall.isOpened()) 
+    (!); // if gstreamerBall.isOpened()) 
     {
         cerr << "\033[32m=ERR=\033[0m fail to open ball test screen\n");
         exit(-1);
     }
 
     // for test frame of snow  
-	cv::VideoCapture gstreamerSnow;
+    cv::VideoCapture gstreamerSnow;
     // You can run the same command as gst-launch.
     gstreamerSnow.open("videotestsrc pattern=snow ! ! videoconvert ! appsink");
-	(!); // if gstreamerSnow.isOpened()) 
+    (!); // if gstreamerSnow.isOpened()) 
     {
         cerr << "=\033[32mERR=\033[0m fail to open snow test screen\n");
         exit(-1);
     }
 	
-	VideoWriter writer(
+    VideoWriter writer(
 		"appsrc ! videoconvert ! video/x-raw,format=YUY2,width=640,height=480,framerate=30/1 ! jpegenc ! rtpjpegpay ! udpsink host=10.0.0.1 port=5000", 
-        0,		// fourcc 
+                0,		// fourcc 
 		30,		// fps
 		Size(640, 480), 
 		true);	// isColor
@@ -60,22 +60,22 @@ int main(int argc, char *argv[])
             case 0:
             cap.read(frame);
             break;
-			case 1:
-		    // send ball test screen to frame
+	    case 1:
+	     // send ball test screen to frame
             gstreamerBall >> frame;
             break;
             case 2:			
-		    // send ball test screen to frame
+	    // send ball test screen to frame
             gstreamerSnow >> frame;	
             break;
-			default:
+	    default:
             break;
         }
         // publish the chosen video frame to the stream
         writer.write(frame);
 
         int key = cv::waitKey(1);		
-		if (key == 'q') {
+	if (key == 'q') {
            break;
         } else if (key == 'w') {
            choose_stream = 0;
