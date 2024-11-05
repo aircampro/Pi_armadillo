@@ -179,22 +179,22 @@ void set_exposure(int expos, int mode) {
     ここでは，V4L2_CID_EXPOSURE_ABSOLUTEを選択する．
     */
     switch(mode) {
-		case 0:
+	case 0:
         qctl.id = V4L2_CID_EXPOSURE_ABSOLUTE;
         break;
-		case 1:
+	case 1:
         qctl.id = V4L2_CID_EXPOSURE_AUTO;
         break;
-		case 2:
+	case 2:
         qctl.id = V4L2_CID_EXPOSURE_MANUAL;
         break;
-		case 3:
+	case 3:
         qctl.id = V4L2_CID_EXPOSURE_SHUTTER_PRIORITY;
         break;
-		case 4:
+	case 4:
         qctl.id = V4L2_CID_EXPOSURE_APERTURE_PRIORITY;
         break;
-		default:
+	default:
         qctl.id = V4L2_CID_EXPOSURE_ABSOLUTE;
         break;	
     }		
@@ -266,9 +266,9 @@ int make_image( const char* outfl, const char* outfl2 ) {
     } else {
         std::cerr << "no image buffer retrieved!" << std::endl;
     }
-	/* try to detect the center of the road */
-	cv::Mat img_bin;
-	cv::Mat img_canny;
+    /* try to detect the center of the road */
+    cv::Mat img_bin;
+    cv::Mat img_canny;
     cv::cvtColor(dst, img_bin, cv::COLOR_BGR2GRAY);
 	// cv::Canny(dst, img_canny, 500.0, 700.0);
     cv::Canny(img_bin, img_canny, 500.0, 700.0);
@@ -316,7 +316,7 @@ void stream_stop(){
 void munmap_buffer(){
     for (int i = 0; i < n_buffers; ++i){
         if (-1 == munmap(buffers[i].start, buffers[i].length)){
-				perror("munmap");
+		perror("munmap");
         }
     }
     free(buffers);
@@ -362,15 +362,15 @@ int main(int argc, char *argv[]) {
     stream_start();
 	/* now capture the frames */
     int cnt = 1;
-	while (no_of_frms) {
-		string out_file_name = out_file + "_" + to_string(cnt) + ".jpg";
-		string det_file_name = out_file + "_detect_" + to_string(cnt) + ".jpg";
+    while (no_of_frms) {
+	string out_file_name = out_file + "_" + to_string(cnt) + ".jpg";
+	string det_file_name = out_file + "_detect_" + to_string(cnt) + ".jpg";
         int enqueue_index = make_image(out_file_name.c_str(), det_file_name.c_str());
         if (enqueue_index == -1){
             return EXIT_FAILURE;
         }
         enqueue_buffer(enqueue_index);
-		no_of_frms--;
+	no_of_frms--;
         cnt++;
     }
     stream_stop();
