@@ -414,7 +414,7 @@ while True:
             box_match = check_box_with_cam(chr(box_to_find), exp_dates[find_index[chr(box_to_find), boxs]])   # look for it in stock
             if box_match == True:
                 box_width = get_box_widths(chr(box_to_find))             # get the box types width from the SAP data
-                if ((grab_box(box_width, soc) == True):                       # succesfully grabbed the box
+                if (grab_box(box_width, soc) == True):                       # succesfully grabbed the box
                     place = 1                                            # set to place it
                     palet_wid += box_width
                     break
