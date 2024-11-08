@@ -1,0 +1,94 @@
+
+This is a summary of GANS used in colab to sharpen and enhance the image quality for jpgs
+https://note.com/kiyo_ai_note/n/n86239492f0bf
+
+!git clone https://github.com/xinntao/Real-ESRGAN.git
+%cd Real-ESRGAN
+!pip install basicsr
+!pip install facexlib
+!pip install gfpgan
+!pip install -r requirements.txt
+!python setup.py develop
+!wget https://github.com/xinntao/Real-ESRGAN/releases/download/v0.1.0/RealESRGAN_x4plus.pth -P experiments/pretrained_models
+#Google Driveのマウント
+from google.colab import drive
+drive.mount('/content/drive')
+
+[IN]
+!git clone https://github.com/xinntao/Real-ESRGAN.git
+%cd Real-ESRGAN
+
+!pip install basicsr
+!pip install facexlib
+!pip install gfpgan
+!pip install -r requirements.txt
+!python setup.py develop
+
+https://github.com/xinntao/Real-ESRGAN/releases/download/v0.1.0/RealESRGAN_x4plus.pth -P experiments/pretrained_models
+
+other models https://github.com/xinntao/Real-ESRGAN/releases
+
+colab if you want to use  
+#Google Drive
+from google.colab import drive
+drive.mount('/content/drive')
+
+
+!python inference_realesrgan.py -n RealESRGAN_x4plus -i inputs -o results
+
+
+https://www.12-technology.com/2021/10/deeplearninggfpgan.html
+GFPGAN
+
+conda install -c anaconda ninja
+export BASICSR_JIT='True'
+
+# https://pytorch.org/get-started/previous-versions/                                                           でバージョン確認
+$ conda install pytorch==1.7.1 torchvision==0.8.2 torchaudio==0.7.2 cudatoolkit=10.1 -c pytorch
+
+# Create conda environment for python version 3.7
+$ conda create -n gfpgan python=3.7
+ 
+# Activate created environment
+$ conda activate gfpgan
+$ cd gfpgan
+ 
+# clone code from git
+$ git clone https://github.com/TencentARC/GFPGAN.git
+$ cd GFPGAN
+ 
+ In the case of # Proxy, the following
+$ export http_proxy="http://"username":"password"@proxy:port"
+$ export https_proxy="http://"username":"password"@proxy:port"
+ 
+# Install required libraries
+$ pip3 install basicsr
+$ pip3 install facexlib
+$ pip3 install -r requirements.txt
+$ python setup.py develop
+$ pip3 install realesrgan
+ 
+ In the case of # Proxy, the following
+$ pip3 install "モジュール名" --proxy=http://"username":"password"@proxy:port
+
+$ cd GFPGAN
+ 
+# Download the trained model
+$ wget https://github.com/TencentARC/GFPGAN/releases/download/v0.2.0/GFPGANCleanv1-NoCE-C2.pth -P experiments/pretrained_models
+ 
+# Create directory for input images
+$ mkdir inputs/target_imgs
+# Store the image in the above directory
+ 
+# Perform image restoration
+python inference_gfpgan.py --upscale 2 --test_path inputs/target_imgs --save_root results
+
+$ cd GFPGAN
+ 
+# Download a trained model for coloring
+wget https://github.com/TencentARC/GFPGAN/releases/download/v0.1.0/GFPGANv1.pth -P experiments/pretrained_models
+ 
+# Perform image restoration
+python inference_gfpgan.py --model_path experiments/pretrained_models/GFPGANv1.pth --test_path inputs/target_imgs --save_root results --arch original --channel 1
+
+
