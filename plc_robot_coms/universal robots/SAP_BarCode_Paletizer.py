@@ -161,23 +161,23 @@ else:
 recipe_id = 0
 for i, q in enumerate(qty):
     if boxs[i] == "A":
-        recipe_id = recipe_id | q
+        recipe_id = recipe_id | int(q)
     elif boxs[i] == "B":
-        recipe_id = recipe_id | q<<8    
+        recipe_id = recipe_id | int(q)<<8    
     elif boxs[i] == "C":
-        recipe_id = recipe_id | q<<16
+        recipe_id = recipe_id | int(q)<<16
     elif boxs[i] == "D":
-        recipe_id = recipe_id | q<<24
+        recipe_id = recipe_id | int(q)<<24
     elif boxs[i] == "G":
-        recipe_id = recipe_id | q<<32
+        recipe_id = recipe_id | int(q)<<32
     elif boxs[i] == "H":
-        recipe_id = recipe_id | q<<40
+        recipe_id = recipe_id | int(q)<<40
     elif boxs[i] == "I":
-        recipe_id = recipe_id | q<<48
+        recipe_id = recipe_id | int(q)<<48
     elif boxs[i] == "J":
-        recipe_id = recipe_id | q<<56
+        recipe_id = recipe_id | int(q)<<56
     elif boxs[i] == "K":
-        recipe_id = recipe_id | q<<64
+        recipe_id = recipe_id | int(q)<<64
         
 # now choose the pallet config (levels) boxs with (rotation) 0=none 1=90 degree
 level=0

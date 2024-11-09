@@ -166,7 +166,7 @@ if (len(qty) == len(boxs)) and (len(qty) == len(exp_dates)):
     boxs = boxs.split(",")
     exp_dates = exp_dates.split(",")
 else:
-    print("invalid SAP data returned, inconsistent lengths of data")
+    print("invalid SAP data returned, inconsistent lengths of data (box types, quantity and expiry date)")
     sys.exit(-1)
 
 # from the order make a unique integer for parsing, this might be more complex with 
@@ -175,23 +175,23 @@ else:
 recipe_id = 0
 for i, q in enumerate(qty):
     if boxs[i] == "A":
-        recipe_id = recipe_id | q
+        recipe_id = recipe_id | int(q)
     elif boxs[i] == "B":
-        recipe_id = recipe_id | q<<8    
+        recipe_id = recipe_id | int(q)<<8    
     elif boxs[i] == "C":
-        recipe_id = recipe_id | q<<16
+        recipe_id = recipe_id | int(q)<<16
     elif boxs[i] == "D":
-        recipe_id = recipe_id | q<<24
+        recipe_id = recipe_id | int(q)<<24
     elif boxs[i] == "G":
-        recipe_id = recipe_id | q<<32
+        recipe_id = recipe_id | int(q)<<32
     elif boxs[i] == "H":
-        recipe_id = recipe_id | q<<40
+        recipe_id = recipe_id | int(q)<<40
     elif boxs[i] == "I":
-        recipe_id = recipe_id | q<<48
+        recipe_id = recipe_id | int(q)<<48
     elif boxs[i] == "J":
-        recipe_id = recipe_id | q<<56
+        recipe_id = recipe_id | int(q)<<56
     elif boxs[i] == "K":
-        recipe_id = recipe_id | q<<64
+        recipe_id = recipe_id | int(q)<<64
         
 # now choose the pallet config (levels) boxs with (rotation) 0=none 1=90 degree
 level=0                                                 # start at bottom level (stack)
@@ -403,6 +403,27 @@ while True:
             print("palletising complete.....")
             print("box A : ",box_a_cnt,"box B : ",box_b_cnt,"box C : ",box_c_cnt,"box D : ",box_d_cnt)
             print("box G : ",box_g_cnt,"box H : ",box_h_cnt,"box I : ",box_i_cnt,"box J : ",box_j_cnt,"box K : ",box_k_cnt)
+            order_complete = True                                        # check if the quantity calculated matches the quantities in the order specified
+            for i, q in enumerate(qty):
+                if boxs[i] == "A":
+                    order_complete &= box_a_cnt == int(q)
+                if boxs[i] == "B":
+                    order_complete &= box_b_cnt == int(q)   
+                if boxs[i] == "C":
+                    order_complete &= box_c_cnt == int(q)
+                if boxs[i] == "D":
+                    order_complete &= box_d_cnt == int(q)
+                if boxs[i] == "G":
+                    order_complete &= box_g_cnt == int(q)
+                if boxs[i] == "H":
+                    order_complete &= box_h_cnt == int(q)
+                if boxs[i] == "I":
+                    order_complete &= box_i_cnt == int(q)
+                if boxs[i] == "J":
+                    order_complete &= box_g_cnt == int(q)
+                if boxs[i] == "K":
+                    order_complete &= box_k_cnt == int(q)
+                print("Order Complete ", order_complete)
             # disconnect UR robot
             robot_disconnect(soc) 
             sys.exit(0)
