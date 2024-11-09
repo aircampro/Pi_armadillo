@@ -352,7 +352,7 @@ if len(sys.argv) >= 13:                             # passed a manual pickup poi
     box_i_cnt = int(sys.argv[10])
     box_j_cnt = int(sys.argv[11])    
     box_k_cnt = int(sys.argv[12]) 
-    if sys.argv[0] >= 14:    
+    if len(sys.argv) >= 14:    
         place = int(sys.argv[13])                   # start palacing rather than picking if set to non-zero
 else:                                               # start at the begining
     level = 0
