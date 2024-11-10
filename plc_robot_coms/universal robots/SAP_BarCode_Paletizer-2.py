@@ -28,7 +28,7 @@ import cv2
 from hana import select_all_as_csv
 # Robo Lib
 import universal_robot2
-
+   
 # find the object (box) index in the SAP list
 def find_index( id, list ):
     for j, bn in enumerate(list):
@@ -144,14 +144,32 @@ def readCSVLines(line_boxs, line_level_data, line_rotations, line_level_rots):
 
 # ============================= main =======================================       
 
+# for odbc driver to system to indicate palet is complete and read the current order to produce
+# pip install pyodbc
+import pyodbc
+# connect to the MIS to read order and complete the order when we have completed
+#
+if platform.architecture()[0].find("64") == 0:
+    cnxn = pyodbc.connect(f'driver=HDBODBC;DSN={dsn};UID={username};PWD={password};SERVERNODE=vhhtzhdpdb.sap.hitachizosen.co.jp:30215') #64bit
+else:
+    cnxn = pyodbc.connect(f'driver=HDBODBC32;DSN={dsn};UID={username};PWD={password};SERVERNODE=vhhtzhdpdb.sap.hitachizosen.co.jp:30215') #32bit
+cursor = cnxn.cursor()
+cursor.execute('''SELECT "ORDER_STR"
+                  FROM "_SYS_ORD"."s4.sd/CA_SD_WORKING_ORDER"
+                  WHERE "BAY_NO" = '12E4' and "FREEZER_NO" = 'XRD1';
+               ''')
+order_str = cursor[0]                                         # first string returned from query is order number for current job 
+# create query to use when completing the order (feedback)
+cur=("INSERT INTO \"_SYS_ORD\".\"s4.sd/CA_SD_COMPLETE_ORDER\" VALUES ("+order_str+");")
+
 # choose the data related to the order from the SAP system
-order_str = '384XSD2321'
+#order_str = '384XSD2321'
 sel = "SELECT QTY, FROM SAPA4H.USR02 WHERE ORDER = "+ order_str
 qty = select_all_as_csv(select_sql=sel)             # to print select_all_as_csv(select_sql=sel.output=sys.stdout)
 sel = "SELECT BOXS, EXPIRY_DATES FROM SAPA4H.USR02 WHERE ORDER = "+ order_str
 boxs = select_all_as_csv(select_sql=sel)
 sel = "SELECT EXPIRY_DATES, FROM SAPA4H.USR02 WHERE ORDER = "+ order_str
-exp_dates = select_all_as_csv(select_sql=sel)  # df = select_all_as_df(select_sql=sql)
+exp_dates = select_all_as_csv(select_sql=sel)       # df = select_all_as_df(select_sql=sql)
 
 # write the data to a csv file for storage or debug
 path = 'data/src/sap_hana_output.csv'
@@ -424,8 +442,18 @@ while True:
                 if boxs[i] == "K":
                     order_complete &= box_k_cnt == int(q)
                 print("Order Complete ", order_complete)
+            if order_complete == True:
+                cursor.execute(cur)                                          # coplete the order in MIS odbc database
+                cursor.commit()                 
             # disconnect UR robot
             robot_disconnect(soc) 
+            # disconnect from odbc
+            # cursor and connection close
+            cursor.close()
+            cnxn.close()
+            # set pointers to nulls
+            cursor = None
+            cnxn = None
             sys.exit(0)
         else:                                                                # should be a valid box
             while True:                                                      # keep grabbing box until done
