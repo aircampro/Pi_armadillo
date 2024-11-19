@@ -1,0 +1,102 @@
+MODULE VisionPickPlace
+    !************************************************************
+    ! Module:  VisionPickPlace
+    !
+    ! Description:
+    !   This code create a server that listen connection request of a client
+    !   The client is a vision system that detect the position of objects and
+    !   send the coordinates to RW for picking them.
+    !
+    ! Author: EDWIN-DOS ref:- https://github.com/edwinDOS/client-tcpip-gofa/tree/main 
+    !
+    ! Version: 1.1 modified ACP
+    !
+    !*********************************************************** 
+
+    VAR socketdev serverSocket;
+    VAR socketdev clientSocket;
+    VAR string data;
+    VAR bool keep_listening := TRUE;
+    VAR bool okX;
+    VAR bool okY;
+    VAR num cambioStrX;
+    VAR num cambioStrY;
+    VAR string XValorString;
+    VAR string YValorString;    
+    !VAR string client_ip := "127.0.0.1";  this is the loop back address if you want to test
+    !Set the IP of the WAN port of the real robot e.g. 192.168,0.91
+    VAR string client_ip := "192.168.98.94";
+    !Process' variables
+    CONST robtarget ptoReposo:=[[558.569062375,391.204728564,297.631913338],[-0.000000013,-0.000000022,1,0.000000006],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+    CONST robtarget ptoPick:=[[190.152964329,689.995892332,56.318084196],[-0.00000001,0.000000013,1,-0.000000005],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+    CONST robtarget ptoAux:=[[204.950713217,341.660605837,100],[0.000000114,0.000000004,1,0.000000036],[0,-1,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+    VAR robtarget ptoCamara := ptoAux;
+    
+    PROC main()
+        !Socket reader from the vision camera 
+        SocketCreate serverSocket; !Create a temp_socket
+        SocketBind serverSocket, client_ip, 1025;
+        SocketListen serverSocket;
+        !WaitTime 10;
+        SocketAccept serverSocket,clientSocket,\Time:=WAIT_MAX;
+        SocketSend clientSocket \Str:="GoFa connected succesfully";
+        SocketReceive clientSocket \Str:= data;
+        Reset Local_IO_0_DO1;
+        
+        WHILE keep_listening DO
+            SocketReceive clientSocket \Str:= data;
+            
+            XValorString := StrPart(data,1,3);
+            okX:=StrToVal(XValorString,cambioStrX);
+                
+            YValorString := StrPart(data,4,3);
+            okY:=StrToVal(YValorString,cambioStrY);
+
+            IF okX and OkY THEN            
+                ptoCamara.trans.x := cambioStrX; !cordinate X passed from the openCV on the camera frame 
+                ptoCamara.trans.y := cambioStrY; !cordinate Y passed from the openCV on the camera frame
+            
+                pickFromPose;
+            ENDIF
+            
+        ENDWHILE
+        SocketClose clientSocket;
+        SocketClose serverSocket;
+        
+        ! Error handler for power fail and connection lost
+        ERROR
+            IF ERRNO=ERR_SOCK_TIMEOUT THEN
+                RETRY;
+            ELSEIF ERRNO=ERR_SOCK_CLOSED THEN
+                SocketClose clientSocket;
+                SocketClose serverSocket;
+                SocketCreate serverSocket;
+                SocketBind serverSocket, client_ip, 1025;
+                SocketListen serverSocket;
+                SocketAccept serverSocket, clientSocket;
+                SocketSend clientSocket \Str:="GoFa Reconnected";
+                SocketReceive clientSocket \Str:= data;
+                data := "";
+                RETRY;
+            ELSE
+                TPWrite "ERRNO = "\Num:=ERRNO;
+                Stop;
+            ENDIF
+    ENDPROC
+    
+    PROC pickFromPose()
+        ConfJ\Off;
+        ConfL\Off;
+        MoveJ ptoReposo,v1000,z100,Servo\WObj:=wobj0;
+        MoveJ Offs(ptoPick,0,0,100),v800,z10,Servo\WObj:=wobj0;
+        MoveL ptoPick,v100,fine,Servo\WObj:=wobj0;
+        Set Local_IO_0_DO1;
+        MoveJ Offs(ptoPick,0,0,50),v400,z10,Servo\WObj:=wobj0;
+        MoveJ ptoReposo,v800,z100,Servo\WObj:=wobj0;
+        MoveJ Offs(ptoCamara,0,0,100),v800,z10,Servo\WObj:=Workobject_1;
+        MoveL ptoCamara,v100,fine,Servo\WObj:=Workobject_1;
+        Reset Local_IO_0_DO1;
+        MoveJ Offs(ptoCamara,0,0,100),v800,z10,Servo\WObj:=Workobject_1;
+    ENDPROC
+    
+ENDMODULE
