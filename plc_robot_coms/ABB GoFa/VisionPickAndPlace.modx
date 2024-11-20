@@ -53,7 +53,7 @@ MODULE VisionPickPlace
             okY:=StrToVal(YValorString,cambioStrY);
 
             IF okX THEN
-			    IF okY THEN            
+	        IF okY THEN            
                     ptoCamara.trans.x := cambioStrX; !cordinate X passed from the openCV on the camera frame 
                     ptoCamara.trans.y := cambioStrY; !cordinate Y passed from the openCV on the camera frame
             
