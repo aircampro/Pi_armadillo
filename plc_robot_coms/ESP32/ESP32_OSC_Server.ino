@@ -110,7 +110,12 @@ void messageCb(OSCMessage& m) {
 }
 
 void setup() {
-  M5.begin();        
+  M5.begin();  
+  /// Increasing the sample_rate will improve the sound quality instead of increasing the CPU load.
+  auto spk_cfg = M5.Speaker.config();
+  spk_cfg.sample_rate = 96000; // default:64000 (64kHz)  e.g. 48000 , 50000 , 80000 , 96000 , 100000 , 128000 , 144000 , 192000 , 200000
+  M5.Speaker.config(spk_cfg);
+  M5.Speaker.setVolume(128);  
   M5.Speaker.begin();
  
   // Wi-Fi
@@ -119,6 +124,12 @@ void setup() {
   // delay(500);
   // WiFi.mode(WIFI_STA);
   // WiFi.begin(ssid, password);
+  // Serial.begin(115200);
+  // while (WiFi.status() != WL_CONNECTED) {
+  //    delay(500);
+  //    Serial.print(".");
+  // }
+  // Serial.println(" CONNECTED");
   // udp.begin(u_port);   <--- use this if you want to use raw udp for messages
   
   // setup an array of faces
@@ -155,7 +166,7 @@ void setup() {
   // ssPin: Specifies the CS pin for SPI communication with the SD card.
   // In the case of M5Stack, it is "GPIO4"
   // SD.begin(GPIO_NUM_4);
-  // iret = TTS.createK(AQUESTALK_KEY);
+  // int iret = TTS.createK(AQUESTALK_KEY);
   int iret = TTS.create(AQUESTALK_KEY);
   avatar.init(8);                                         // start drawing in 8 bit color mode
   avatar.setColorPalette(*color_palettes[0]);
