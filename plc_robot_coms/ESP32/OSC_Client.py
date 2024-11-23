@@ -21,6 +21,22 @@ def change_face(face_to_show):
     print(cmd)
     client.send_message("/msg", cmd)
 
+def play_music(filen):
+    text = filen
+    cmd = 'play ' + text
+    print(cmd)
+    client.send_message("/msg", cmd)
+
+def volume_up():
+    cmd = 'volu ' 
+    print(cmd)
+    client.send_message("/msg", cmd)
+
+def volume_down():
+    cmd = 'vold ' 
+    print(cmd)
+    client.send_message("/msg", cmd)
+    
 def change_expression():
     cmd = 'expr ' 
     print(cmd)
@@ -49,3 +65,5 @@ if __name__ == "__main__":
     say_text_message("now toggle the blink")
     toggle_blink()
     change_face("custom")
+    # now play a file on the SPIFFS file system of the ESP32
+    play_music("my_spiffs_song.mp3")
