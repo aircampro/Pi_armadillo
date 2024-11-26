@@ -290,4 +290,4 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("stop of ADC reader test")
         
-spi.close()
+    spi.close()
