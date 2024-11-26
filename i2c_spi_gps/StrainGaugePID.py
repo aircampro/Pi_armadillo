@@ -229,7 +229,7 @@ REF_V = 3.3                                                            # with a 
 
 # filters
 N = 30                                                                 # Number of samples
-dt = 1/30                                                              # Sampling period [s]
+dt = 1.0/30.0                                                          # Sampling period [s]
 fs = 1 / dt
 
 # chev
@@ -356,7 +356,7 @@ class PidController():
             error = state - self._target
             self._last_error = error
             
-        return self._out
+        return self._term, self._out
 
     def set_auto(self) :
         self._mode = 1
@@ -421,6 +421,7 @@ OUT_ST = 0
 DEADBAND=-1.0                                                                                # define control deadband or -1.0 for none
 C_ACTION=0                                                                                   # forward or reverse action
 PID_LOOP_TIME=1                                                                              # pid loop time in seconds
+PID_OT=1                                                                                     # choose output=1 or term=0
 
 if __name__ == "__main__": 
 
@@ -444,6 +445,7 @@ if __name__ == "__main__":
             DEADBAND = float(config_ini['PID']['DB'])
             C_ACTION = float(config_ini['PID']['CA'])
             PID_LOOP_TIME = float(config_ini['PID']['LT'])
+            PID_OT = int(config_ini['PID']['OT'])
         elif sec == "CALIB":
             CAL_FACTOR = float(config_ini['CALIB']['CF'])
             ZERO_FORCE_V = float(config_ini['CALIB']['ZF'])
@@ -512,12 +514,13 @@ if __name__ == "__main__":
                     str_avg = sum_y / i 
                     t = (now_time - st_time) 
                     # if you want to use a fixed sample time then make t = 100 it might be better                
-                    outPID = controller.next(t, str_avg, DEADBAND)   
-                    if outPID > OUT_H:
-                        outPID = OUT_H
-                    elif outPID < OUT_L:
-                        outPID = OUT_L 
-                    set_DAC(dac, outPID, OUT_H)                    
+                    outTerm, outPID = controller.next(t, str_avg, DEADBAND)  
+                    choice_of_op = [ outTerm, outPID ]                     
+                    if choice_of_op[PID_OT] > OUT_H:
+                        choice_of_op[PID_OT] = OUT_H
+                    elif choice_of_op[PID_OT] < OUT_L:
+                        choice_of_op[PID_OT] = OUT_L 
+                    set_DAC(dac, choice_of_op[PID_OT], OUT_H)                    
                     # reset x
                     x = []
                     st_time = time.time()
