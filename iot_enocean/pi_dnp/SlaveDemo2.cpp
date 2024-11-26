@@ -139,6 +139,23 @@ double SlaveDemoBase::ScaleInput(int inp, double range)
     return (range * (static_cast<double>(inp) / 4095.0));
 }
 
+const double sg_range=3.3;                                                   // with a 3.3V reference voltage
+const double sg_raw_counts=4095.0;                                           // 12-bit ADC
+#define CAL_FACTOR 10.0                                                      // Adjust this based on your calibration data
+#define ZERO_FORCE_V 0.5                                                     // Adjust this based on your calibration data
+
+double SlaveDemoBase::StrainGaugeCalc(int inp)
+{
+    StrainGaugeInput(inp, sg_range, sg_raw_counts );
+	return (voltage - ZERO_FORCE_V ) * CAL_FACTOR;
+}
+
+double SlaveDemoBase::StrainGaugeInput(int inp, double range, double raw_counts )
+{
+    double voltage = (range * (static_cast<double>(inp) / raw_counts));
+	return (voltage - ZERO_FORCE_V ) * CAL_FACTOR;
+}
+
 int SlaveDemoBase::ScaleOutput(double inp, double range)
 {
     return static_cast<int>(std::round(4095.0 * (static_cast<double>(inp) / range)));
