@@ -37,10 +37,8 @@
 // uncomment to activate pulse output 
 // #define PULSE_OUT
 // #define PLS_DURATION 5.0f
-
-#if defined(PULSE_OUT)
-#include <boost/timer.hpp>
-#endif
+#include <cmath>
+#include <iostream>
 
 #include "raspGPIO.h"
 
@@ -56,6 +54,19 @@
     #include <cstdio>
     #define OLED_SPI "/dev/spidev0.0"
 #endif
+
+#if defined(PULSE_OUT)
+#include <boost/timer.hpp>
+#endif
+
+// PID loop with AIN on SPI
+#include "PID.h"
+#include <math.h>
+#include <vector>
+#include "raspADC.h"
+
+// DAC on I2C
+#include "..dac/mcp4725.h"
 
 namespace apl
 {
@@ -82,6 +93,16 @@ public:
 	// initialize the gpio
 	void RaspiGpioInit();
 
+    // for the PID	
+    void PidLoopInit(double p, double i, double d);
+    void ReadAllMeasInput();
+    void ReadMeasInput( int chan_no );
+    double ScaleInput(int inp, double range);
+    int ScaleOutput(double inp, double range);
+    void RunPidLoop();
+    void doPidLoop();
+    double StrainGaugeCalc(int inp);
+    double StrainGaugeInput(int inp, double range, double raw_counts );
 private:
 
 	/** OnCommandNotify has been marshalled to the application thread. It
