@@ -15,10 +15,22 @@ import spidev
 import time
 # Vref = 3.29989
 
-# initialize the spi device
+# initialize the spi device and create an object
 spi = spidev.SpiDev()
 spi.open(0,0)                                            #port 0,cs 0
 spi.max_speed_hz = 1000000                               #speed 1MHz
+
+# adafruit MCP4725 DAC on i2c
+# sudo pip3 install adafruit-circuitpython-mcp4725
+import board
+import busio
+import adafruit_mcp4725
+# Initialize I2C bus.
+i2c = busio.I2C(board.SCL, board.SDA)
+# Initialize MCP4725. and create object
+dac = adafruit_mcp4725.MCP4725(i2c)
+# Optionally you can specify a different addres if you override the A0 pin.
+# amp = adafruit_max9744.MAX9744(i2c, address=0x63)
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -59,7 +71,7 @@ class MA_Filter():
         
 class Bessel_Filter():
     def __init__(self, master=None):
-        print("Chebyshev_Filter")
+        print("Bessel_Filter")
 
     def get_filtertype(self, selected_num):
         if selected_num == 0:
@@ -174,16 +186,19 @@ class Chebyshev_Filter():
         return z
         
 def butter_lowpass(lowcut, fs, order=4):
+    "'Function to design Butterworth low-pass filter'"
     nyq = 0.5 * fs
     low = lowcut / nyq
     b, a = signal.butter(order, low, btype='low')
     return b, a
 
 def butter_lowpass_filter(x, lowcut, fs, order=4):
+    "'Function to lowpass filter data'"
     b, a = butter_lowpass(lowcut, fs, order=order)
     y = signal.filtfilt(b, a, x)
     return y
- 
+
+# read LTC2450 ADC on SPI
 def adc_read_u16():
     ret = 0
     dataV = 0
@@ -230,6 +245,7 @@ orderb = 4
 # MA filter
 move_num = 5
 
+# calculate strain from raw DAC reading
 def read_strain():
     ret, raw_value = adc_read_u16()                                         # Read the raw analog value
     force = 0
@@ -242,9 +258,111 @@ def read_strain():
 
     return ret, force
 
+# set adafruit MCP4725 DAC on i2c
+def set_DAC(dacH, raw, rwarng):
+    dacV = (raw / rwarng) * 4095
+    dacH.raw_output = dacV
+
+class PidController():
+    """A classical PID controller which maintains state between calls.
+
+    This class is intended to be integrated into an external control loop. It
+    remembers enough of the state history to compute integral and derivative
+    terms, and produces a combined control signal with the given gains.
+    """
+
+    def __init__(self,
+                 kp: float,
+                 ki: float,
+                 kd: float,
+                 target: float,
+                 initial_state: float,
+                 t_0: int) -> None:
+        """Create a PID controller with the specified gains and initial state.
+
+        Parameters
+        ----------
+        kp, ki, kd    : The PID control gains.
+        target        : The desired system state, also called a "setpoint".
+        initial_state : The starting state of the system.
+        t_0           : The starting time.
+        """
+        # Gains for the proportional, integral, and derivative terms.
+        self._kp: float = kp
+        self._ki: float = ki
+        self._kd: float = kd
+
+        # The target state which the controller tries to maintain.
+        self._target: float = target
+
+        # Tracks the integrated error over time. This starts at 0 as no time has passed.
+        self._accumulated_error: float = 0.0
+        # Tracks the previous sample's error to compute derivative term.
+        self._last_error: float = initial_state - target
+        # Tracks the previous sample time point for computing the d_t value used in I and D terms.
+        self._last_t: int = t_0
+
+    def next(self, t: int, state: float) -> float:
+        """Incorporate a sample of the state at time t and produce a control value.
+
+        Because the controller is stateful, calls to this method should be
+        monotonic - that is, subsequent calls should not go backwards in time.
+
+        Parameters
+        ----------
+        t     : The time at which the sample was taken.
+        state : The system state at time t.
+        """
+        error = state - self._target
+        d_t = (t - self._last_t)
+        p = self._proportional(error)
+        i = self._integral(d_t, error)
+        d = self._derivative(d_t, error)
+        self._last_t = t
+        self._last_error = error
+        return p + i + d
+
+    def set_p(self, p) :
+        self._kp = p
+
+    def set_i(self, i) :
+        self._ki = i
+
+    def set_d(self, d) :
+        self._kd = d
+        
+    def _proportional(self, error: float) -> float:
+        return self._kp * error
+
+
+    def _integral(self, d_t: float, error: float) -> float:
+        # The constant part of the error.
+        base_error = min(error, self._last_error) * d_t
+        # Adjust by adding a little triangle on the constant part.
+        error_adj = abs(error - self._last_error) * d_t / 2.0
+        self._accumulated_error += base_error + error_adj
+        return self._ki * self._accumulated_error
+
+
+    def _derivative(self, d_t: float, error: float) -> float:
+        d_e = (error - self._last_error)
+        if d_t > 0:
+            return self._kd * (d_e / d_t)
+        else:
+            return 0
+
+# PID Params
+TARGET_STRAIN = 1.5                                                                        # required force
+PBAND_STR=1.0                                                                              # p i d params
+INT_STR=0.2
+DER_STR=0.1
+OUT_H=4095                                                                                 # pid out scale
+OUT_L=100
+PID_USES_FILTER=1                                                                             # 0=raw 1=butterworth, 2=chevyshev 3=besel 4=Moving avagerge
+  
 if __name__ == "__main__": 
 
-    x = [] 
+    x = []                                                                                    # initialise an array to store the readings from the DAC 
     # chev filter
     CFilter = Chebyshev_Filter()
     ftype = CFilter.get_filtertype(ftype)
@@ -253,41 +371,75 @@ if __name__ == "__main__":
     ftypeB = BeFilter.get_filtertype(ftypeB)
     # moveing average
     MFilter = MA_Filter()
-    try:    
-        while 1:  
-            ret, strn = read_strain() 
-            if ret == 0:            
-                x.append(strn)
-            if len(x) == 30:                                                                # we have 30 samples
-                # butterworth
-                y0 = butter_lowpass_filter(x, 100, fs, order=4)
-                # chebyshev               
-                y1 = CFilter.Chebyshev_filter(x, dt, order, flc, fh, attenuation, ftype)
-                x_freq_rspns_ch, y_freq_rspns_ch, p_ch, x_gd_ch, y_gd_ch = CFilter.character_Chebyshev(dt, order, flc, fh, ripple, ftype)
-                # besel
-                y2 = BeFilter.Bessel_filter(x, dt, orderb, flb, fhb, ftypeB)
-                x1_freq_rspns_be, y1_freq_rspns_be, p_be, x_gd_be, y_gd_be = BeFilter.character_Bessel(dt, orderb, flb, fhb, ftypeB) 
-                # MA Filter
-                y3 = MFilter.MA_filter(x, move_num) 
+    # Create our PID controller with some initial values for the gains.
+    controller = PidController(PBAND_STR, INT_STR, DER_STR, TARGET_STRAIN, TARGET_STRAIN, 0)
+    st_time = time.time()                                                                      # start timer
+    loopExit = 0                                                                               # set infinite loop until you interrupt and type x
+    while loopExit == 0:
+        try:    
+            while 1:  
+                ret, strn = read_strain() 
+                if ret == 0:            
+                    x.append(strn)
+                if len(x) == 30:                                                                # we have 30 samples i.e 1s for 30sps
+                    now_time = time.time()                                                      # end PID sampling time
+                    # butterworth
+                    y0 = butter_lowpass_filter(x, 100, fs, order=4)
+                    # chebyshev               
+                    y1 = CFilter.Chebyshev_filter(x, dt, order, flc, fh, attenuation, ftype)
+                    x_freq_rspns_ch, y_freq_rspns_ch, p_ch, x_gd_ch, y_gd_ch = CFilter.character_Chebyshev(dt, order, flc, fh, ripple, ftype)
+                    # besel
+                    y2 = BeFilter.Bessel_filter(x, dt, orderb, flb, fhb, ftypeB)
+                    x1_freq_rspns_be, y1_freq_rspns_be, p_be, x_gd_be, y_gd_be = BeFilter.character_Bessel(dt, orderb, flb, fhb, ftypeB) 
+                    # MA Filter
+                    y3 = MFilter.MA_filter(x, move_num) 
                 
-                # now plot the raw and filtered data
-                fig, ax = plt.subplots()
-                ax.plot(t, x,  c="blue", label='raw data')
-                ax.plot(t, y0, c="red", label='butterworth filtered')
-                ax.plot(t, y1, c="green", label='chevyshev filtered')
-                ax.plot(t, y2, c="cyan", label='besel filtered')
-                ax.plot(t, y3, c="yellow", label='Moving Avg filtered')
-                ax.set_xlabel("Time [s]")
-                ax.set_ylabel("Signal")
-                ax.set_xlim([0, 0.1])
-                ax.grid()
-                plt.legend(loc='strain gauage readings with filters')
-                plt.show()            
-            
-                # reset x
-                x = []
+                    # now plot the raw and filtered data
+                    fig, ax = plt.subplots()
+                    ax.plot(t, x,  c="blue", label='raw data')
+                    ax.plot(t, y0, c="red", label='butterworth filtered')
+                    ax.plot(t, y1, c="green", label='chevyshev filtered')
+                    ax.plot(t, y2, c="cyan", label='besel filtered')
+                    ax.plot(t, y3, c="yellow", label='Moving Avg filtered')
+                    ax.set_xlabel("Time [s]")
+                    ax.set_ylabel("Signal")
+                    ax.set_xlim([0, 0.1])
+                    ax.grid()
+                    plt.legend(loc='strain gauage readings with filters')
+                    plt.show()            
+
+                    # example read ADC pass through a butterworth filter and then pass the result to PID with this scaled result being sent to a DAC
+                    #
+                    filter_for_pid = [x, y0, y1, y2, y3 ]                       # list available filters
+                    chosen_filter = filter_for_pid[PID_USES_FILTER]             # choose filter 0 which is butterworth
+                    sum_y = 0
+                    for i in len(chosen_filter):
+                        sum_y += chosen_filter[i]
+                    str_but_avg = sum_y / i 
+                    t = (now_time - st_time) * 100
+                    # if you want to use a fixed sample time then make t = 100 it might be better                
+                    outPID = controller.next(t, str_but_avg)   
+                    if outPID > OUT_H:
+                        outPID = OUT_H
+                    elif outPID < OUT_L:
+                        outPID = OUT_L 
+                    set_DAC(dac, outPID, OUT_H)                    
+                    # reset x
+                    x = []
+                    st_time = time.time()
         #time.sleep(0.1)
-    except KeyboardInterrupt:
-        print("stop of ADC reader test")
+        except KeyboardInterrupt:
+            v=input("\033[32m enter p= i= d= e.g. p=32 or x to end anything else returns back to reading \033[0m")
+            if not v.find("p") == -1:
+                controller.set_p(int(v.split("=")[1]))  
+            elif not v.find("i") == -1:
+                controller.set_i(int(v.split("=")[1])) 
+            elif not v.find("d") == -1:
+                controller.set_d(int(v.split("=")[1])) 
+            elif not v.find("x") == -1:
+                print("stop of ADC reader....")
+                loopExit = 1
+            else:            
+                print("returning to reading ADC....")
         
 spi.close()
