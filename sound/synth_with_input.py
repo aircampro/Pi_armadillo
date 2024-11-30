@@ -365,67 +365,65 @@ import pyaudio                              # install : conda install pyaudio
 import mido                                 # install : pip install mido
 import soundfile as sf                      # install : pip install soundfile
 
-# サンプリングレートを定義
 SAMPLE_RATE = 44100
 
-# MIDIの1ノートを表現するリストの要素を定義しておく
-IX_ON_MSEC = 0                                                           # int note onの時間　単位はミリ秒
-IX_OFF_MSEC = 1                                                          # int note offの時間　単位はミリ秒
-IX_NOTE_NUMBER = 2                                                       # int ノート番号
-IX_VELOCITY = 3                                                          # float 音量　範囲は0-1.0
-IX_DULATION = 4                                                          # float 音の長さ　単位は秒
+# MIDI
+IX_ON_MSEC = 0                                                           # int note on
+IX_OFF_MSEC = 1                                                          # int note off
+IX_NOTE_NUMBER = 2                                                       # int 
+IX_VELOCITY = 3                                                          # float 
+IX_DULATION = 4                                                          # float 
 MIDI_2_WAVE_FILE="midwav.mid"
 
-# 指定ノート番号のサイン波を、指定秒数生成してnumpy配列で返す関数
+# function to take a given note and make a corresponding wav file
 def notenumber2wave(notenumber: int, duration: float, volume: float) -> np.array:
     # convert the midi note number to a frequency
     freq = 440.0 * 2 ** ((notenumber - 69) / 12)
-    # 指定周波数のサイン波を指定秒数分生成
+    # create a numpy array for the note at that freq
     samples = np.sin(np.arange(int(duration * SAMPLE_RATE)) * freq * np.pi * 2 / SAMPLE_RATE) * volume
-    # 波形の頭とお尻を最大100サンプル(約0.002秒)をフェード処理する（つなぎ目のプチノイズ軽減のため）
-    fade_len = min(100, samples.size)                                                        # フェード処理するサンプル数
-    slope = (np.arange(fade_len) - 1) / fade_len                                             # フェードインのスロープ計算
-    samples[:fade_len] = samples[:fade_len] * slope                                          # サンプル先頭とスロープを掛けてフェードイン
-    slope = ((fade_len - 1) - np.arange(fade_len)) / fade_len                                # フェードアウトのスロープ計算
-    samples[-fade_len:] = samples[-fade_len:] * slope                                        # サンプル末尾とスロープを掛けてフェードアウト
+    # implement fade
+    fade_len = min(100, samples.size)                                                        # fade length
+    slope = (np.arange(fade_len) - 1) / fade_len                                             # slope
+    samples[:fade_len] = samples[:fade_len] * slope                                          # fade in
+    slope = ((fade_len - 1) - np.arange(fade_len)) / fade_len                               
+    samples[-fade_len:] = samples[-fade_len:] * slope                                       
     return samples
 
 
-# n個の波形の長さを揃えて縦に積む関数
+# pad and stack
 def padding_and_stack(inputs: list) -> np.array:
-    # 配列の総数が0なら、返すものがない
     if len(inputs) < 1:
         return None
-    # 配列の総数が1なら、その1個を返す
+
     if len(inputs) == 1:
         return inputs[0]
-    # 配列の最大要素数を調べる
+
     maxlen = 0
     for x in inputs:
         if maxlen < len(x):
             maxlen = len(x)
-    # 最大数に揃える（うしろに０を加える）
+
     for i, x in enumerate(inputs):
         if len(x) < maxlen:
             inputs[i] = np.pad(x, (0, maxlen - len(x)))
-    # 縦に積む
+
     return np.vstack(inputs)
 
 
 # play （np.array） as a sound stream
 def play_wave_pyaudio(wave) -> None:
-    # PyAudio開始
+
     p = pyaudio.PyAudio()
-    # ストリームを開く
+
     stream = p.open(format=pyaudio.paFloat32, channels=1,  rate=SAMPLE_RATE, frames_per_buffer=1024,  output=True)
-    # 再生
+
     stream.write(wave.astype(np.float32).tostring())
-    # ストリームを閉じる
+
     stream.close()
-    # PyAudio終了
+
     p.terminate()
 
-# MIDIファイルの中のメッセージをすべてプリント
+# MIDI printer
 def print_midi(file_path: str) -> None:
     print("----------------- PRINT MIDI -----------------")
     file = mido.MidiFile(file_path)
@@ -437,18 +435,18 @@ def print_midi(file_path: str) -> None:
     print("----------------------------------------------")
 
 
-# 1トラック分の notes[note[],note[],...] を波形に変換して返す
+# notes[note[],note[],...] 
 def notes2track(notes: list) -> np.array:
-    # まずトラックの長さを調査（いちばん遅いnote off）
+    # いnote off）
     track_msec = 0
     for note in notes:
         if track_msec < note[IX_OFF_MSEC]:
             track_msec = note[IX_OFF_MSEC]
-    # まずトラックの長さの無音波形（ベース配列）を作る
+
     track_base = np.zeros(int((track_msec / 1000.0) * SAMPLE_RATE))
-    # 次に、ノートの波形を生成し、ベース配列の上に重ねていく
+
     for note in notes:
-        if note[IX_DULATION] > 0:  # サンプルが存在するくらい長い場合に限って処理する
+        if note[IX_DULATION] > 0:  
             wave = notenumber2wave(note[IX_NOTE_NUMBER], note[IX_DULATION], note[IX_VELOCITY])
             fromix = int((note[IX_ON_MSEC] / 1000.0) * SAMPLE_RATE)
             toix = fromix + wave.size
@@ -468,8 +466,8 @@ def midi2wave(file_path: str, proj_tempo: float, samplerate=SAMPLE_RATE) -> np.a
     tracks = []
     # Search tracks
     for track in file.tracks:
-        now = 0                                                          # 現在の時刻（msec）を保持
-        notes = []                                                       # ノート情報の配列
+        now = 0                                                          # （msec）
+        notes = []                                                    
         for event in track:
             now = now + event.time * abs_time_tick_msec
             if event.type == 'set_tempo':
@@ -477,23 +475,19 @@ def midi2wave(file_path: str, proj_tempo: float, samplerate=SAMPLE_RATE) -> np.a
                 abs_time_tick_msec = tempo / ticks_per_beat / 1000.0
                 print("BPM = ", 60000000.0 / tempo)
             elif event.type == 'note_on' and event.channel == 9:
-                # 打楽器を無視
                 pass
             elif event.type == 'note_off' or (event.type == 'note_on' and event.velocity == 0):
-                # ノートオフを処理
                 for note in notes:
                     if (note[IX_OFF_MSEC] == 0) and (note[IX_NOTE_NUMBER] == event.note):
                         note[IX_OFF_MSEC] = now
                         note[IX_DULATION] = (note[IX_OFF_MSEC] - note[IX_ON_MSEC]) / 1000.0
                         note[IX_VELOCITY] = note[IX_VELOCITY] / 127.0
             elif event.type == 'note_on':
-                # ノートオンを登録
                 notes.append([math.floor(now), 0, event.note, event.velocity, 0])
-        if len(notes) > 0:  # このトラックに発音すべきノートがあれば
+        if len(notes) > 0:  
             print("midi2wave: converting track #", len(tracks), "...")
-            tracks.append(notes2track(notes))  # トラックの波形を作る
+            tracks.append(notes2track(notes))  
 
-    # 1つの波形に合成（個々のサンプルの平均を取る）＝ボリューム1:1:1のミキシング
     print("midi2wave: mixising", len(tracks), "tracks ...")
     mixed_wave = padding_and_stack(tracks).mean(axis=0)
     print("midi2wave: finish!")
@@ -508,25 +502,25 @@ def set_midi_wav_file(file_path: str) -> None:
     
 # plays the midi as audio once using a sound stream
 def play_midi_wav_stream() -> None:
-    print_midi(MIDI_2_WAVE_FILE)                                         # MIDIファイルの中身を全部プリント（デバッグのため）
-    wave = midi2wave(MIDI_2_WAVE_FILE,SONG_TEMPO)                        # MIDIファイルを波形に変換
-    play_wave_pyaudio(wave)                                              # 波形を再生
+    print_midi(MIDI_2_WAVE_FILE)                                         # MIDI
+    wave = midi2wave(MIDI_2_WAVE_FILE,SONG_TEMPO)                        # MIDI
+    play_wave_pyaudio(wave)                                              
 
 # opens the output wav made from the midi and continuosly plays it
 def loop_midi_wav() -> None:
-    print_midi(MIDI_2_WAVE_FILE)                                         # MIDIファイルの中身を全部プリント（デバッグのため）
-    wave = midi2wave(MIDI_2_WAVE_FILE,SONG_TEMPO)                        # MIDIファイルを波形に変換
+    print_midi(MIDI_2_WAVE_FILE)                                         # MIDI
+    wave = midi2wave(MIDI_2_WAVE_FILE,SONG_TEMPO)                        # MIDI
     while True:
         wav_obj = simpleaudio.WaveObject.from_wave_file("out_midi.wav")
         play_obj = wav_obj.play()
         play_obj.wait_done()
 
 def write_wav_from_freq(freq=600, samplerate=48000)  -> np.array :
-    n = np.arange(samplerate*2)                                           # サンプリング番号
+    n = np.arange(samplerate*2)                                          
     data = np.zeros((samplerate*2,2), dtype=float)  
-    data[:,0] = np.sin(2.0*np.pi*freq*n/samplerate)                       # 正弦波作成
-    data[:,1] = np.sin(np.random.rand(samplerate*2)*2-1.0)                # 白色雑音作成
-    sf.write("freq_out.wav", data, samplerate, subtype="PCM_24")          # 書き込み
+    data[:,0] = np.sin(2.0*np.pi*freq*n/samplerate)                      
+    data[:,1] = np.sin(np.random.rand(samplerate*2)*2-1.0)               
+    sf.write("freq_out.wav", data, samplerate, subtype="PCM_24")         
     return data
 
 def midi_note_from_freq(freq=500.0) -> int:
@@ -616,12 +610,10 @@ from scipy.signal import resample
 def noise_reduction(audio_data):
     global NOISE_PROFILE
     
-    # ノイズプロファイルの更新（最初の数フレーム）
     if NOISE_PROFILE is None:
         NOISE_PROFILE = np.abs(fft(audio_data))
         return audio_data
     
-    # スペクトル減算
     spectrum = fft(audio_data)
     noise_reduction_factor = 0.9
     reduced_spectrum = spectrum - noise_reduction_factor * NOISE_PROFILE
@@ -888,6 +880,8 @@ import wave
 import pyaudio
 import socket
 import threading
+import ctypes
+
 #   usage example :-
 #   mss_client = MixedWavMicSoundStream("sample.wav")
 #   mss_client.start()
@@ -907,36 +901,30 @@ class MixedWavMicSoundStream(threading.Thread):
     def run(self):
         audio = pyaudio.PyAudio()
 
-        # 音楽ファイル読み込み
         wav_file = wave.open(self.WAV_FILENAME, 'rb')
 
-        # オーディオプロパティ
         FORMAT = pyaudio.paInt16
         CHANNELS = wav_file.getnchannels()
         RATE = wav_file.getframerate()
         CHUNK = 1024
 
-        # マイクの入力ストリーム生成
         mic_stream = audio.open(format=FORMAT, channels=CHANNELS, rate=RATE, input=True, frames_per_buffer=CHUNK)
         stream = audio.open(format=FORMAT, channels=CHANNELS, rate=RATE, output=True, frames_per_buffer=CHUNK)
         
-        # メインループ
         while RUN_IT:
-            # 音楽ファイルとマイクからデータ読み込み
+
             wav_data = wav_file.readframes(CHUNK)
             mic_data = mic_stream.read(CHUNK)
 
-            # 音楽ファイルリピート再生処理
             if wav_data == b'':
                 wav_file.rewind()
                 wav_data = wav_file.readframes(CHUNK)
 
-            # サーバに音データを送信
             data_chunk = self.mix_sound(wav_data, mic_data, CHANNELS, CHUNK, 0.5, 0.5)
             if not data_chunk:
                 break
             stream.write(data_chunk)
-        # 終了処理
+
         mic_stream.stop_stream()
         mic_stream.close()
         stream.stop_stream()
@@ -944,20 +932,46 @@ class MixedWavMicSoundStream(threading.Thread):
         
         audio.terminate()
 
-    # 2つの音データを1つの音データにミックス
+
     def mix_sound(self, data1, data2, channels, frames_per_buffer, volume1, volume2):
-        # 音量チェック
+
         if volume1 + volume2 > 1.0:
             return None
-        # デコード
+
         decoded_data1 = np.frombuffer(data1, np.int16).copy()
         decoded_data2 = np.frombuffer(data2, np.int16).copy()
-        # データサイズの不足分を0埋め
+
         decoded_data1.resize(channels * frames_per_buffer, refcheck=False)
         decoded_data2.resize(channels * frames_per_buffer, refcheck=False)
-        # 音量調整 & エンコード
+
         return (decoded_data1 * volume1 + decoded_data2 * volume2).astype(np.int16).tobytes()
 
+# Class wrapper for threading 
+# you can also kill task e.g. if op_task.is_alive(): op_task.raise_exception()
+#
+class twe(threading.Thread):
+    def __init__(self, group=None, target=None, name=None, args=(), kwargs={}):
+        threading.Thread.__init__(self, group=group, target=target, name=name)
+        self.args = args
+        self.kwargs = kwargs
+        return
+
+    def run(self):
+        self._target(*self.args, **self.kwargs)
+
+    def get_id(self):
+        if hasattr(self, '_thread_id'):
+            return self._thread_id
+        for id, thread in threading._active.items():
+            if thread is self:
+                return id
+
+    def raise_exception(self):
+        thread_id = self.get_id()
+        resu = ctypes.pythonapi.PyThreadState_SetAsyncExc(ctypes.c_long(thread_id), ctypes.py_object(SystemExit))
+        if resu > 1:
+            ctypes.pythonapi.PyThreadState_SetAsyncExc(ctypes.c_long(thread_id), 0)
+            print('Failure in raising exception')
 
 # if you want to use a clean mic class instead of the one above with no wav file playing overlayed then uncomment and try this..
 #
@@ -980,11 +994,14 @@ if __name__ == '__main__':
     set_file_name("all_mixed.wav")
 
     # define the aynth thread    
-    loop_synth_task = threading.Thread(target=loop_synth, daemon=True)
+    # loop_synth_task = threading.Thread(target=loop_synth, daemon=True)
+    loop_synth_task = twe(name = 'Thread Synth', target=loop_synth, args=(), kwargs={})
     # define the midi thread
-    loop_midi_task = threading.Thread(target=loop_midi_arrangement, daemon=True)
+    # loop_midi_task = threading.Thread(target=loop_midi_arrangement, daemon=True)
+    loop_midi_task = twe(name = 'Thread midi', target=loop_midi_arrangement, args=(), kwargs={})
     # define the wave thread comment out and use below if also want input mic active   
-    loop_wave_task = threading.Thread(target=loop_sample, daemon=True)
+    #loop_wave_task = threading.Thread(target=loop_sample, daemon=True)
+    loop_wave_task = twe(name = 'Thread beat', target=loop_sample, args=(), kwargs={})
     # wave stream has a mic/audio_input active too... then comment out above and uncomment below
     # mss_client = MixedWavMicSoundStream(FILENM)    
     try:
