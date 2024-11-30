@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # ====================================================================================
 # Example of running a sequence of ramp operations as specified for a given patient id
 #
@@ -108,7 +109,9 @@ class Ramp_sequence():
         self.repeats = 0
         self._pi = pigpio.pi()
         self._esd_return_state = RETURN_OFF                            # default esd return state
-               
+        self.n = 0
+        self._mem_state = 0
+        
     def cb_esd(gpio, level, tick):
         print (f'# {gpio=} : {level=} : {tick/(1000*1000)=}s')
         if level == 1:
@@ -129,7 +132,7 @@ class Ramp_sequence():
         self._pi.set_pull_up_down(gpio_no,pigpio.PUD_UP)  
 
     def init_io_output(self, gpio_no):
-        self._pi.set_mode(gpio_no, pigpio.OUTPU) 
+        self._pi.set_mode(gpio_no, pigpio.OUTPUT) 
         
     def ramp_up(self, delta):
         if self._out + delta <= self._omax:
@@ -155,50 +158,71 @@ class Ramp_sequence():
     # 3. wait
     # 4. ramp down
     # 5. end
+    #  
+    # this routine re-starts exactly where it stopped the ramp function
     #    
     def main_operation_thread(self):
-        print("start opertion...")
+        print("start main opertion...")
+        
         if DIN1 == 1 and self._state == WAIT_FOR_START:
             self._last_state = self._state
             self._state = RAMP_UP
             self._t = time.time()
+            self._mem_state = 0
             print("ramp function begin...",self._opword)
         while self._state == RAMP_UP:  
+            print("identifying the change",time.time()-self.n)
+            if (time.time()-self.n > 0.1) and (self._mem_state == 1):   # we went offline and are recalling this step
+                adapted_start_point = time.time() - (self.n - self._t)
+                print("adapted the start point as we were offline",adapted_start_point, time.time()-adapted_start_point)
+                self._t = adapted_start_point
             self._last_state = self._state
             self._opword |= A                                           # add A      
             self.ramp_up(self._delta)
-            n = time.time()
+            self.n = time.time()
+            self._mem_state = 1
             print("ramping up...",self._out,self._opword)
-            if (n - self._t) >= RAMP_UP_PERIOD:
+            if (self.n - self._t) >= RAMP_UP_PERIOD:
                 self._state = WAIT_DELAY
-                self._t = n
+                self._t = self.n
                 print("ramped up to...",self._out,self._opword)
+                self._mem_state = 2
         while self._state == WAIT_DELAY:
             self._last_state = self._state
             self._opword &= ~A                                          # remove A  
-            n = time.time()
-            if (n - self._t) >= RAMP_WT_PERIOD:
+            self.n = time.time()
+            if (self.n - self._t) >= RAMP_WT_PERIOD:
                 self._state = RAMP_DOWN
-                self._t = n
+                self._t = self.n
+                self._mem_state = 3
                 print("now ramping down...",self._opword)
         while self._state == RAMP_DOWN:
+            print("identifying the change",time.time()-self.n)
+            if (time.time()-self.n > 0.1) and (self._mem_state == 4):   # we went offline and are recalling this step
+                adapted_start_point = time.time() - (self.n - self._t)
+                print("adapted the start point as we were offline",adapted_start_point, time.time()-adapted_start_point)
+                self._t = adapted_start_point
             self._last_state = self._state
             self._opword |= B                                           # add B   
             self.ramp_down(self._delta)  
-            n = time.time()
+            self.n = time.time()
+            self._mem_state = 5
             print("ramping down...",self._out,self._opword)
-            if (n - self._t) >= RAMP_DN_PERIOD:
+            if (self.n - self._t) >= RAMP_DN_PERIOD:
                 self._state = STOP_OFF
-                self._t = n
+                self._t = self.n
                 print("ramped down to...",self._out,self._opword)
+                self._mem_state = 6
         while self._state == STOP_OFF:
             self._last_state = self._state
             self._opword &= ~B                                          # remove B 
             self._out = 0
             n = time.time()
+            self._mem_state = 7
             if (n - self._t) >= 1:
                 self._state = WAIT_FOR_START
                 self._t = n
+                self._mem_state = 0
         while self._state == MAN_OUT:                                   # goto manual state
             man_val = int(input("enter the manual output required "))
             if man_val > self._omax:
@@ -208,7 +232,7 @@ class Ramp_sequence():
             self._out = man_val               
             time.sleep(0.1)
         while self._state == ESD:                                       # esd present
-            self._out = 0
+            self._out = 0                                               # shutdown
             
         self._run = False                                               # stop monitor thread as well	
         print("completed opertion...")
@@ -222,7 +246,9 @@ class Ramp_sequence():
     # 4. ramp down
     # 5. repeats < no_of_repeats goto 2 or repeats > no_of_repeats goto 6
     # 6. end
-    # 
+    #
+    # this routine re-starts at the next ramp function completing the last known on re-start
+    #     
     def secondary_operation_thread(self):
         print("start secondary...")
         self.repeats = 0
