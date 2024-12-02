@@ -68,8 +68,18 @@ FLOAT32ARR = []                                   # data from plc2
 NO_OF_PLC2_FLOATS = 2                             # number of registers to read as above floats
 DO_WRITE_SLAVE=0
 QUE_INH=0                                         # queue inhibit option active from HMI
-
-NO_IR_INTS = 30                                   # data area in the modbus tcp slave
+Q1 = []                                           # show queues on HMI
+Q2 = []
+Q3 = []
+Q4 = []
+Q5 = []
+QUE_RST = 0                                       # hmi to reset the queue
+QUE_RST_EDGE = 0
+ALARM_WORD = 0
+FILTER_INH = 0
+Q_INHS = 0
+U_STATES = []
+NO_IR_INTS = 100                                   # data area in the modbus tcp slave
 NO_IR_FLOATS = 30
 
 # =================================================
@@ -402,20 +412,39 @@ def four_list_or(a, b, c, d):
         r[i] = a[i] | b[i] | c[i] | d[i]
     for rr in range(0, len(r)-len(a)):                # trim back the list to sizes ored
         b = r.pop() 
-        
+
+# [ 1, 0, 1, 0, 0, 1 ] ---> 37
+#
+def binary_list_2_number(blist):
+    b = 0
+    for x, s in enumerate(blist):
+        b += int(s) * pow(2,x)    
+    return b
+    
 # variable to decide it the queue is latching (i.e. once seen is enough) = True otherwise if condition trigger lost queue looses it
-LATCH_QUE = False
-     
+LATCH_QUE = False                                                            # True queue latches else False is instantaneous
+MAN_REQ_LATCH = True                                                         # if True 1st Manual request is time prioroty else order of unit and can reset
+REMOVE_NO_LATCH = True                                                       # if True stop removing when removed regardless of LATCH_QUE_TRUE
+
+import datetime                                                              # we reset the list of filters washed at 0800 am every day
+def make_next_day_date():
+    today = datetime.datetime.today()
+    ss=str(datetime.datetime.strftime(today, '%Y-%m-%d')).split("-")    
+    dt2 = datetime.datetime(year=int(ss[0]), month=int(ss[1]), day=int(ss[2])+1, hour=8) 
+    return dt2
+    
 async def main_filter_queue_task(): 
 
     if LATCH_QUE == True:
-        # this option creates latched queue once seen it remains
+        # this option creates latched queue once seen it remains this would prioritise time it was in the queue 
         man_req = [ ]
         dp_req = [ ]
         service_time_req = [ ]
         turb_req = [ ]
         alum_req = [ ]
         remove_list = [ ] 
+    elif MAN_REQ_LATCH == True:
+        man_req = [ ]
         
     # the dp and tubidity for each unit are read over modbus rs495 serial line to the Novus Modbus i/o
     # set up the novus on serial
@@ -498,7 +527,9 @@ async def main_filter_queue_task():
     # wash water pump controls 
     db_tick_wwp = 0                                                                  # timer interacting with wash pump run signal 
     latch1 = False 
-                
+
+    reprt_date_time = make_next_day_date()
+    
     while True:
         try:    
             # inhibit queue requests while the resource is booked and INHIB_DOFF_TIME (s) thereafter
@@ -533,17 +564,31 @@ async def main_filter_queue_task():
 
                 if LATCH_QUE == False:        
                     # this option creates a new queue every time so the queue is as per the requests and if they go out of trigger they are removed
-                    man_req = [ ]
                     dp_req = [ ]
                     service_time_req = [ ]
                     turb_req = [ ]
                     alum_req = [ ]
                     remove_list = [ ]  
-        
+                if MAN_REQ_LATCH == False:
+                    man_req = [ ]
+                if REMOVE_NO_LATCH == True:
+                    remove_list = [ ] 
+
+                if QUE_RST == 1 and QUE_RST_EDGE == 0:                          # HMI Reset to queue (10s pulse)
+                    dp_req = [ ]
+                    service_time_req = [ ]
+                    turb_req = [ ]
+                    alum_req = [ ]
+                    remove_list = [ ]
+                    man_req = [ ]
+                    QUE_RST_EDGE == 1
+                elif QUE_RST == 0:                                             # HMI removed trigger reset the edge flag
+                    QUE_RST_EDGE == 0
+                    
                 # create the trigger lists (this shall be created by the realtime data read from each remote unit) as shown below but use this for testing the queue
                 # again uncomment for testing and comment out the collection section below
                 #man_trig = [ 1, 0, 0, 0, 1, 1 ]
-                man_spt = True 
+                man_spt = 1 
                 #dp_trig = [ 1.1, 0.1, 0.9, 0, 2.1, 9.81 ]
                 dp_spt = 1.0
                 #service_time_trig = [ 2, 44, 65, 76, 67, 89 ]
@@ -563,8 +608,8 @@ async def main_filter_queue_task():
                     try:                
                         results = read_input_regs(client_novus, modbus_novus_procon.NOVS_DR2A_PV_CH1, mthd, 4, def_addr_novus_d2a)
                         print(results)  
-                        dp_trig.append(range_novus(results[0],RNG_DP)
-                        turb_trig.append(range_novus(results[1],RNG_TUR)
+                        dp_trig.append(range_novus(results[0],RNG_DP))
+                        turb_trig.append(range_novus(results[1],RNG_TUR))
                     except (ValueError, Exception) as e:
                         print(e)
                         steps_in_error = 0
@@ -587,8 +632,8 @@ async def main_filter_queue_task():
                                     steps_in_error = 2
                                     results = read_input_regs(client_novus, modbus_novus_procon.NOVS_DR2A_PV_CH1, mthd, 4, def_addr_novus_d2a)
                                     print(results)  
-                                    dp_trig.append(range_novus(results[0],RNG_DP)
-                                    turb_trig.append(range_novus(results[1],RNG_TUR)
+                                    dp_trig.append(range_novus(results[0],RNG_DP))
+                                    turb_trig.append(range_novus(results[1],RNG_TUR))
                                 except (ValueError, Exception) as e:
                                     # error should then drop out loop and close connections
                                     print(e) 
@@ -600,7 +645,7 @@ async def main_filter_queue_task():
                     try:                
                         results = read_input_regs(client_novus, modbus_novus_procon.NOVS_DR2A_PV_CH1, mthd, 4, def_addr_novus_d2a)
                         print(results)  
-                        alum_trig.append(range_novus(results[0],RNG_AL)
+                        alum_trig.append(range_novus(results[0],RNG_AL))
                     except (ValueError, Exception) as e:
                         print(e)
                         steps_in_error = 0
@@ -623,7 +668,7 @@ async def main_filter_queue_task():
                                     steps_in_error = 2
                                     results = read_input_regs(client_novus, modbus_novus_procon.NOVS_DR2A_PV_CH1, mthd, 4, def_addr_novus_d2a)
                                     print(results)  
-                                    alum_trig.append(range_novus(results[0],RNG_AL)
+                                    alum_trig.append(range_novus(results[0],RNG_AL))
                                 except (ValueError, Exception) as e:
                                     # error should then drop out loop and close connections
                                     print(e) 
@@ -631,25 +676,53 @@ async def main_filter_queue_task():
 
                 # Read Time in Service from Procon PLC user BBRAM stored saved and often
                 # M1200 – M1219 start 41208 1207 end 41220 1219
+                # this is then sorted so the highest is last with the filter number tagged for sort the input list
+                #
                 service_time_trig = read_holding_regs(client_pro, reg=modbus_novus_procon.PROCON_PL101_BBRAM_START, method="tcp", cc=num_of_units)
+                service_time_ordered = []
+                for i, ddd in enumerate(service_time_trig):
+                    service_time_ordered.append((ddd, i))                                     # tag each value with its unit item number (filter)
+                service_time_ordered.sort()                                                   # ordered with the highest last (reverse order)
+                service_time_ordered.reverse()                                                # now highest value is first
+
+                dp_trig_ordered = []                                                          # order dp as highest value first
+                for i, ddd in enumerate(dp_trig):
+                    dp_trig_ordered.append((ddd, i))                                          # tag each value with its unit item number (filter)
+                dp_trig_ordered.sort()                                                        # ordered with the highest last (reverse order)
+                dp_trig_ordered.reverse()                                                     # now highest value is first 
+
+                turb_trig_ordered = []                                                        # order turb as highest value first
+                for i, ddd in enumerate(turb_trig):
+                    turb_trig_ordered.append((ddd, i))                                        # tag each value with its unit item number (filter)
+                turb_trig_ordered.sort()                                                      # ordered with the highest last (reverse order)
+                turb_trig_ordered.reverse()                                                   # now highest value is first 
+
+                alum_trig_ordered = []                                                        # order alum as highest value first
+                for i, ddd in enumerate(alum_trig):
+                    alum_trig_ordered.append((ddd, i))                                        # tag each value with its unit item number (filter)
+                alum_trig_ordered.sort()                                                      # ordered with the highest last (reverse order)
+                alum_trig_ordered.reverse()                                                   # now highest value is first
                 
                 # read the manual initiate switches
+                # if you wanted to make this know which intiation was first you would have to read timers from the PLC as real values
+                # and then order it exactly the same as service_time above i.e which button was pressed for the longest time
+                #
                 di8_1_list = read_disc_inputs(client_pro, reg=modbus_novus_procon.PROCON_PT16DI_DIStart, num=8, method=mthd_pro)        
                 # last 2 are unused
-                b = di8_1_list.pop()
-                b = di8_1_list.pop()
+                b = get_item_from_end_of_Q(di8_1_list)
+                b = get_item_from_end_of_Q(di8_1_list)
                 man_trig = di8_1_list
         
                 for i, man in enumerate(man_trig):
                     di_signal_chk(man, man_spt, i+1. man_req) 
-                for i, dp in enumerate(dp_trig):
-                    ani_signal_chk(dp, dp_spt, i+1. dp_req) 
-                for i, ser in enumerate(service_time_trig):
-                    ani_signal_chk(ser, st_spt, i+1. service_time_req) 
-                for i, tu in enumerate(turb_trig):
-                    ani_signal_chk(tu, turb_spt, i+1. alum_req)    
-                for i, al in enumerate(alum_trig):
-                    ani_signal_chk(al, alum_spt, i+1. turb_req)
+                for dp in enumerate(dp_trig_ordered):
+                    ani_signal_chk(dp[0], dp_spt, dp[1]+1. dp_req) 
+                for ser in (service_time_ordered):                                             # list is priority pairs
+                    ani_signal_chk(ser[0], st_spt, ser[1]+1. service_time_req)                  
+                for i, tu in enumerate(turb_trig_ordered):
+                    ani_signal_chk(tu[0], turb_spt, tu[1]+1. alum_req)    
+                for i, al in enumerate(alum_trig_ordered):
+                    ani_signal_chk(al[0], alum_spt, al[1]+1. turb_req)
                           
                 # process the trigger collection data
                 process_request_info(man_req, MANUAL)
@@ -818,19 +891,34 @@ async def main_filter_queue_task():
                                         print("all queues are empty")
                 if not item == -1:
                     w = write_holding_reg(client_pro, reg=modbus_novus_procon.PROCON_PL101_BBRAM_START+30+item, value=1, method="tcp")                # book the item
-                    RESOURCE = Booked
+                    # RESOURCE = Booked
                     UNIT_NOS.append(item)
                     print("item booked == ",item)
 
+            # has the report time expired and do we need to reset the filters washed this day list
+            diff_time = datetime.datetime.today() - reprt_date_time
+            if diff_time.days >= 0:                                                               # we got 08:00 am next day
+                print("resetting the filters washed today list")
+                UNIT_NOS = []
+                reprt_date_time = make_next_day_date()                                            # increment to the next day  
+                
             # write the data for the HMI via modbus tcp slave
             if DO_WRITE_SLAVE == 0:
                 MANU_TRIG = man_trig                
                 DP_TRIG = dp_trig
                 RUN_TIMES = service_time_trig
                 ALUM_TR = alum_trig
-                TURBID_TR = turb_trig                
+                TURBID_TR = turb_trig
+                Q1, Q2, Q3, Q4, Q5 = p1_q, p2_q, p3_q, p4_q, p5_q    
+                ALARM_WORD = int(db_tick_wwp > 10000) | (2*(int(wash_tank_refil) and int(db_tick_wwp == 10000))) | 4*int(wwon == 2) | 8*int(abon == 2)
+                ALARM_WORD = ALARM_WORD | 16*ESD_FLG | 32*int(UNAVAIL_COMMON_RES == True) | 64*int(RESOURCE == Free)
+                q_info_list = inhibits
+                q_info_list.append(QUE_RST_EDGE)                                # add a bit to the list of 5 elements 
+                Q_INHS = binary_list_2_number(q_info_list) 
+                U_STATES = unit_states                
+                FILTER_INH = binary_list_2_number(remove_trig)                                
                 DO_WRITE_SLAVE = 1                                               # inititate write to the slave data
-            
+                       
         except (KeyboardInterrupt) as k: 
             print(k) 
             print("\033[31m closing down...... \033[0m")
@@ -870,17 +958,29 @@ async def update_datablock2(store: ModbusSlaveContext):
     print('start of tcp slave interface')
     while True:
         INH_HMI = store.getValues(1, 0, 1)[0]                           # get coil registers from HMI
-        QUE_INH = store.getValues(1, 0, 1)[0][0]                        # get coil registers from HMI
+        QUE_WD = store.getValues(1, 0, 1)[0]                            # get coil registers from HMI
+        QUE_INH = QUE_WD[0]
+        QUE_RST = QUE_WD[1]
         
         store.setValues(4, 0, [CHAN_LVL_PLC2])                          # send for displaying info on graphics 
         if DO_WRITE_SLAVE == 1:
-            store.setValues(4, 1, DP_TRIG)    
-            store.setValues(4, 1+NO_OF_UNITS, RUN_TIMES) 
-            store.setValues(4, 1+NO_IR_INTS, ALUM_TR) 
-            store.setValues(4, 1+NO_IR_INTS+(NO_OF_UNITS*2), TURBID_TR) # floats are 32 bit so mnultiply by 2
-            store.setValues(1, 10, MANU_TRIG)
+            store.setValues(4, 1, DP_TRIG)                                 # dp cell reading from each unit
+            store.setValues(4, 1+NO_OF_UNITS, RUN_TIMES)                   # unit times in operation
+            store.setValues(4, 1+2*NO_OF_UNITS, Q1)                        # queue(s)
+            store.setValues(4, 1+3*NO_OF_UNITS, Q2)
+            store.setValues(4, 1+4*NO_OF_UNITS, Q3)
+            store.setValues(4, 1+5*NO_OF_UNITS, Q4)
+            store.setValues(4, 1+6*NO_OF_UNITS, Q5)
+            store.setValues(4, 1+7*NO_OF_UNITS, ALARM_WORD)                 # data and alarms 
+            store.setValues(4, 1+7*NO_OF_UNITS+1, FILTER_INH)               # filter (unit) inhibits
+            store.setValues(4, 1+7*NO_OF_UNITS+2, Q_INHS)                   # queue inhibits
+            store.setValues(4, 1+7*NO_OF_UNITS+3, U_STATES)                 # current unit states
+            store.setValues(4, 1+7*NO_OF_UNITS+4, UNIT_NOS)                 # list of units washed this day
+            store.setValues(4, 1+NO_IR_INTS, ALUM_TR)                       # alum f32 
+            store.setValues(4, 1+NO_IR_INTS+(NO_OF_UNITS*2), TURBID_TR)     # turbidity floats are 32 bit so mnultiply by 2
+            store.setValues(1, 10, MANU_TRIG)                               # manual trigger wash list
             DO_WRITE_SLAVE = 0
-        store.setValues(4, 1+NO_IR_INTS+(NO_OF_UNITS*2), FLOAT32ARR)    # write them for HMI as floats		
+        store.setValues(4, 1+NO_IR_INTS+((NO_OF_UNITS*2)*2), FLOAT32ARR)    # write them for HMI as floats		
         await asyncio.sleep(0.1)
 
 # run the serial slave with collection		
