@@ -26,6 +26,8 @@ import ctypes
 import pickle 
 import argparse
 
+import configparser
+
 # for interfacing with gpio in raspberry pi
 import pigpio
 import time
@@ -263,7 +265,7 @@ class Ramp_sequence():
             self._opword |= A                                           # add A      
             self.ramp_up(self._delta_slo)
             n = time.time()
-            print("rampeding up...",self._out,self._opword)
+            print("ramping up.............",self._out,self._opword)
             if (n - self._t) >= RAMP_UP_PERIOD:
                 self._state = WAIT_DELAY
                 self._t = n
@@ -281,6 +283,7 @@ class Ramp_sequence():
             self._opword |= B                                           # add B   
             self.ramp_down(self._delta_slo)  
             n = time.time()
+            print("ramping down.............",self._out,self._opword)
             if (n - self._t) >= RAMP_DN_PERIOD:
                 self._state = STOP_OFF
                 self._t = n
@@ -452,7 +455,7 @@ if __name__ == "__main__":
     try:
         parser = argparse.ArgumentParser(description='command line parse')
         parser.add_argument('-r', '--restore', type=int, dest='cFlag', default=0, help='set to 1 to restore the controller from last saved settings')
-        parser.add_argument('-p', '--patient', type=str, dest='pName', default="seq", help='patient name to save/recall parameters for')
+        parser.add_argument('-p', '--patient', type=str, dest='pName', default="patient", help='patient name to save/recall parameters for')
         args = parser.parse_args()
 
         nm = args.pName
@@ -481,13 +484,29 @@ if __name__ == "__main__":
         
         # list the order of operations in the sequence we wish to run in this batch operation 
         #
-        # this might be retrieved from a csv line input like shown below
-        # mt = { 'main_op' : r.main_operation_thread, 'sec_op' : r.secondary_operation_thread }
-        # csv_list='main_op','sec_op','main_op','main_op'     
-        # sequence_of_op_tasks = []
-        # for z in range(0,len(csv_list)):
-        #     sequence_of_op_tasks.append(mt[csv_list[z].split(",")[0]])        
-        sequence_of_op_tasks = [ r.main_operation_thread, r.secondary_operation_thread, r.main_operation_thread, r.main_operation_thread ]   
+        # this might be retrieved from a csv line input like shown belo
+        #
+        # this is a map of name in the ini file to the actual program in this sequence which does the action
+        sequence_of_op_tasks = [ r.main_operation_thread, r.secondary_operation_thread, r.main_operation_thread, r.main_operation_thread ] 
+        mt = { 'main_op' : r.main_operation_thread, 'sec_op' : r.secondary_operation_thread }
+        config_ini = configparser.ConfigParser()
+        config_ini.read('patient_excercises.ini', encoding='utf-8') 
+        sections = config_ini.sections()   
+        found = 0 
+        for s in sections:
+            if s == nm:                                                              # if patient is found
+                csv_str=str(config_ini[nm]['EXCERCISE_LIST']).replace(' ','') 
+                csv_list = csv_str.split(",")                
+                sequence_of_op_tasks = []
+                for z in range(0,len(csv_list)):
+                    sequence_of_op_tasks.append(mt[csv_list[z]])                     # make the excercise list per patient
+                found = 1
+                break
+        if not found:
+           print(f"\033[33;44m using default treatment none found in patient_excercises.ini for {nm} default patient treatement being undertaken \033[0m")
+           
+        # hard coded below for test                    
+        # sequence_of_op_tasks = [ r.main_operation_thread, r.secondary_operation_thread, r.main_operation_thread, r.main_operation_thread ]   
 
         for i, tsk in enumerate(sequence_of_op_tasks):                  # run the sequence as 2 concurrent threads, operation and monitor                                              
             if i == r.seq_pos:                                          # restored from the last sequence position
