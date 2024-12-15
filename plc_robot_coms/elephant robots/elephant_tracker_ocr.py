@@ -19,6 +19,7 @@ import traceback
 from functools import cmp_to_key
 from itertools import cycle
 from pathlib import Path
+import picklw
 
 sys.path.remove('/opt/ros/kinetic/lib/python2.7/dist-packages')
 import cv2
@@ -166,9 +167,28 @@ class Elephant:
         print("Current Angles:", angles)
 		return angles
 
+    # angles = [0, 45, 90, -45, 0, 0] angles for each joint
     def send_angles(self, ang, speed):
         self.mc.send_angles(ang, speed)	
-		
+
+    def check_at_angles(self, req_angles, delta):
+        act_angles = self.get_current_angles()
+        ret = len(act_angles) == len(req_angles)
+        if ret == True:
+            for i, r in enumerate(req_angles):
+                if abs(r - act_angles[i]) > delta:
+                    ret = False
+                    break
+        return ret
+        
+    def set_angles(self, req_angles, speed, delta):
+        self.send_angles(req_angles, speed)
+        to = 0
+        while((self.check_at_angles(req_angles, delta)==False) and (to < 20000)):
+            time.sleep(0.1)
+            to += 1
+        return to
+        
     def open_gripper(self, speed=70):
 	    self.mc.set_gripper_state(0, speed)
 
@@ -525,7 +545,15 @@ class Demo:
                 joint = int(highest_conf_text.split(":")[1].replace(' ',''))
                 jval = int(highest_conf_text.split(":")[2].replace(' ',''))				
                 self.ele_robot.set_joint_encoder(joint, jval)
-
+            elif not highest_conf_text.find("angles :") == -1:	                                # text shows for example "angles : 45, 0, 14, 90, 0, 10 : 200"
+                d = highest_conf_text.split(":")[1].replace(' ','').split(",")
+                r_angles = []
+                for dd in d:
+                    r_angles.append(float(dd))
+                speed = int(highest_conf_text.split(":")[2].replace(' ',''))				
+                delta = 5
+                self.ele_robot.set_angles(r_angles, speed, delta)
+                
     def loop(self):
         if self._conf.useCamera:
             self._pv.prepareFrames(callback=self.onNewFrame)
@@ -600,7 +628,7 @@ class Demo:
                 self._nnManager.draw(self._pv, self._nnData)
             self._pv.showFrames(callback=self._showFramesCallback)
         elif self._hostFrame is not None:  
-            # read text in frame and if recognised move the cobot
+            # read text in frame and if recognised move the cobot as desired
             #        
             self.read_text_move_cobot()
                 
@@ -852,9 +880,15 @@ def prepareConfManager(in_args):
 
 def runOpenCv():
     confManager = prepareConfManager(args)
-    demo = Demo()
+    try:
+        with open('app.pkl', 'rb') as f:
+            demo = pickle.load(f)
+    except:
+        demo = Demo()
     demo.run_all(confManager)
-
+    with open('app.pkl', 'wb') as f:
+        pickle.dump(demo, f)
+        
 if __name__ == "__main__":
     use_cv = args.guiType == "cv"
     if use_cv:
