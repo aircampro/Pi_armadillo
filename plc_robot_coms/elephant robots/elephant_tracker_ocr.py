@@ -552,7 +552,8 @@ class Demo:
                     r_angles.append(float(dd))
                 speed = int(highest_conf_text.split(":")[2].replace(' ',''))				
                 delta = 5
-                self.ele_robot.set_angles(r_angles, speed, delta)
+                if (self.ele_robot.set_angles(r_angles, speed, delta) == 20000):
+                    print("could not move to specified angles")
                 
     def loop(self):
         if self._conf.useCamera:
