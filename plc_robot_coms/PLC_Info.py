@@ -1450,3 +1450,60 @@ def read_Titan_CURDA(a):
     except ValueError:
         rv = int(a[4][1])
     return rv 
+
+# Omrom NX1 PLC over ethernetIP https://industrial.omron.eu/en/products/nx1
+#
+from aphyt import omron
+
+def connectNX1_eip(ip_addr='192.168.251.1'):
+    eip_instance = omron.n_series.NSeriesEIP()
+    eip_instance.connect_explicit(ip_addr)
+    eip_instance.register_session()
+    eip_instance.update_variable_dictionary()
+    return eip_instance
+    
+def writeNX1_do(eiph, vname='handng', valu=False):
+    reply = eiph.write_variable(vname, valu)
+    return reply
+    
+def writeNX1_str(eiph, vname='ToBaPrCo', valu):
+    reply = eiph.write_variable(vname, str(valu))
+    
+def readNX1_val(eiph, vname='START_PB'):
+    rt = eiph.read_variable(vname)
+    return rt
+    
+# OMRON Techman Cobot library https://www.tm-robot.com/en/tm5-900/
+#
+import asyncio
+import sys
+import techmanpy
+import csv
+import time
+O_TM_IP='169.254.130.10'
+
+async def tm_move(poz, SP, TI, rip=O_TM_IP):
+    async with techmanpy.connect_sct(robot_ip=rip) as conn:
+        await conn.move_to_joint_angles_ptp(poz, SP, TI)
+
+def tm_robot_move(POZZ, SP, TI, rip=O_TM_IP):
+    asyncio.run(tm_move(POZZ, SP, TI, rip))
+
+async def tm_move_line(poz, SP, TI, rip=O_TM_IP):
+    async with techmanpy.connect_sct(robot_ip=rip) as conn:
+        await conn.move_to_point_line(poz, SP, TI)
+
+def tm_robot_move_line(POZZ,SP, TI, rip=O_TM_IP):
+    asyncio.run(tm_move_line(POZZ, SP, TI, rip))
+
+def save_dictionary_to_csv(params_dict):
+    with open("robot.csv", 'w') as file:
+        writer = csv.writer(file)
+        for parameter, value in params_dict.items():
+            writer.writerow([parameter, value])
+
+async def tm_listen(rip=O_TM_IP):
+    async with techmanpy.connect_svr(robot_ip=rip) as conn:
+        conn.add_broadcast_callback(save_dictionary_to_csv)
+        await conn.keep_alive()
+        
