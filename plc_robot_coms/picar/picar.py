@@ -239,13 +239,13 @@ try:
             stopcar()
             time.sleep(short_delay)	
             
-        elif sensorval=="000":                                         # no obstacles
+        elif sensorval=="000":                                          # no obstacles
             print(sensorval+" forward")
             if sharp_r >= 2:                                            # we went a lot right turn back a bit
-                turnLeft(low_speed, low_speed)	
+                turnLeft(0, low_speed)	
                 sharp_r -= 1
             if sharp_l >= 2:                                            # we went a lot left turn back a bit
-                turnRight(low_speed, low_speed)	
+                turnRight(low_speed, 0)	
                 sharp_l -= 1                			
             time.sleep(short_delay)	
             forward(mid_speed,mid_speed)                                # go forward
