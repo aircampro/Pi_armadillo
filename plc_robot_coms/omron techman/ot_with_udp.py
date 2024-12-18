@@ -376,13 +376,6 @@ def perform_chosen_action():
     elif cut_status == 'P':
         rst_joint_angles()
         
-    try:
-        TCP_client.connect((host, port))
-        return TCP_client
-    except socket.error:
-        TCP_client.close()
-        return -1
-        
 # threads which interact with remote GUI on UDP port 8888 (by default)
 #  
 # Download an Android or iOS UDP sending/receiving APP. You can use any UDP sending/receiving APP. 
