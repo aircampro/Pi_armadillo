@@ -441,6 +441,7 @@ def read_remote_udp(sock):
             run_f = False
         elif data == b'Z':
             cur_status = 'S'
+            perform_chosen_action() 
             RUN_ALL = False
             
 if __name__ == "__main__":
