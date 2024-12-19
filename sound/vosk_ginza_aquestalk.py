@@ -41,12 +41,19 @@ else:
         
 # determine language en or jp and choose the nlp dictionary
 #
-cmd_str = "locale -a | grep jp"
-z=subprocess.run(cmd_str, shell=True)
-if z.returncode == 0:
-   LANG="jp"
-else:
-   LANG="en"   
+if plat = "win":
+    output_str = subprocess.run('Get-InstalledLanguage', capture_output=True, text=True).stdout
+    if not output_str.find("ja-JA") == -1:
+        LANG="jp"
+    else:
+        LANG="en"
+else:   
+    cmd_str = "locale -a | grep jp"
+    z=subprocess.run(cmd_str, shell=True)
+    if z.returncode == 0:
+        LANG="jp"
+    else:
+        LANG="en"   
 
 if plat == "lin":    
     from ctypes import *
@@ -80,9 +87,9 @@ if plat == "lin":
             if not wav == None:
                 f.write(wav)
         
-    def say_to_file_with_phont(textmsg: str) -> None:        
+    def say_to_file_with_phont(textmsg: str, f_p='aqtk2-lnx-eva/phont/aq_yukkuri.phont') -> None:        
         with open('yukkuri.wav', 'wb') as f:
-            wav = synthe_spk(textmsg, speed=100, file_phont='aqtk2-lnx-eva/phont/aq_yukkuri.phont')
+            wav = synthe_spk(textmsg, speed=100, file_phont=f_p)
             if not wav == None:
                 f.write(wav)
 
