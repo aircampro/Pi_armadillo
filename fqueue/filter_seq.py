@@ -90,6 +90,7 @@ RMP_STEP_TM = 0.1
 SETTLE_PERIOD = 600
 FILL_UP_PERIOD = 150
 SLOW_START_PERIOD = 12000
+LVL_ENOUGH = 40
 
 # outputs to valves and pumps (for example modbus relays in i/o or PLC)
 A = 0b1                                             # air blower inlet
@@ -193,7 +194,8 @@ class Wash_sequence():
         self._esd_return_state = RETURN_OFF                            # default esd return state
         self.n = 0
         self._mem_state = 0
-
+        self._lev_ok = False
+        
     # hard wired ESD with actions        
     def cb_esd(gpio, level, tick):
         print (f'# {gpio=} : {level=} : {tick/(1000*1000)=}s')
@@ -560,7 +562,7 @@ class Wash_sequence():
             self._last_state = self._state    
             self.n = time.time()
             self._mem_state = 8
-            if (self.n - self._t) >= FILL_UP_PERIOD:
+            if (self.n - self._t) >= FILL_UP_PERIOD and self._lev_ok == True:
                 self._state = SequenceSteps.SLOW_RAMP_OUTLET.value
                 self._t = self.n
                 self._mem_state = 9
@@ -796,9 +798,12 @@ class Wash_sequence():
                         self._opword |= E                               # open inlet
                         din3_on = 0
                         cnt3 = 0
-                        
+
+            if self._state == SequenceSteps.FILL.value: 
+                self._lev_ok = lc.state >= LVL_ENOUGH
+                
             self.drive_out()                                            # drive the dac output
-                                                 
+                                                              
         self._run = True                                                # re-enable monitor thread for next time we start the main thread
         print("completed exception monitoring...")
 

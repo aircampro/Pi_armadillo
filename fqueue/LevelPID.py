@@ -269,6 +269,7 @@ class PidController():
         self._mode: int = 1                                                       # mode auto/manual
         self._rev: int = fwd_rev                                                  # forward or reverse acting PID
         self._i_mode: int = 0                                                     # mode to calculate integral term
+        self.state = 0
         
     def next(self, t: int, state: float, deadb: float) -> float:
         """Incorporate a sample of the state at time t and produce a control value.
@@ -282,11 +283,12 @@ class PidController():
         state : The system state at time t.
         deadb : do nothing if in the deadband or -1 is ignore
         """
+        self.state = state 
         if self._mode == 1 and deadb == -1.0 :
             if self._remote_local == 0: 
-                error = state - self._target
+                error = self.state - self._target
             elif self._remote_local == 1:
-                error = state - self._remote_spt 
+                error = self.state - self._remote_spt 
             #d_t = (t - self._last_t)
             d_t = t
             p = self._proportional(error)
@@ -301,9 +303,9 @@ class PidController():
                 self._out = self._out + self._term
         if self._mode == 1 and deadb >= 0.0 :
             if self._remote_local == 0: 
-                error = state - self._target
+                error = self.state - self._target
             elif self._remote_local == 1:
-                error = state - self._remote_spt
+                error = self.state - self._remote_spt
             if abs(error) > deadb:
                 #d_t = (t - self._last_t)
                 d_t = t 
@@ -323,9 +325,9 @@ class PidController():
                 self._accumulated_error = 0                 
         elif self._mode == 0:
             if self._remote_local == 0: 
-                error = state - self._target
+                error = self.state - self._target
             elif self._remote_local == 1:
-                error = state - self._remote_spt            
+                error = self.state - self._remote_spt            
             self._last_error = error
             
         return self._term, self._out
@@ -341,9 +343,9 @@ class PidController():
         set_manual()
         self._out = v 
         if self._remote_local == 0:        
-            error = state - self._target
+            error = self.state - self._target
         elif self._remote_local == 1:
-            error = state - self._remote_spt
+            error = self.state - self._remote_spt
         self._last_error = error
             
     def set_spt(self, sp) :
