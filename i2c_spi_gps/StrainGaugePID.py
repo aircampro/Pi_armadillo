@@ -509,9 +509,9 @@ if __name__ == "__main__":
                     filter_for_pid = [x, y0, y1, y2, y3]                        # list available filters
                     chosen_filter = filter_for_pid[PID_USES_FILTER]             # choose filter 0 which is butterworth
                     sum_y = 0
-                    for i in len(chosen_filter):
+                    for i in range(0, len(chosen_filter)):
                         sum_y += chosen_filter[i]
-                    str_avg = sum_y / i 
+                    str_avg = sum_y / len(chosen_filter) 
                     t = (now_time - st_time) 
                     # if you want to use a fixed sample time then make t = 100 it might be better                
                     outTerm, outPID = controller.next(t, str_avg, DEADBAND)  
