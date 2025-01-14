@@ -1,8 +1,10 @@
+#define _USE_MATH_DEFINES
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
 #include <cmath>
+#include <math.h>
 #include <unistd.h>
 #include "util.h"
 
@@ -150,9 +152,9 @@ void convert_cmyk_rgb( uint16_t C, uint16_t M, uint16_t Y, uint16_t K, uint16_t 
   G1 = 255U - M - K;
   B1 = 255U - Y - K;
 
-  *R = max(0U, R1);
-  *G = max(0U, G1);
-  *B = max(0U, B1);
+  *R = std::max(0U, R1);
+  *G = std::max(0U, G1);
+  *B = std::max(0U, B1);
 }
 
 /*-----------------------------------------------------------------------------
@@ -340,7 +342,7 @@ uint16_t abToHue(float a, float b)
     } else if ((a > 0.0f) && (b < 0.0f)) {
         xBias = 360u;
     }
-    return ((atan(b / a)) * (180.0f / PI)) + xBias;
+    return ((atan(b / a)) * (180.0f / M_PI)) + xBias;
 }
 
 /*-----------------------------------------------------------------------------
@@ -460,7 +462,7 @@ int8_t convert_YUV_420_422( uint8_t *Cin, uint8_t *Cout, uint16_t Clen)
    while (i++<=Clen)
    {
       Cout[2U*i] = Cin[i];
-      Cout[2U*i+1] = min(max(((9U * (Cin[i] + Cin[i+1U]) - (Cin[i-1U] + Cin[i+2U]) + 8U) >> 4U),0U),255U);
+      Cout[2U*i+1] = std::min(std::max(((9U * (Cin[i] + Cin[i+1U]) - (Cin[i-1U] + Cin[i+2U]) + 8U) >> 4U),0U),255U);
    }
    return 0;
 }
@@ -503,8 +505,8 @@ void RGB2HSL(uint8_t *r, uint8_t *g, uint8_t *b, uint8_t *h, uint8_t *s, uint8_t
 {
    double themin,themax,delta;
 
-   themin = min(*r, min(*g,*b));
-   themax = max(*r, max(*g,*b));
+   themin = std::min(*r, std::min(*g,*b));
+   themax = std::max(*r, std::max(*g,*b));
    delta = themax - themin;
    *l = (themin + themax) / 2.0f;
    *s = 0.0f;
