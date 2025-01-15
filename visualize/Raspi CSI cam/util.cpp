@@ -575,16 +575,16 @@ void convertRGB332To888(uint8_t *src, uint8_t *dst, uint32_t pixelSize)
 {
 	float bias = 1.1f;                                                    // because downsampled this seemed to work better
 	for(uint32_t i = 0; i < pixelSize; i++){
-        uint8_t newRGB = (*src++);
-        uint8_t newB = (newRGB & 0x3); 
-        uint8_t newG = (newRGB & 0x1C) >> 2;
-        uint8_t newR = (newRGB & 0xE0) >> 5;
-        uint8_t r = newR << 5;
-        uint8_t g = newG << 5;
-        uint8_t b = newB << 6;
-		(*dst++) = static_cast<uint8_t>(round(r*bias));
-		(*dst++) = static_cast<uint8_t>(round(g*bias));
-		(*dst++) = static_cast<uint8_t>(round(b*bias));
+            uint8_t newRGB = (*src++);
+            uint8_t newB = (newRGB & 0x3); 
+            uint8_t newG = (newRGB & 0x1C) >> 2;
+            uint8_t newR = (newRGB & 0xE0) >> 5;
+            uint8_t r = newR << 5;
+            uint8_t g = newG << 5;
+            uint8_t b = newB << 6;
+	    (*dst++) = static_cast<uint8_t>(round(r*bias));
+	    (*dst++) = static_cast<uint8_t>(round(g*bias));
+	    (*dst++) = static_cast<uint8_t>(round(b*bias));
 	}
 }
 
