@@ -1,6 +1,7 @@
 #ifndef UTIL_H_
 #define UTIL_H_
-
+// common utilities for video codecs and conversions 
+//
 #include <common.h>
 #include "common.h"
 
@@ -23,4 +24,9 @@ void convert_rgb_cmyk( uint16_t R, uint16_t G, uint16_t B, uint16_t *C, uint16_t
 void resize_uyuv(uint8_t *source, uint8_t *dest, int16_t downsample, int input_w, int output_h, int output_w);
 void grayscale_uyvy(uint8_t *source, uint8_t *dest, int output_h, int output_w);
 RET colorfilt_uyvy(uint8_t *source, uint8_t *dest, int output_h, int output_w, uint8_t y_m, uint8_t y_M, uint8_t u_m, uint8_t u_M, uint8_t v_m, uint8_t v_M);
+uint8_t convertRGBtoRGB332byte(uint8_t r, uint8_t g, uint8_t b);
+uint8_t convertRGB888toRGB332byte( uint8_t r, uint8_t g, uint8_t b);
+uint8_t convertRGB888toRGB565byte( uint8_t r, uint8_t g, uint8_t b);
+void convertRGB888To332(uint8_t *src, uint8_t *dst, uint32_t pixelSize);
+void convertRGB332To888(uint8_t *src, uint8_t *dst, uint32_t pixelSize);
 #endif

@@ -132,9 +132,9 @@ void convert_xyz_lab( float *X, float *Y, float *Z, uint16_t *L, uint16_t *A, ui
     {
        *Z = ((*Z * 7.787f) + 16.0f) / 116.0f;
     }
-   *L = round((116.0f * (*Y - 16.0f)),0.0f);
-   *A = round((500.0f * (*X - *Y)),0.0f);
-   *B = round((200.0f * (*Y - *Z)),0.0f);
+   *L = static_cast<uint16_t>(round((116.0f * (*Y - 16.0f)),0.0f));
+   *A = static_cast<uint16_t>(round((500.0f * (*X - *Y)),0.0f));
+   *B = static_cast<uint16_t>(round((200.0f * (*Y - *Z)),0.0f));
 }
 
 /*-----------------------------------------------------------------------------
@@ -401,6 +401,12 @@ void convert_rgb_cmyk( uint16_t R, uint16_t G, uint16_t B, uint16_t *C, uint16_t
   *Y = 255U - B - *K;
 }
 
+/*
+Sample Ratio	    format	FOURCC Code	Sort Order	bpp
+YUV422	Packed	    YUY2	YUV	                    16bit
+YUV420	Planar	    I420	YUV	                    12bit
+YUV420	Semi-planar	NV12	YUV	                    12bit
+*/
 /*-----------------------------------------------------------------------------
  *      NV12ToRGB:  NV12 to RGB 
  *      
@@ -523,6 +529,65 @@ void RGB2HSL(uint8_t *r, uint8_t *g, uint8_t *b, uint8_t *h, uint8_t *s, uint8_t
       *h *= 60.0f;
    }
 }
+
+/*  RGB 8bit 888 converrsion to compressed formats below
+	RGB565	RGB332
+R	5bit	3bit
+G	6bit	3bit
+B	5bit	2bit
+Total number of bits	16bit	8bit
+Representable colors	65536 colors	256 colors
+example	0xFFFF	0xFF
+*/
+
+uint8_t convertRGBtoRGB332byte(uint8_t r, uint8_t g, uint8_t b)
+{
+    return (r & 0xE0) | ((g & 0xE0) >> 3) | ((b & 0xC0) >> 6);
+}
+
+// alternative way of writing it
+uint8_t convertRGB888toRGB332byte( uint8_t r, uint8_t g, uint8_t b) {
+    uint8_t newR = r>>5;
+    uint8_t newG = g>>5;
+    uint8_t newB = b>>6;
+    return (newR<<5) | (newG<<2) | newB;
+}
+
+uint8_t convertRGB888toRGB565byte( uint8_t r, uint8_t g, uint8_t b) {
+    uint8_t newR = r>>3;
+    uint8_t newG = g>>2;
+    uint8_t newB = b>>3;
+    return (newR<<11) | (newG<<5) | newB;
+}
+
+void convertRGB888To332(uint8_t *src, uint8_t *dst, uint32_t pixelSize)
+{
+	for(uint32_t i = 0; i < pixelSize; i++){
+		uint8_t r = (*src++);
+		uint8_t g = (*src++);
+		uint8_t b = (*src++);
+		*dst++ = convertRGB888toRGB332byte(r, g, b);
+	}
+}
+
+// doesnt work very well as we are trying to expand downsampled compressed data
+void convertRGB332To888(uint8_t *src, uint8_t *dst, uint32_t pixelSize)
+{
+	float bias = 1.1f;                                                    // because downsampled this seemed to work better
+	for(uint32_t i = 0; i < pixelSize; i++){
+        uint8_t newRGB = (*src++);
+        uint8_t newB = (newRGB & 0x3); 
+        uint8_t newG = (newRGB & 0x1C) >> 2;
+        uint8_t newR = (newRGB & 0xE0) >> 5;
+        uint8_t r = newR << 5;
+        uint8_t g = newG << 5;
+        uint8_t b = newB << 6;
+		(*dst++) = static_cast<uint8_t>(round(r*bias));
+		(*dst++) = static_cast<uint8_t>(round(g*bias));
+		(*dst++) = static_cast<uint8_t>(round(b*bias));
+	}
+}
+
 
 /*-----------------------------------------------------------------------------
  *      average_image:  average the image

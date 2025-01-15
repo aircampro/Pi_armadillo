@@ -2,12 +2,13 @@
 #define COMMON_H_
 
 #include <stdint.h>
+#include "ReadIniConfig.hpp"
 
 /* common return code */
 typedef int RET;
-#define RET_OK  0x00000000
-#define RET_NO_DATA  0x00000001
-#define RET_TIMEOUT  0x00000002
+#define RET_OK 0x00000000
+#define RET_NO_DATA 0x00000001
+#define RET_TIMEOUT 0x00000002
 #define RET_ERR 0x80000001
 
 /* LOG macros */
@@ -20,13 +21,17 @@ typedef int RET;
 #define TARGET_FPS 20
 #define WIDTH 320
 #define HEIGHT 240
-#define FILENAME_FORMAT "IMG_%04d.jpg"
+#define FILENAME_FORMAT "CSICAM_IMG_%04d.jpg"
 
-/* device related definition (todo: should be separated file) */
+/* device related definition */
+/* they have been changed to read the .ini file as shown below
 #define DD_ILI_9341_SPI_SPI_DEV "/dev/spidev0.0"
 #define DD_ILI_9341_SPI_GPIO_DC 26
 #define DD_TP_TSC_2046_SPI_SPI_DEV "/dev/spidev0.1"
 #define DD_TP_TSC_2046_SPI_GPIO_IRQ 19
 #define DD_CAMERA_V2L4 "/dev/video0"
-
+*/
+ReadIniConfig m_config;
+std::string m_inipath = "config.ini";
+	
 #endif /* COMMON_H_ */
