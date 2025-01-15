@@ -10,6 +10,7 @@
 RET saveFileBinary(const char* filename, uint8_t* data, int size);
 void convertRGB888To565(uint8_t *src, uint8_t *dst, uint32_t pixelSize);
 void convertYUYVToRGB565(uint8_t *src, uint8_t *dst, uint32_t pixelSize);
+void convertYVYUToRGB565(uint8_t *src, uint8_t *dst, uint32_t pixelSize);
 void convert_xyz_lab( float *X, float *Y, float *Z, uint16_t *L, uint16_t *A, uint16_t *B);
 void convert_cmyk_rgb( uint16_t C, uint16_t M, uint16_t Y, uint16_t K, uint16_t *R, uint16_t *G, uint16_t *B );
 void NV12ToRGB(uint8_t * rgbBuffer, uint8_t * yuvBuffer, int16_t width, int16_t height);
