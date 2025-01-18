@@ -139,7 +139,7 @@ def make_web_map():
             current_coordinate = [gps.latitude[0], gps.longitude[0]]
             distance = geodesic(current_coordinate, target_coordinate).kilometers
             print('distance from target: %s (km)' % distance)
-            print('衛星番号: (仰角, 方位角, SN比)')
+            print('Satellite number: (elevation, azimuth, signal-to-noise ratio)')
             for k, v in gps.satellite_data.items():
                 print('%d: %s' % (k, v))
             print('')
