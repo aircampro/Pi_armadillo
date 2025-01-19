@@ -8,7 +8,9 @@ from tika import parser
 import datetime
 import pytz
 import urllib.request
-   
+import re
+import math
+ 
 def remove_string( str_in, rem_str ):
     return str_in.replace(rem_str, '')
 
@@ -93,7 +95,19 @@ def html_to_txt(html):
     # getting text from html
     text = soup.getText()
     return text
-	
+
+def html_images(html):
+    soup = BeautifulSoup(html, 'lxml')
+    articles = soup.find_all('div', class_='post')
+    url_list = []
+    for article in articles:
+        images = article.find_all('img')
+        for img in images:
+            img_url = img['src']
+            print(f"Image URL: {img_url}")
+            url_list.append(img_url) 
+    return url_list            
+   
 # URL request function
 def url_request(url):
     # http://www.networkinghowtos.com/howto/common-user-agent-list/
@@ -111,6 +125,30 @@ def url_request(url):
         data_response = response.read().decode("utf8")
     return data_response
 
+def get_url_with_soup(ur='http://example.com'):
+    response = url_request(url)(ur)
+    soup = BeautifulSoup(response, 'html.parser')  
+    return soup
+    
+def get_all_links(soup_v):
+    all_links = soup_v.find_all('a')
+    arr = []
+    for link in all_links:
+        print(link.get('href'))
+        arr.append(link.get('href'))
+    return arr
+
+def get_all_img(soup_v):
+    articles = soup_v.find_all('div', class_='post')
+    url_list = []
+    for article in articles:
+        images = article.find_all('img')
+        for img in images:
+            img_url = img['src']
+            print(f"Image URL: {img_url}")
+            url_list.append(img_url) 
+    return url_list 
+    
 def create_timestamp():
     # This timestamp is in UTC
     my_ct = datetime.datetime.now(tz=pytz.UTC)
@@ -119,3 +157,99 @@ def create_timestamp():
     new_ct = my_ct.astimezone(tz)
     timestamp = new_ct.strftime("%d-%m-%Y_%H-%I")
     return timestamp
+    
+# （）,(),『』,「」,〝〟,“”,"",'',``
+# 512 is the threshold for skipping over a forgotten closing parenthesis
+SPEECH_BLOCK_PATTERNS = (
+    r"（[^（）]{0,512}）", r"\([^\(\)]{0,512}\)",
+    r"『[^『』]{0,512}』", r"「[^「」]{0,512}」",
+    r"〝[^〝〟]{0,512}〟", r"“[^“”]{0,512}”",
+    r'"[^"]{0,512}"', r"'[^']{0,512}'", r"`[^`]{0,512}`"
+)
+SPEECH_BRACKETS = set("（）()『』「」〝〟“”""'`")
+
+def separate_speech_lines(text):
+    if isinstance(text, (list, tuple)):
+        text = "\n".join(text)
+    speech_blocks = sum([[m[0] for m in re.finditer(regex, text, re.M)]
+                         for regex in SPEECH_BLOCK_PATTERNS], [])
+
+    non_speech_text = text
+    for block in sorted(speech_blocks, key=lambda line: len(line), reverse=True):
+        non_speech_text = non_speech_text.replace(block, "")
+    non_speech_text = re.sub(r"[\r\n]+", "\n", non_speech_text)
+    non_speech_blocks = [block for block in non_speech_text.split("\n")
+                         if all(b not in block for b in SPEECH_BRACKETS)]
+
+    speech_lines = sum([split_sentence(block[1:-1].strip(" \r\n\t　"))
+                        for block in speech_blocks], [])
+    non_speech_lines = sum([split_sentence(block.strip(" \t　"))
+                            for block in non_speech_blocks], [])
+
+    return speech_lines, non_speech_lines
+
+def split_sentence(text):
+    text = re.sub(r"([。\.\?？！]+)", r"\1\n", text)
+    text = re.sub(r"[\r\n]+", "\n", text)
+    lines = remove_empty([line.strip(" 　\t") for line in text.split("\n")])
+    return lines
+
+def remove_punct(line):
+    return re.sub(r"[。、\.,\?？！]+", "", line)
+
+def remove_empty(lines):
+    return [line for line in lines if line.strip(" 　\t\r\n")]
+
+def filter_length(lines, min_len=0, max_len=math.inf):
+    return [line for line in lines if min_len <= len(line) <= max_len]
+	
+def load_content(text_file):
+    content = []
+    with open(text_file, mode="r", encoding="cp932") as f:
+        lines = list(f.readlines())
+        start = False
+        for i, line in enumerate(lines):
+            if not start:
+                if line.startswith("----") and i + 1 < len(lines) and lines[i + 1] == "\n":
+                    start = True
+                continue
+
+            line = re.sub(r"^[\s　]+", "", line.strip())
+            if not line:
+                continue
+            if line[0] in {"＊", "＃", "［"}:
+                continue
+            if all([c == "―" for c in line]):
+                continue
+
+            line = re.sub(r"※［＃.*］", "", line)
+            line = re.sub(r"＊[１２３４５６７８９０]*［＃.*］", "", line)
+            line = re.sub(r"［＃.*］", "", line)
+            line = re.sub(r"＊[１２３４５６７８９０　]*", "", line)
+            line = re.sub(r"《.*》", "", line)
+            line = re.sub(r"｜", "", line)
+            if line.startswith("底本："):
+                break
+            if line:
+                content.append(line)
+    return "\n".join(content)
+
+def load_resource(text_file):
+    content = load_content(text_file)
+    return separate_speech_lines(content)
+
+def load_speech_lines(text_file, remove_punct=False, min_len=3, max_len=math.inf):
+    speech_lines, non_speech_lines = load_resource(text_file)
+    if remove_punct:
+        speech_lines = remove_empty([remove_punct(line) for line in speech_lines])
+
+    return filter_length(speech_lines, min_len=min_len, max_len=max_len)
+
+def load_non_speech_lines(text_file, remove_punct=False, min_len=3, max_len=math.inf):
+    speech_lines, non_speech_lines = load_resource(text_file)
+    if remove_punct:
+        non_speech_lines = remove_empty([remove_punct(line) for line in non_speech_lines])
+
+    return filter_length(non_speech_lines, min_len=min_len, max_len=max_len)
+
+	
