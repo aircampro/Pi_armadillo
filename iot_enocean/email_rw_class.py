@@ -166,7 +166,7 @@ def count_email(email_id, passwrd):
 	
 if __name__ =="__main__":
     email_id = os.getenv('EMAIL')                                             # read from env settings 
-    pass = os.getenv('PASSWORD')
+    passw = os.getenv('PASSWORD')
 	addr_to = "xx@gmail.com"
 	# show how to read emails 
 	tot_num_of_em = count_email(email_id, pass)
@@ -177,7 +177,7 @@ if __name__ =="__main__":
 	# now send a test email 
     subject = "Send Test e-mail"
     body = create_mail_body( "Mark Nicholas", "40.3" )
-    GmMailer = GmMailer(email_id, pass, addr_to, subject, body)
+    GmMailer = GmMailer(email_id, passw, addr_to, subject, body)
     GmMailer.send()
     new_num_of_em = 0
 	# now wait for confirmation email from the reciever
