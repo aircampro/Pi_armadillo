@@ -118,13 +118,13 @@ def make_web_map():
     # this is the coordinate of the target you are looking for read from the command line or defaulted
     if (len(sys.argv[0]) > 1):
         try:
-            target_coordinate = [float(sys.argv[1]), float(sys.argv[2])]
+            target_coordinate = (float(sys.argv[1]), float(sys.argv[2]))
         except Exception as e:
             print("error : ", e)
             print("first two arguments must be float numbers (lat/lon) - using default for location")
-            target_coordinate = [35.690921, 139.700258]                                                    # sapporo city        
+            target_coordinate = (35.690921, 139.700258)                                                    # sapporo city        
     else:    
-        target_coordinate = [35.690921, 139.700258]               
+        target_coordinate = (35.690921, 139.700258)               
 
     while True:
 
@@ -136,7 +136,7 @@ def make_web_map():
             print('alt: %f' % gps.altitude)
             print('speedド: %f' % gps.speed[2])
             print('sats: %s' % gps.satellites_used)
-            current_coordinate = [gps.latitude[0], gps.longitude[0]]
+            current_coordinate = (gps.latitude[0], gps.longitude[0])
             distance = geodesic(current_coordinate, target_coordinate).kilometers
             print('distance from target: %s (km)' % distance)
             print('Satellite number: (elevation, azimuth, signal-to-noise ratio)')

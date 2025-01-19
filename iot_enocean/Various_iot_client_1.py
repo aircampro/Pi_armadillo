@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 #
+# Example of publisher to cloud/database/other service of information which in our example is 2 enocean sensors
+#
 # client is publishing enocean sensors to various listed iOt telemetry or email or sms text message or to databases
 # subscriber sister application is to read this from the mosquito broker for example if you are doing the mqtt internally on raspberry pi 4
 # or you can use one of the SSL server examples to communicate internally or load a database to a server, or choose one from cloud
@@ -20,7 +22,7 @@ import pytz
 MY_TZ='Europe/Moscow'
 
 # ------------ here list the choices and options for iOt or monitoring -----------------      
-TELEM_CHOICES=[ "soracom", "beebotte", "mosquito", "ubidots", "machinist", "aws", "azure", "yandex", "twillio", "smtp_email", "ssl_tls_server", "ssl_23_server", "cloud_mqtt", "gcs_blob", "splunk", "gcs_spread", "ambient", "influxdb", "redis", "mongo", "mysql", "sybase", "oracle", "sqllite", "pg", "fluvio", "scyllia", "rocks", "ali", "taiga", "msaccess", "riak", "elas", "neo4j", "cumulocity", "sftp", "coAp", "sms_gsm_modem" ]
+TELEM_CHOICES=[ "soracom", "beebotte", "mosquito", "ubidots", "machinist", "aws", "azure", "yandex", "twillio", "smtp_email", "ssl_tls_server", "ssl_23_server", "cloud_mqtt", "gcs_blob", "splunk", "gcs_spread", "ambient", "influxdb", "redis", "mongo", "mysql", "sybase", "oracle", "sqllite", "pg", "fluvio", "scyllia", "rocks", "ali", "taiga", "msaccess", "riak", "elas", "neo4j", "cumulocity", "sftp", "coAp", "sms_gsm_modem", "ibmdb" ]
 SORACOM=0
 BEEBOTTE=1
 MOSQUITO=2
@@ -59,6 +61,7 @@ CUMOLOCITY=34
 SFTP=35
 COAP=36
 SMS_GSM_MODEM=37
+IBMDB=38
 
 # ============= make your choice of cloud service here from list above ================== 
 MY_CURRENT_TELEM=TELEM_CHOICES[SORACOM]
@@ -108,21 +111,21 @@ if MY_CURRENT_TELEM == "beebotte":
 # ubidots
 # pip install ubidots==1.6.6
 # sudo apt-get install python-setuptools
-if MY_CURRENT_TELEM == "ubidots":
+elif MY_CURRENT_TELEM == "ubidots":
     UBI_URL=https://industrial.api.ubidots.com/api/v1.6
 
 # machinist
-if MY_CURRENT_TELEM == "machinist":
+elif MY_CURRENT_TELEM == "machinist":
     MAPIKEY = "xxxxxx"
     MUrl = "https://gw.machinist.iij.jp/endpoint"
 
 # aws
-if MY_CURRENT_TELEM == "aws":
+elif MY_CURRENT_TELEM == "aws":
     AWS_TOPIC_NAME = "my/temperatures"
     AWS_CLIENT="iot-data"
 
 # azure
-if MY_CURRENT_TELEM == "azure":
+elif MY_CURRENT_TELEM == "azure":
     AZURE_TYPE = "connection_string"          # choose connection_string or provisioning_host
     AZURE_CONN_STR="yourConnectionString"
     # ensure environment variables are set for your device and IoT Central application credentials
@@ -136,7 +139,7 @@ if MY_CURRENT_TELEM == "azure":
     symmetric_key = DEVICE_KEY
 
 # yandex
-if MY_CURRENT_TELEM == "smtp_email":
+elif MY_CURRENT_TELEM == "smtp_email":
     YPORT=8443
     YHOST="rc1c-xxxx123456.mdb.yandexcloud.net"
     YCERTNAME="your_cert_name"	
@@ -144,17 +147,17 @@ if MY_CURRENT_TELEM == "smtp_email":
     YAPI_KEY="xxxxxx"
 
 # smtp
-if MY_CURRENT_TELEM == "smtp_email":
+elif MY_CURRENT_TELEM == "smtp_email":
     SMTP_SERVER = "smtp.gmail.com"
     port = 587
     SMTP_NO_SSL=1                             # 1 use above data without SSL otherwise use gmail and SSL
 
 # ssl server with tls_set
-if MY_CURRENT_TELEM == "ssl_tls_server":
+elif MY_CURRENT_TELEM == "ssl_tls_server":
     SSLHOST, SSLPORT = "127.0.0.1", 12345
 
 # ssl23
-if MY_CURRENT_TELEM == "ssl_23_server":
+elif MY_CURRENT_TELEM == "ssl_23_server":
     SSL_URL = '127.0.0.1'
     SSL_PORT = 10023
 
@@ -162,7 +165,7 @@ if MY_CURRENT_TELEM == "ssl_23_server":
 AES_ENCRYPT=0
 
 # cloud MQTT
-if MY_CURRENT_TELEM == "cloud_mqtt":
+elif MY_CURRENT_TELEM == "cloud_mqtt":
     CHOSTNAME = "driver.cloudmqtt.com"
     CPORT = 28607
     CTOPIC = "pi/sub2"                    
@@ -170,17 +173,17 @@ if MY_CURRENT_TELEM == "cloud_mqtt":
 
 # GCS Spreadsheet
 # set when you set-up sheet
-if MY_CURRENT_TELEM == "gcs_spread":
+elif MY_CURRENT_TELEM == "gcs_spread":
     GSS_TEMP_KEY = os.environ['GSS_TEMP_KEY']
 
 # ambient
 #
-if MY_CURRENT_TELEM == "ambient":
+elif MY_CURRENT_TELEM == "ambient":
     channelID = 100
     writeKey = 'writeKey'
 
-# soracom
-if MY_CURRENT_TELEM == "sms_gsm_modem":
+# gsm modem
+elif MY_CURRENT_TELEM == "sms_gsm_modem":
     #
     # library https://github.com/faucamp/python-gsmmodem/blob/master/examples/sms_handler_demo.py
     #
@@ -218,7 +221,7 @@ if MY_CURRENT_TELEM == "sms_gsm_modem":
     
 # sftp
 #
-if MY_CURRENT_TELEM == "sftp":
+elif MY_CURRENT_TELEM == "sftp":
     import paramiko
     SFTP_HOST = 'localhost'
     SFTP_PORT = 22
@@ -230,7 +233,7 @@ if MY_CURRENT_TELEM == "sftp":
     FILE_CNTR = 0
 
 # pip3 install c8y-api
-if MY_CURRENT_TELEM == "cumulocity":
+elif MY_CURRENT_TELEM == "cumulocity":
     from c8y_api import CumulocityApi
 
     c8y = CumulocityApi(base_url='',    # the url of your Cumulocity tenant here
@@ -248,7 +251,7 @@ if MY_CURRENT_TELEM == "cumulocity":
     DEV_ID = d.id  # d is still in memory from the loop     
     
 # ============================== mongo DB Classes *perhaps make seperate include and import when option active) =======================================
-if MY_CURRENT_TELEM == "mongo":
+elif MY_CURRENT_TELEM == "mongo":
     import pandas as pd
     import pymongo
 
@@ -305,14 +308,14 @@ if MY_CURRENT_TELEM == "mongo":
 
 # =============================================  use mySQL database  ============================================================
 #
-if MY_CURRENT_TELEM == "mysql":
+elif MY_CURRENT_TELEM == "mysql":
     MY_SQL_DB='python_db'
     MY_SQL_TAB="Enocean_Temperatures"
     MYSQLLIB = "MYSQLDB"
 
 # coAp - google colab secure UDP
 #
-if MY_CURRENT_TELEM == "coAp":
+elif MY_CURRENT_TELEM == "coAp":
     from aiocoap import *
     import nest_asyncio
     nest_asyncio.apply()
@@ -323,7 +326,7 @@ if MY_CURRENT_TELEM == "coAp":
 #
 
 # only do this if we are using neo4j
-if MY_CURRENT_TELEM == "neo4j":
+elif MY_CURRENT_TELEM == "neo4j":
     # Neo4j init data
     T1_LAST="init1"
     T2_LAST="init2"  
@@ -359,7 +362,24 @@ if MY_CURRENT_TELEM == "neo4j":
             tx.run('MATCH (p:Temp2 {value: $value}) '
                    'CREATE (p)-[:FRIEND]->(:Temp2 {value: $friend_name})',
                    value=value, friend_name=friend_name)
-    
+
+# =============================================  use ibm database  ============================================================
+#   
+elif MY_CURRENT_TELEM == "ibmdb":
+    import ibm_db
+    import ibm_db_dbi
+    import os
+    from os.path import join, dirname
+    from dotenv import load_dotenv
+    load_dotenv(verbose=True)
+    dotenv_path = join(dirname(__file__), '.env')
+    load_dotenv(dotenv_path)
+    DSN = os.environ.get("DB_NAME")                             # read these from your environment
+    USN = os.environ.get("USER_NAME")
+    PWD = os.environ.get("PASSWORD")
+    DSN = settings.DSN
+    USN = settings.USN
+    PWD = settings.PWD
     
 # This function reads 1 byte of data from the serial port and parses the EnOcean telegram. After analyzing 
 # Telegram, data is sent to the chosen iOt (telemetry/database) system
@@ -748,6 +768,23 @@ def Enocean2Telemetry(s_port, telem_opt):
             print ("Timeout Error:",errt)
         except requests.exceptions.RequestException as err:
             print ("OOps: Something Else",err)	
+
+    # IBM DB
+    def sendDataIBMDB(descrip1,temp_data1,descrip2,temp_data2):
+        # connect to the db
+        conn = ibm_db_dbi.connect(DSN, USN, PWD)
+        # SQL
+        cur = conn.cursor()
+        cursor.execute("""insert into IBM_SQL_TAB (description, value, timestamp)
+            VALUES ('{d1}', '{t1}', '{ts}' ),
+            ('{d2}', '{t2}', '{ts}' ),
+            """.format(d1=descrip1,t1=temp_data1,d2=descrip2,t2=temp_data2, ts=str(t)))
+        cur.execute("select * from IBM_SQL_TAB")
+
+        for row in cur:
+            print("%s, %s, %s, %s, %s" % (row[0], row[1], row[2], row[3], row[4]))
+
+        conn.commit()
 
     # GCS BLOB UPLOAD
     def uploadBlobGcs(descrip1,temp_data1,descrip2,temp_data2):
@@ -2081,6 +2118,8 @@ def Enocean2Telemetry(s_port, telem_opt):
     elif telem_opt == "sms_gsm_modem":
         start_sms_daemon()
         sendData=write_to_sms_message            
+    elif telem_opt == "ibmdb":
+        sendData=sendDataIBMDB
     else:                                                    # we asume its for mosquito broker internally running on host e.g. raspberry pi 4
         client = mqtt.Client()
         client.on_connect = on_connect
