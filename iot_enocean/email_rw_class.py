@@ -167,22 +167,22 @@ def count_email(email_id, passwrd):
 if __name__ =="__main__":
     email_id = os.getenv('EMAIL')                                             # read from env settings 
     passw = os.getenv('PASSWORD')
-	addr_to = "xx@gmail.com"
-	# show how to read emails 
-	tot_num_of_em = count_email(email_id, pass)
+    addr_to = "xx@gmail.com"
+    # show how to read emails 
+    tot_num_of_em = count_email(email_id, passw)
     print(f"you have {tot_num_of_em} emails")
-    read_email(email_id, pass)
+    read_email(email_id, passw)
     # count the number of emails already in box from the reciever
-	num_of_em = check_from_email(email_id, pass, addr_to)
-	# now send a test email 
+    num_of_em = check_from_email(email_id, passw, addr_to)
+    # now send a test email 
     subject = "Send Test e-mail"
     body = create_mail_body( "Mark Nicholas", "40.3" )
     GmMailer = GmMailer(email_id, passw, addr_to, subject, body)
     GmMailer.send()
     new_num_of_em = 0
-	# now wait for confirmation email from the reciever
+    # now wait for confirmation email from the reciever
     while not (num_of_em == new_num_of_em):
-        new_num_of_em = check_from_email(email_id, pass, addr_to) 
-		time.sleep(1)
+        new_num_of_em = check_from_email(email_id, passw, addr_to) 
+        time.sleep(1)
     print("completed! - we received confirmation back from receiver ",addr_to)
 	
