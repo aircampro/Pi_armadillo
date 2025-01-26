@@ -357,7 +357,10 @@ def disconnectSCTP(sk):
 def closeIPHandle(ip_handle):
     ip_handle.close()
    
-# OMRON CJ Series - this is the data message that defines what you are reading from the omron PLC 
+# OMRON CJ Series - this is the data message that defines what you are reading/writing from the omron PLC 
+#
+# you set this message up to read or write what you need 
+#
 data_omron_cj = [
     # header
     0x80, #(ICF) 
@@ -380,12 +383,18 @@ data_omron_cj = [
     0x00,0x07,        # Read Bytes
 ]
 
-def omronCJReadUDP(UDP_client,data_omron_cj_msg):                          # uses UDP Client connected as above
-    if (MY_PY == 2):
-        sendmsg = bytes(data_omron_cj_msg)
-    elif (MY_PY == 3):
-        sendmsg = data_omron_cj_msg.encode('utf-8')
-    try:                                                                   # in this example if cant send it will attempt re-connection once
+# changed to default as byte-array above
+#
+def omronCJReadUDP(UDP_client, data_omron_cj_msg=data_omron_cj, ba=1):                          # uses UDP Client connected as above
+    if ba == 1:
+        sendmsg = bytearray(data_omron_cj_msg)
+    else:
+        if (MY_PY == 2):
+            sendmsg = bytes(data_omron_cj_msg)
+        elif (MY_PY == 3):
+            sendmsg = data_omron_cj_msg.encode('utf-8')
+        
+    try:                                                                                        # in this example if cant send it will attempt re-connection once
         UDP_client.send(sendmsg))
     except Exception as e:
         print('omron CJ series series send error try reconnect: ',e)
@@ -1451,7 +1460,7 @@ def read_Titan_CURDA(a):
         rv = int(a[4][1])
     return rv 
 
-# Omrom NX1 PLC over ethernetIP https://industrial.omron.eu/en/products/nx1
+# Omron NX1 PLC over ethernetIP https://industrial.omron.eu/en/products/nx1
 #
 from aphyt import omron
 
