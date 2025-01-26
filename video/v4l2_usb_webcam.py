@@ -157,8 +157,8 @@ class V4L2UsbWebcam:
             vendor = 0x046d
             product = 0x0843
             if self.backe == True:
-			    dev = usb.core.find(idVendor=vendor, idProduct=product, backend=self.backend)
-				dev.set_configuration()
+                dev = usb.core.find(idVendor=vendor, idProduct=product, backend=self.backend)
+	        dev.set_configuration()
             else:			
                 dev = usb.core.find(idVendor=vendor, idProduct=product)
             dev.reset()
@@ -168,8 +168,8 @@ class V4L2UsbWebcam:
             vendor = 0x054C                  
             product = 0x0D9F
             if self.backe == True:
-			    dev = usb.core.find(idVendor=vendor, idProduct=product, backend=self.backend)
-				dev.set_configuration()
+                dev = usb.core.find(idVendor=vendor, idProduct=product, backend=self.backend)
+                dev.set_configuration()
             else:			
                 dev = usb.core.find(idVendor=vendor, idProduct=product)
             dev.reset()
@@ -178,7 +178,7 @@ class V4L2UsbWebcam:
             vendor = 0x04B4                         # i dont know these yet !
             product = 0x8613		
             dev = usb.core.find(idVendor=vendor, idProduct=product, backend=self.backend)
-		    # example on how to issue command : in this example it is set factory default  
+             # example on how to issue command : in this example it is set factory default  
             cb = 0x7                                # compute the checksum byte
             cb ^= 0x01
             cb ^= 0x00
