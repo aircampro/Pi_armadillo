@@ -13,16 +13,6 @@
 import serial
 import serial.tools.list_ports
 
-def search_com_port():
-    coms = serial.tools.list_ports.comports()
-    list_com = []
-    for com in coms:
-        list_com.append(com.device)
-    print('Connected COM ports: ' + str(list_com))
-    used_port = list_com[0]
-    print('Using first listed COM port: ' + used_port)
-    return used_port
-	
 class FutabaRS_Servo(object):
 
     # Address for various control actions in drives RAM memory
@@ -92,10 +82,20 @@ class FutabaRS_Servo(object):
 
 	def __del__(self):
 		self.myserial.close()
-		
+
+    def search_com_port(self):
+        coms = serial.tools.list_ports.comports()
+        list_com = []
+        for com in coms:
+            list_com.append(com.device)
+        print('Connected COM ports: ' + str(list_com))
+        used_port = list_com[0]
+        print('Using first listed COM port: ' + used_port)
+        return used_port
+    
 	def open_port(self, port=None, baudrate=115200, timeout=1):
         if port == None:
-            port = search_com_port()		
+            port = self.search_com_port()		
 		self.myserial.port = port
 		self.myserial.baudrate = baudrate
 		self.myserial.timeout = timeout
@@ -229,20 +229,28 @@ class FutabaRS_Servo(object):
 
 		elif return_packet == 0x01:
 			return self._check_ack(id)
-
+        
 	def send_command_byte(self, id=0x01, val, ram_cmd_reg=self.ADDR_PID_COEFFICIENT, return_packet=0x01, cnt=0x01):
 		self._check_range(id, 1, 127, 'id')
-		self._check_range(return_packet, 0, 15, 'return_packet')
 
-		send = [0xFA,
-				0xAF,
-				id,
-				return_packet,
-				ram_cmd_reg,
-				0x02,
-				cnt,
-				val & 0x00FF,
-				(val & 0xFF00) >> 8]
+        if val == None:
+		    send = [0xFA,
+				    0xAF,
+				    id,
+				    return_packet,
+				    ram_cmd_reg,
+				    0x00,
+				    cnt ]
+        else:      
+		    send = [0xFA,
+				    0xAF,
+				    id,
+				    return_packet,
+				    ram_cmd_reg,
+				    0x02,
+				    cnt,
+				    val & 0x00FF,
+				    (val & 0xFF00) >> 8]
 		send.append(self._calc_checksum(send))
 
 		self._write_serial(send, return_packet)
@@ -253,9 +261,49 @@ class FutabaRS_Servo(object):
 		elif return_packet == 0x01:
 			return self._check_ack(id)
 
+	def send_command_byte_array(self, id=0x01, valArr, ram_cmd_reg=self.ADDR_WRITE_FLASH_ROM, return_packet=0x01):
+		self._check_range(id, 1, 127, 'id')
+
+		send = [0xFA,
+				0xAF,
+				id,
+				return_packet,
+				ram_cmd_reg,
+				len(valArr),
+				0x01]
+        for b in valArr:
+            send.append(b)
+		send.append(self._calc_checksum(send))
+
+		self._write_serial(send, return_packet)
+
+		if return_packet == 0x00:
+			return id, 0x00
+
+		elif return_packet == 0x01:
+			return self._check_ack(id)
+            
+    def save_rom(self,sid):
+        return self.send_command_byte(id=sid, val=None, ram_cmd_reg=self.ADDR_WRITE_FLASH_ROM, return_packet=0x40, cnt=0x00 )
+
+    def set_max_torque(self, sid, torq_spt):
+        torq_spt = int(torq_spt)
+        return self.send_command_byte(id=sid, val=torq_spt, ram_cmd_reg=self.ADDR_MAX_TORQUE, return_packet=0x00, cnt=0x01 )
+
+    def set_limit_cw_pos(self, sid, limit_position):
+        limit_position_hex = format(int(limit_position * 10) & 0xffff, '04x')
+        limit_position_hex_h = int(limit_position_hex[0:2], 16)
+        limit_position_hex_l = int(limit_position_hex[2:4], 16)
+        return self.send_command_byte_array(id=sid, valArr=[limit_position_hex_l, limit_position_hex_h], ram_cmd_reg=self.ADDR_CW_ANGLE_LIMIT_L, return_packet=0x00, cnt=0x01 )
+
+    def set_limit_ccw_pos(self, sid, limit_position):
+        limit_position_hex = format(int(limit_position * 10) & 0xffff, '04x')
+        limit_position_hex_h = int(limit_position_hex[0:2], 16)
+        limit_position_hex_l = int(limit_position_hex[2:4], 16)
+        return self.send_command_byte_array(id=sid, valArr=[limit_position_hex_l, limit_position_hex_h], ram_cmd_reg=self.ADDR_CCW_ANGLE_LIMIT_L, return_packet=0x00, cnt=0x01 )
+        
 	def send_command_msg(self, id=0x01, valArr, ram_cmd_reg=self.ADDR_WRITE_FLASH_ROM, return_packet=0x01):
 		self._check_range(id, 1, 127, 'id')
-		self._check_range(return_packet, 0, 15, 'return_packet')
 
 		send = [0xFA,
 				0xAF,
@@ -311,31 +359,34 @@ class FutabaRS_Servo(object):
 
 		return 'multi_target_position:' + str(servo_data)
 
-	def get_selected_item(self, id=0x01, flags_memmap=self.FLAG30_MEM_MAP_SELECT, addr=self.ADDR_PRESENT_CURRENT_L, len=0x02, count=0x01):
+	def get_selected_item(self, id=0x01, flags_memmap=self.FLAG30_MEM_MAP_SELECT, addr=self.ADDR_PRESENT_CURRENT_L, len=0x02, count=0x01, sign=False, endi='little'):
 		self._check_range(id, 1, 127, 'id')
 
 		send = [0xFA, 0xAF, id, flags_memmap, addr, len, count]
 		send.append(self._calc_checksum(send))
 
 		self._write_serial(send, 1)
-
-		receive = self.myserial.read()
+         
+		receive = self.myserial.read(len)
+        
+        num = int.from_bytes(receive, endi, signed=sign)
+		rec_nums = [ord(r) for r in receive]
 		receive = [chr(r) for r in receive]
-		print('receive', receive)
+		print('received ', receive)
 
-        return receive
+        return num, rec_nums, receive
 
     def get_current(self, sid=0x1):
         return self.get_selected_item(id=sid)
         
     def get_voltage(self, sid=0x1):
-        return self.get_selected_item(id=sid, flags_memmap=self.FLAG30_MEM_MAP_SELECT, addr=self.ADDR_VOLTAGE_L, len=2, count=0x01)  
+        return self.get_selected_item(id=sid, flags_memmap=self.FLAG30_MEM_MAP_SELECT, addr=self.ADDR_VOLTAGE_L, len=2, count=0x01, sign=True)  
         
     def get_target_pos(self, sid=0x1):
-        return self.get_selected_item(id=sid, flags_memmap=self.FLAG30_MEM_MAP_SELECT, addr=self.ADDR_GOAL_POSITION_L, len=2, count=0x01)
+        return self.get_selected_item(id=sid, flags_memmap=self.FLAG30_MEM_MAP_SELECT, addr=self.ADDR_GOAL_POSITION_L, len=2, count=0x01, sign=True)
 
     def get_current_pos(self, sid=0x1):
-        return self.get_selected_item(id=sid, flags_memmap=self.FLAG30_MEM_MAP_SELECT, addr=self.ADDR_PRESENT_POSITION_L, len=2, count=0x01)
+        return self.get_selected_item(id=sid, flags_memmap=self.FLAG30_MEM_MAP_SELECT, addr=self.ADDR_PRESENT_POSITION_L, len=2, count=0x01, sign=True)
 
     def get_target_time(self, sid=0x1):
         return self.get_selected_item(id=sid, flags_memmap=self.FLAG30_MEM_MAP_SELECT, addr=self.ADDR_GOAL_TIME_L, len=2, count=0x01)
@@ -350,19 +401,38 @@ class FutabaRS_Servo(object):
         return self.get_selected_item(id=sid, flags_memmap=self.FLAG30_MEM_MAP_SELECT, addr=self.ADDR_SERVO_ID, len=1, count=0x01)
         
     def get_current_speed(self, sid=0x1):
-        return self.get_selected_item(id=sid, flags_memmap=self.FLAG30_MEM_MAP_SELECT, addr=self.ADDR_PRESENT_SPEED_L, len=2, count=0x01)
+        return self.get_selected_item(id=sid, flags_memmap=self.FLAG30_MEM_MAP_SELECT, addr=self.ADDR_PRESENT_SPEED_L, len=2, count=0x01, sign=True)
 
+    def get_current_time(self, sid=0x1):
+        return self.get_selected_item(id=sid, flags_memmap=self.FLAG30_MEM_MAP_SELECT, addr=self.ADDR_PRESENT_TIME_L, len=2, count=0x01, sign=False)
+        
     def get_limit_cw_position(self, sid=0x1):
-        return self.get_selected_item(id=sid, flags_memmap=self.FLAG30_MEM_MAP_SELECT, addr=self.ADDR_CW_ANGLE_LIMIT_L, len=2, count=0x01)
+        return self.get_selected_item(id=sid, flags_memmap=self.FLAG30_MEM_MAP_SELECT, addr=self.ADDR_CW_ANGLE_LIMIT_L, len=2, count=0x01, sign=True)
 
     def get_limit_ccw_position(self, sid=0x1):
-        return self.get_selected_item(id=sid, flags_memmap=self.FLAG30_MEM_MAP_SELECT, addr=self.ADDR_CCW_ANGLE_LIMIT_L, len=2, count=0x01)        
+        return self.get_selected_item(id=sid, flags_memmap=self.FLAG30_MEM_MAP_SELECT, addr=self.ADDR_CCW_ANGLE_LIMIT_L, len=2, count=0x01, sign=True)        
 
     def get_limit_temperature(self, sid=0x1):
-        return self.get_selected_item(id=sid, flags_memmap=self.FLAG30_MEM_MAP_SELECT, addr=self.ADDR_TEMPERATURE_LIMIT_L, len=2, count=0x01) 
+        return self.get_selected_item(id=sid, flags_memmap=self.FLAG30_MEM_MAP_SELECT, addr=self.ADDR_TEMPERATURE_LIMIT_L, len=2, count=0x01, sign=True) 
 
     def get_temperature(self, sid=0x1):
-        return self.get_selected_item(id=sid, flags_memmap=self.FLAG30_MEM_MAP_SELECT, addr=self.ADDR_TEMPERATURE_L, len=2, count=0x01) 
+        return self.get_selected_item(id=sid, flags_memmap=self.FLAG30_MEM_MAP_SELECT, addr=self.ADDR_TEMPERATURE_L, len=2, count=0x01, sign=True) 
+
+    def get_warm_up_time(self, sid=0x1):
+        return self.get_selected_item(id=sid, flags_memmap=self.FLAG30_MEM_MAP_SELECT, addr=self.ADDR_WARM_UP_TIME, len=2, count=0x01) 
+
+    def get_torque_in_silence(self, sid=0x1):
+        return self.get_selected_item(id=sid, flags_memmap=self.FLAG30_MEM_MAP_SELECT, addr=self.ADDR_TORQUE_IN_SILENCE, len=2, count=0x01) 
+
+    def get_punch(self, sid=0x1):
+        return self.get_selected_item(id=sid, flags_memmap=self.FLAG30_MEM_MAP_SELECT, addr=self.ADDR_PUNCH_L, len=2, count=0x01) 
+
+    def get_compliance(self, sid=0x1):
+        a, b, c = self.get_selected_item(id=sid, flags_memmap=self.FLAG30_MEM_MAP_SELECT, addr=self.ADDR_CW_COMPLIANCE_MARGIN, len=2, count=0x01) 
+        a1, b, c = self.get_selected_item(id=sid, flags_memmap=self.FLAG30_MEM_MAP_SELECT, addr=self.ADDR_CCW_COMPLIANCE_MARGIN, len=2, count=0x01) 
+        a2, b, c = self.get_selected_item(id=sid, flags_memmap=self.FLAG30_MEM_MAP_SELECT, addr=self.ADDR_CW_COMPLIANCE_SLOPE, len=2, count=0x01) 
+        a3, b, c = self.get_selected_item(id=sid, flags_memmap=self.FLAG30_MEM_MAP_SELECT, addr=self.ADDR_CCW_COMPLIANCE_SLOPE, len=2, count=0x01) 
+        return a, a1, a2, a3
         
 	def get_data(self, id=0x01, mode='all'):
 		self._check_range(id, 1, 127, 'id')
@@ -543,7 +613,12 @@ def main():
         angle, time, speed, load, temperature, voltage = frs_servo.get_data()
         print("angle ",angle," time ",time," speed ",speed," load ",load)
         print("temperature ",temperature," voltage ",voltage)
-        print("pid cooeff ", frs.servo.get_pid_coeff())
+        pc, x1, x2 = frs_servo.get_pid_coeff()
+        print("pid cooeff ", pc)
+        c, x1, x2 = frs_servo.get_current()
+        print("current ", c)
+        p, x1, x2 = frs_servo.get_punch()
+        print("punch ", p)
         rpts += 1
         if rpts == 1:
             frs_servo.set_rpu()              # now repeat with rpu mode set to on           
