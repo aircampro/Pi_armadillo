@@ -88,8 +88,8 @@ class V4L2UsbWebcam:
         first_camera_device = None
         second_camera_device = None
         self.camera_device = None
-		self.backe = be
-		if self.backe == True:
+        self.backe = be
+        if self.backe == True:
             self.backend = usb.backend.libusb1.get_backend(find_library=lambda x: "libusb-1.0.dll")
             self.backend.lib.libusb_set_option.argtypes = [c_void_p, c_int]
             self.backend.lib.libusb_set_debug(backend.ctx, 5)
