@@ -40,7 +40,7 @@ class PF_PGV100(object):
             self.f_run = 0
         
 	def __del__(self):
-		self.myserial.close()
+            self.myserial.close()
 		
 	def open_port(self, port=None, baudrate=115200, parity=serial.PARITY_NONE, timeout=1):
             if port == None:
