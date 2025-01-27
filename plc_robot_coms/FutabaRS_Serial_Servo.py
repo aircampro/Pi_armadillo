@@ -367,7 +367,7 @@ class FutabaRS_Servo(object):
 
 		self._write_serial(send, 1)
          
-		receive = self.myserial.read(len)
+		receive = self.myserial.read(len)                  # may also use if self.myserial.in_waiting >0: receive = self.myserial.read_all()
         
         num = int.from_bytes(receive, endi, signed=sign)
 		rec_nums = [ord(r) for r in receive]

@@ -53,21 +53,20 @@ KM_JR_Order_Boost=0x1A
 KM_JR_Order_Alarm_Level1=0x1B 
 KM_JR_Order_Alarm_Delay2=0x1C 
 KM_JR_Order_Angle=0x1D 
-KM_JR_OrderDat_Angle120= 0x00      # 通常動作（最大角120度） 
-KM_JR_OrderDat_Angle180=0x01       # 最大角180度（一部の機種では、180 # 度に到達しない場合がある）     
-KM_JR_OrderDat_Angle150=0x02       # 最大角150度
+KM_JR_OrderDat_Angle120= 0x00      # Normal operation (maximum angle 120 degrees) 
+KM_JR_OrderDat_Angle180=0x01       # Maximum angle 180 degrees (Some models may not reach 180 # degrees)     
+KM_JR_OrderDat_Angle150=0x02       # Maximum angle 150 degrees
 KM_JR_Order_Slow_Start=0x1E  
 KM_JR_Order_Stop_Mode=0x1F  
 KM_JR_Order_Current_Position=0x20  #------get only 
 KM_JR_Order_Current_Power=0x21     #------get only  
 KM_JR_Order_Speed_Limit=0x22  
 KM_JR_Order_Max_Integer=0x23  
-
 KM_JR_Order_PWM_Mode=0x24 
-KM_JR_OrderDat_PWM_0=0x00         #通常モード 
-KM_JR_OrderDat_PWM_1520=0x01      #Fモード1（ニュートラル1520） 
-KM_JR_OrderDat_PWM_760=0x02       #Fモード2（ニュートラル760） 
-KM_JR_OrderDat_PWM_300=0x03       #Sモード（ニュートラル300）
+KM_JR_OrderDat_PWM_0=0x00         # Normal Mode 
+KM_JR_OrderDat_PWM_1520=0x01      # F mode 1 (Neutral 1520) 
+KM_JR_OrderDat_PWM_760=0x02       # F Mode 2 (Neutral 760) 
+KM_JR_OrderDat_PWM_300=0x03       # S mode (neutral 300)
 KM_JR_Order_Interpolate=0x25  
 KM_JR_Order_Current=0x26  
 
@@ -97,7 +96,7 @@ class KonishiMokei_Xbus_Servo(object):
 		self.myserial.port = port
 		self.myserial.baudrate = baudrate
 		self.myserial.timeout = timeout
-		self.myserial.parity = serial.PARITY_NONE
+		self.myserial.parity = parity
 		try:
 			self.myserial.open()
 		except IOError:
