@@ -60,33 +60,33 @@ class PF_PGV100(object):
 		print('Succeeded to open communication to PGV100 on port: ' + port)
 
 	def close_port(self):
-		self.myserial.close()
+            self.myserial.close()
 
 	def set_port(self, baudrate=115200, timeout=0x01):
-		self.myserial.baudrate = baudrate
-		self.myserial.timeout = timeout
-		self.myserial._reconfigurePort()
-		print('Succeeded to set baudrate:%d, timeout:%d' % (baudrate, timeout))
+	    self.myserial.baudrate = baudrate
+	    self.myserial.timeout = timeout
+	    self.myserial._reconfigurePort()
+	    print('Succeeded to set baudrate:%d, timeout:%d' % (baudrate, timeout))
 
 	def select_no_lane(self):
-		send = [ 0xE0, 0x1F ]
-		self._write_serial(send)
+	    send = [ 0xE0, 0x1F ]
+	    self._write_serial(send)
 
 	def select_follow_right(self):
-		send = [ 0xE4, 0x1B ]
-		self._write_serial(send)
+	    send = [ 0xE4, 0x1B ]
+	    self._write_serial(send)
         
 	def select_follow_left(self):
-		send = [ 0xE8, 0x17 ]
-		self._write_serial(send)
+	    send = [ 0xE8, 0x17 ]
+	    self._write_serial(send)
         
 	def select_straight_ahead(self):
-		send = [ 0xEC, 0x13 ]
-		self._write_serial(send)
+	    send = [ 0xEC, 0x13 ]
+	    self._write_serial(send)
 
 	def request_position_info(self):
-		send = [ 0xC8, 0x37 ]
-		self._write_serial(send)
+	    send = [ 0xC8, 0x37 ]
+	    self._write_serial(send)
         
 	def get_data(self):
             self.f_run = 1
