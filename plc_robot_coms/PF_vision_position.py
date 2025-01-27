@@ -168,7 +168,7 @@ class PF_PGV100(object):
         def hexstring_to_int(self, h):
             return int(h, 16)
         
-# TEST :: set torque on drive and move angle/position then read back all data
+# TEST :: set to straight ahead and read angle and position x y
 #
 def main():
     pgv100 = PF_PGV100()
