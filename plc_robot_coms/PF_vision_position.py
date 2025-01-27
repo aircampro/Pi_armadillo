@@ -151,23 +151,22 @@ class PF_PGV100(object):
                 break
         
 	def _check_range(self, value, lower_range, upper_range, name='value'):
-		if value < lower_range or value > upper_range:
-			raise ValueError(name + ' must be set in the range from '
-							 + str(lower_range) + ' to ' + str(upper_range))
+	    if value < lower_range or value > upper_range:
+	        raise ValueError(name + ' must be set in the range from ' + str(lower_range) + ' to ' + str(upper_range))
 
 	def _write_command(self, send):
-		self.myserial.flushOutput()
-		self.myserial.flushInput()
-		self.myserial.write(bytearray(send))
+	    self.myserial.flushOutput()
+	    self.myserial.flushInput()
+	    self.myserial.write(bytearray(send))
 
 	def _write_serial(self, send):
-        self._write_command(send)
+            self._write_command(send)
 
-    def int_to_hexstring(self, i):
-        return f"0x{i:02x}"
+        def int_to_hexstring(self, i):
+            return f"0x{i:02x}"
 
-    def hexstring_to_int(self, h):
-        return int(h, 16)
+        def hexstring_to_int(self, h):
+            return int(h, 16)
         
 # TEST :: set torque on drive and move angle/position then read back all data
 #
