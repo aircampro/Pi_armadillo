@@ -27,7 +27,7 @@ ssh -T $_remote <<'EOL'
 	echo "Now setting $cbp to $value_set"
 	/opt/fox/bin/tools/setval $cbp $value_set
 	echo "Now resding $cbp2"
-	/opt/bin/tools/getval $cbp2
+	/opt/fox/bin/tools/getval $cbp2
 	echo "Bye"
 EOL
 
