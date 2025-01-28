@@ -11,8 +11,8 @@ PRE_DEF_ALGO = [ "crc-8", "crc-8-darc", "crc-8-i-code", \
 "crc-8-itu", "crc-8-maxim", "crc-8-rohc", "crc-8-wcdma", \	
 "crc-16", "crc-16-buypass", "crc-16-dds-110", "crc-16-dect", \	
 "crc-16-dnp", "crc-16-en-13757", "crc-16-genibus", \	
-"crc-16-maxim", "crc-16-mcrf4xx", "crc-16-riello" \	
-"crc-16-t10-dif", "crc-16-teledisk", "crc-16-usb" \	
+"crc-16-maxim", "crc-16-mcrf4xx", "crc-16-riello", \	
+"crc-16-t10-dif", "crc-16-teledisk", "crc-16-usb", \	
 "x-25", "xmodem", "modbus", "kermit", "crc-ccitt-false", \ 
 "crc-aug-ccitt", "crc-24", "crc-24-flexray-a", "crc-24-flexray-b", \	
 "crc-32", "crc-32-bzip2", "crc-32c", "crc-32d", "crc-32-mpeg", \	
