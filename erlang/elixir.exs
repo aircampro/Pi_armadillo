@@ -173,8 +173,10 @@ defmodule Digest do
     key = :crypto.strong_rand_bytes(16)
     iv  = :crypto.strong_rand_bytes(16)
     {cipher, ctag} = :crypto.block_encrypt(:aes_gcm, key, iv, {"aad", text2cipher2})
+    IO.puts cipher
     # this successfully decrypts and returns plaintext
-    :crypto.block_decrypt(:aes_gcm, key, iv, {"aad", cipher, ctag})
+    {cleantext, ctag} = :crypto.block_decrypt(:aes_gcm, key, iv, {"aad", cipher, ctag})
+    IO.puts cleantext
   end
 end
 
