@@ -352,6 +352,7 @@ def main():
         create_transformer_global()
         bridge = CvBridge()                                                              # create ros image bridge
         image_pub = rospy.Publisher("/output/image_raw", Image, queue_size=1)            # create ros image publisher
+        image_pub_raw = rospy.Publisher("/head_camera/image_raw", Image, queue_size=1)   # create ros image publisher
         pub = rospy.Publisher('cam_sets', String, queue_size=10)                         # create an info string with the camera settings
         r = rospy.Rate(1)                                                                # 10hz
     
@@ -381,7 +382,8 @@ def main():
                     if not rospy.is_shutdown():
                         str = "exposure: %s  white_bal(RGB) : %s %s %s" % (exposure_spt,wb_r,wb_g,wb_b)
                         pub.publish(str)                                                # publish settings to ROS
-                        image_pub.publish(bridge.cv2_to_imgmsg(output_image, "mono8"))  # publish image to ROS
+                        image_pub.publish(bridge.cv2_to_imgmsg(output_image, "mono8"))  # publish processed image to ROS
+                        image_pub_raw.publish(bridge.cv2_to_imgmsg(img, "mono8"))       # publish raw capture image to ROS
                         r.sleep()
                 except CvBridgeError as e:
                     print(e)
