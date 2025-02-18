@@ -34,17 +34,17 @@ def load_content(text_file, enco="utf-8"):
 
             # add any supported code pages here (we are currently only japanese and utf-8)
             if enco == "cp932":                                                                        # japanese encoding was chosen code page 932
-			    line = re.sub(r"＃.*", "", line)
+                line = re.sub(r"＃.*", "", line)
                 line = re.sub(r"[１２３４５６７８９０]", "", line)
-				line = re.sub(r"｜.*", "", line)
+	        line = re.sub(r"｜.*", "", line)
                 skip_line = "底本："
-			elif enco == "utf-8":                                                                      # file is standard utf-8 (e.g. ascii with extended chars like emoji)
+            elif enco == "utf-8":                                                                      # file is standard utf-8 (e.g. ascii with extended chars like emoji)
                 line = re.sub(r"#.*", "", line)                                                        # remove # comment
-			    line = re.sub(r"[1234567890]", "", line)                                               # remove numbers
+                line = re.sub(r"[1234567890]", "", line)                                               # remove numbers
                 line = re.sub(r"\|.*", "", line)                                                       # remove | comment
-			    line = re.sub(r":", ">", line)                                                         # change : to >
-			    re.sub(r"[\.,\?]+", "", line)                                                          # remove punctuation
-				skip_line = "step:"
+                line = re.sub(r":", ">", line)                                                         # change : to >
+                re.sub(r"[\.,\?]+", "", line)                                                          # remove punctuation
+                skip_line = "step:"
             if line.startswith(skip_line):                                                             # skip this line
                 break
             if line:
