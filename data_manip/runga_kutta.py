@@ -30,16 +30,16 @@ class Runge:
         X = []
 
         for i in range(n):
-            d1 = dxdt(x);
-            d2 = dxdt(x + d1*h*0.5);
-            d3 = dxdt(x + d2*h*0.5);
-            d4 = dxdt(x + d3*h);
+            d1 = self.dxdt(x);
+            d2 = self.dxdt(x + d1*h*0.5);
+            d3 = self.dxdt(x + d2*h*0.5);
+            d4 = self.dxdt(x + d3*h);
             x += (d1 + 2 * d2 + 2 * d3 + d4)*(h/6.0); 
             X.append(x)
         return X
  
-    def run(self, a=0.0, b=0.0, c=1.0, d=100):
-        X = self.runge(a, b, c, d)
+    def run(self, x=0.0, y=0.0, z=1.0, w=100):
+        X = self.runge(x, y, z, w)
         print(X)
 
 # Solving Ordinary Differential Equations using runge-kutta method
@@ -161,7 +161,7 @@ class RungeKuttaVib:
     def do_rkv(self):
         self.u, self.v = self.runga_kutta_vibrations(self.t, 0, 0, self.m, self.c, self.k, self.force)	
 
-    # Plot the result
+    # Plot & save the result
     def plot(self):
         if not self.v == None:
             fig, ax1 = plt.subplots()
@@ -169,7 +169,8 @@ class RungeKuttaVib:
             ax2 = ax1.twinx()
             l2 = ax2.plot(self.t, self.force, color='r', label="force")
             plt.show()
-	
+            plt.savefig('vibration.png')	
+            
 if __name__ == '__main__':
 
     # output voltage
@@ -184,7 +185,7 @@ if __name__ == '__main__':
     #Euler method
     for x in xs:
         y_cal.append(y)
-        y += diff_func(x)*dx                        #y
+        y += diff_func(x)*dx                        # y
     
     rungekutta = RungeKutta4thOrder(dx=dx, diff_func=diff_func)
     y = y0 
