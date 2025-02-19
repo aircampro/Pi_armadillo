@@ -65,7 +65,7 @@ engine_rpm = [0, 0]                                    # engine speed in NMEA200
 # makes an int 16 number from 2 bytes
 def make16(endo, d):
     if endo == 1:
-        value = d[1] | (d[0] << 8)
+            value = d[1] | (d[0] << 8)
 	else:
 	    value = d[0] | (d[1] << 8)
     return value
