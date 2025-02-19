@@ -72,79 +72,79 @@ def make16(endo, d):
 
 # makes an int32 number from 2 words (4bytes)
 def make32(endo, data):
-	if endo == 1:
-	    ProductCodeList = [data[1] | (data[0]<<8), data[3] | (data[2]<<8)]
-	else:
-	    ProductCodeList = [data[0] | (data[1]<<8), data[2] | (data[3]<<8)]
-	ProductCode = struct.unpack('@i', struct.pack('@2h', *ProductCodeList))[0]             # make 32bit integer
-	return ProductCode
+    if endo == 1:
+        ProductCodeList = [data[1] | (data[0]<<8), data[3] | (data[2]<<8)]
+    else:
+        ProductCodeList = [data[0] | (data[1]<<8), data[2] | (data[3]<<8)]
+    ProductCode = struct.unpack('@i', struct.pack('@2h', *ProductCodeList))[0]             # make 32bit integer
+    return ProductCode
 
 # makes an real32 number from 2 words (4bytes)
 def makef32(endo, data):
-	if endo == 1:
-	    ProductCodeList = [data[1] | (data[0]<<8), data[3] | (data[2]<<8)]
-	else:
-	    ProductCodeList = [data[0] | (data[1]<<8), data[2] | (data[3]<<8)]
-	ProductCode = struct.unpack('@f', struct.pack('@2h', *ProductCodeList))[0]
-	return ProductCode
+     if endo == 1:
+         ProductCodeList = [data[1] | (data[0]<<8), data[3] | (data[2]<<8)]
+     else:
+         ProductCodeList = [data[0] | (data[1]<<8), data[2] | (data[3]<<8)]
+     ProductCode = struct.unpack('@f', struct.pack('@2h', *ProductCodeList))[0]
+     return ProductCode
 
 # makes an real64 number from 4 words (8bytes)
 def makef64(endo, data):
-	if endo == 1:
-	    ProductCodeList = [data[1] | (data[0]<<8), data[3] | (data[2]<<8), data[5] | (data[4]<<8), data[7] | (data[6]<<8) ]
-	else:
-	    ProductCodeList = [data[0] | (data[1]<<8), data[2] | (data[3]<<8), data[4] | (data[5]<<8), data[6] | (data[7]<<8) ]
-	ProductCode = struct.unpack('@f', struct.pack('@2h', *ProductCodeList))[0]
-	return ProductCode
+    if endo == 1:
+        ProductCodeList = [data[1] | (data[0]<<8), data[3] | (data[2]<<8), data[5] | (data[4]<<8), data[7] | (data[6]<<8) ]
+    else:
+        ProductCodeList = [data[0] | (data[1]<<8), data[2] | (data[3]<<8), data[4] | (data[5]<<8), data[6] | (data[7]<<8) ]
+    ProductCode = struct.unpack('@f', struct.pack('@2h', *ProductCodeList))[0]
+    return ProductCode
     
 # read product info message	
 def product_info(n2k, data, msgid, seq):
     global N2K_PROD_INFO
     # Remove unused characters in string byte fields
-	N2K_PROD_INFO.ManModSerial = data[0:31].split(b'\xff')[0]
-	N2K_PROD_INFO.ManModSerial = N2K_PROD_INFO.ManModSerial.decode().rstrip()
-	N2K_PROD_INFO.ProductCode = make32(ENDO, data[32:35])
-	N2K_PROD_INFO.ModelID = data[36:67].split(b'\xff')[0]
-	N2K_PROD_INFO.ModelID = N2K_PROD_INFO.ModelID.decode().rstrip()
-	N2K_PROD_INFO.SwCode = data[68:107].split(b'\xff')[0]
-	N2K_PROD_INFO.SwCode = N2K_PROD_INFO.SwCode.decode().rstrip()
-	N2K_PROD_INFO.ModelVersion = data[108:131].split(b'\xff')[0]
-	N2K_PROD_INFO.ModelVersion = N2K_PROD_INFO.ModelVersion.decode().rstrip()
-	N2K_PROD_INFO.LoadEquivalency = make16(ENDO, data[132:133])
-	N2K_PROD_INFO.N2kVersion = make16(ENDO, data[134:135])
-	N2K_PROD_INFO.CertificationLevel = make16(ENDO, data[136:137])
-	N2K_PROD_INFO,iDev = make16(ENDO, data[138:139])
+    N2K_PROD_INFO.ManModSerial = data[0:31].split(b'\xff')[0]
+    N2K_PROD_INFO.ManModSerial = N2K_PROD_INFO.ManModSerial.decode().rstrip()
+    N2K_PROD_INFO.ProductCode = make32(ENDO, data[32:35])
+    N2K_PROD_INFO.ModelID = data[36:67].split(b'\xff')[0]
+    N2K_PROD_INFO.ModelID = N2K_PROD_INFO.ModelID.decode().rstrip()
+    N2K_PROD_INFO.SwCode = data[68:107].split(b'\xff')[0]
+    N2K_PROD_INFO.SwCode = N2K_PROD_INFO.SwCode.decode().rstrip()
+    N2K_PROD_INFO.ModelVersion = data[108:131].split(b'\xff')[0]
+    N2K_PROD_INFO.ModelVersion = N2K_PROD_INFO.ModelVersion.decode().rstrip()
+    N2K_PROD_INFO.LoadEquivalency = make16(ENDO, data[132:133])
+    N2K_PROD_INFO.N2kVersion = make16(ENDO, data[134:135])
+    N2K_PROD_INFO.CertificationLevel = make16(ENDO, data[136:137])
+    N2K_PROD_INFO,iDev = make16(ENDO, data[138:139])
 
 # read maretron flow volume message
 def fluid_vol_info(n2k, data, msgid, seq):
     global N2K_FV_INFO
     # Remove unused characters in string byte fields
-	N2K_FV_INFO.proprieter = make16(ENDO, data[0:1])
-	N2K_FV_INFO.SID = data[2]
-	N2K_FV_INFO.VolumeInstance = data[3]
-	N2K_FV_INFO.FluidType = data[4]
-	N2K_FV_INFO.TripVolume = makef64(ENDO, data[5:12])	
+    N2K_FV_INFO.proprieter = make16(ENDO, data[0:1])
+    N2K_FV_INFO.SID = data[2]
+    N2K_FV_INFO.VolumeInstance = data[3]
+    N2K_FV_INFO.FluidType = data[4]
+    N2K_FV_INFO.TripVolume = makef64(ENDO, data[5:12])	
 
 # read maretron flow volume message
 def fluid_flo(n2k, data, msgid, seq):
     global N2K_FR_INFO
     # Remove unused characters in string byte fields
-	N2K_FR_INFO.proprieter = make16(ENDO, data[0:1])
-	N2K_FR_INFO.SID = data[2]
-	N2K_FR_INFO.FlowRateInstance = data[3]
-	N2K_FR_INFO.FluidType = data[4]
-	N2K_FR_INFO.FluidFlowRate = makef64(ENDO, data[5:12])	
+    N2K_FR_INFO.proprieter = make16(ENDO, data[0:1])
+    N2K_FR_INFO.SID = data[2]
+    N2K_FR_INFO.FlowRateInstance = data[3]
+    N2K_FR_INFO.FluidType = data[4]
+    N2K_FR_INFO.FluidFlowRate = makef64(ENDO, data[5:12])	
       
 # read maretron temperature message
 def fluid_temp(n2k, data, msgid, seq):
     global N2K_T_INFO
     # Remove unused characters in string byte fields
-	N2K_T_INFO.proprieter = make16(ENDO, data[0:1])
-	N2K_T_INFO.SID = data[2]
-	N2K_T_INFO.TempInstance = data[3]
-	N2K_T_INFO.TempSource = data[4]
-	N2K_T_INFO.ActualTemperature = makef64(ENDO, data[5:12])
-	N2K_T_INFO.SetTemperature = makef64(ENDO, data[13:20])
+    N2K_T_INFO.proprieter = make16(ENDO, data[0:1])
+    N2K_T_INFO.SID = data[2]
+    N2K_T_INFO.TempInstance = data[3]
+    N2K_T_INFO.TempSource = data[4]
+    N2K_T_INFO.ActualTemperature = makef64(ENDO, data[5:12])
+    N2K_T_INFO.SetTemperature = makef64(ENDO, data[13:20])
 
 # initialise asking for the PGN's that we are parsing in the functions above	
 def on_init(n2k, state):
