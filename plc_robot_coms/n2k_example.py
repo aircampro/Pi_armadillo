@@ -169,7 +169,7 @@ def rx_rotax(can, fifo):
     engine_updated[engine_idx] = True                                   # set 'received' flag
 
 # rotax on n2k
-def rotax_tx():
+def rotax_tx(n2k):
     global engine_updated, engine_kPa, engine_rpm
     rotsx_pgm = 127488
     engine_data = bytearray(8)                                                                       # frame data for PGN "Engine Parameters, Rapid Update"
@@ -207,7 +207,7 @@ def main():
     while True:
         time.sleep(0.1)                                                                                  # 10 Hz
         # send n2k packet with rotax information
-        rotax_tx()
+        rotax_tx(n2k)
 
 if __name__ == '__main__':
     while True:
