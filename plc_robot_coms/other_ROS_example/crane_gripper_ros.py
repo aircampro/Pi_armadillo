@@ -232,3 +232,4 @@ def main():
 
     rclpy.shutdown()
     print('robot controls completed')
+    thread.join()
