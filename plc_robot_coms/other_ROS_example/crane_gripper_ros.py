@@ -10,11 +10,39 @@ from rclpy.duration import Duration
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 import time
 import threading
+import ctypes
 
 # from our libraries
 from KBHit import KBHit
 from kinematics_funcs import gripper_in_range, joint_in_range, kinematic_action, forward_kinematics, to_gripper_ratio, inverse_kinematics, from_gripper_ratio
 
+# Class wrapper for threading 
+# you can also kill task e.g. if op_task.is_alive(): op_task.raise_exception()
+#
+class twe(threading.Thread):
+    def __init__(self, group=None, target=None, name=None, args=(), kwargs={}):
+        threading.Thread.__init__(self, group=group, target=target, name=name)
+        self.args = args
+        self.kwargs = kwargs
+        return
+
+    def run(self):
+        self._target(*self.args, **self.kwargs)
+
+    def get_id(self):
+        if hasattr(self, '_thread_id'):
+            return self._thread_id
+        for id, thread in threading._active.items():
+            if thread is self:
+                return id
+
+    def raise_exception(self):
+        thread_id = self.get_id()
+        resu = ctypes.pythonapi.PyThreadState_SetAsyncExc(ctypes.c_long(thread_id), ctypes.py_object(SystemExit))
+        if resu > 1:
+            ctypes.pythonapi.PyThreadState_SetAsyncExc(ctypes.c_long(thread_id), 0)
+            print('Failure in raising exception')
+            
 # Node that publishes directives to topics for CRANE+ V2
 class Commander(Node):
 
@@ -64,8 +92,9 @@ def main():
     commander = Commander()
 
     # Run rclpy.spin() in a separate thread
-    thread = threading.Thread(target=rclpy.spin, args=(commander,))
-    thread.start()
+    #thread = threading.Thread(target=rclpy.spin, args=(commander,))
+    thread_ros = twe(name = 'Thread ROS', target=rclpy.spin, args=(commander,), kwargs={})
+    thread_ros.start()
 
     # sleep for 1 sec.
     time.sleep(1.0)
@@ -232,4 +261,6 @@ def main():
 
     rclpy.shutdown()
     print('robot controls completed')
-    thread.join()
+    if thread_ros.is_alive(): 
+        thread_ros.raise_exception()
+    thread_ros.join()
