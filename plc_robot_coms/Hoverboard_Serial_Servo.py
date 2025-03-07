@@ -11,6 +11,7 @@
 #
 import serial
 import serial.tools.list_ports
+import time
 
 #   uint16_t start;
 #   int16_t  steer;
@@ -72,13 +73,13 @@ class serial_rcv_cmd_t():
             
 class Hoverboard(object):
 
-	def __init__(self):
-		self.myserial = serial.Serial()
-		print('Generated the serial object for the FutabaRS Servo')
-		self.mode = 'normal'
+    def __init__(self):
+        self.myserial = serial.Serial()
+        print('Generated the serial object for the FutabaRS Servo')
+        self.mode = 'normal'
 
-	def __del__(self):
-		self.myserial.close()
+    def __del__(self):
+        self.myserial.close()
 
     def search_com_port(self):
         coms = serial.tools.list_ports.comports()
@@ -91,50 +92,50 @@ class Hoverboard(object):
         return used_port
 
     # open the specified port or the first listed if not specified    
-	def open_port(self, port=None, baudrate=115200, timeout=1):
+    def open_port(self, port=None, baudrate=115200, timeout=1):
         if port == None:
             port = self.search_com_port()		
-		self.myserial.port = port
-		self.myserial.baudrate = baudrate
-		self.myserial.timeout = timeout
-		self.myserial.parity = serial.PARITY_NONE
-		try:
-			self.myserial.open()
-		except IOError:
-			raise IOError('Failed to open port, check the device and port number')
-		else:
-			print('Succeede to open port: ' + port)
+            self.myserial.port = port
+            self.myserial.baudrate = baudrate
+            self.myserial.timeout = timeout
+            self.myserial.parity = serial.PARITY_NONE
+            try:
+                self.myserial.open()
+            except IOError:
+                raise IOError('Failed to open port, check the device and port number')
+            else:
+                print('Succeede to open port: ' + port)
 
-	def close_port(self):
-		self.myserial.close()
+    def close_port(self):
+        self.myserial.close()
 
-	def set_port(self, baudrate=115200, timeout=0x01):
-		self.myserial.baudrate = baudrate
-		self.myserial.timeout = timeout
-		self.myserial._reconfigurePort()
-		print('Succeede to set baudrate:%d, timeout:%d' % (baudrate, timeout))
+    def set_port(self, baudrate=115200, timeout=0x01):
+        self.myserial.baudrate = baudrate
+        self.myserial.timeout = timeout
+        self.myserial._reconfigurePort()
+        print('Succeede to set baudrate:%d, timeout:%d' % (baudrate, timeout))
 
-	def set_steer_speed(self, steer=100, speed=1000):
-		self._check_range(steer, -65534, 65535, 'steer')
-		self._check_range(speed, -65534, 65535, 'speed')
+    def set_steer_speed(self, steer=100, speed=1000):
+        self._check_range(steer, -65534, 65535, 'steer')
+        self._check_range(speed, -65534, 65535, 'speed')
         ss = serial_send_cmd_t(steer,speed)
         
-		send = [ss.start >> 8,
-				ss.start & 0xFF,
-				ss.steer >> 8,
-				ss.steer & 0xFF,
-				ss.speed >> 8,
-				ss.speed & 0xFF,
-				ss.checksum >> 8,
-				ss.checksum & 0xFF]
+	send = [ss.start >> 8,
+	        ss.start & 0xFF,
+	        ss.steer >> 8,
+                ss.steer & 0xFF,
+                ss.speed >> 8,
+                ss.speed & 0xFF,
+                ss.checksum >> 8,
+                ss.checksum & 0xFF]
 
-		self._write_serial(send)
+       self._write_serial(send)
 
-	def read_data(self, len=22, endi='little'):
-		receive = self.myserial.read(len)                  # may also use if self.myserial.in_waiting >0: receive = self.myserial.read_all()      
-		rec_nums = [ord(r) for r in receive]
-		receive = [chr(r) for r in receive]
-		print('received ', receive)
+    def read_data(self, len=22, endi='little'):
+        receive = self.myserial.read(len)                  # may also use if self.myserial.in_waiting >0: receive = self.myserial.read_all()      
+        rec_nums = [ord(r) for r in receive]
+        receive = [chr(r) for r in receive]
+        print('received ', receive)
 
         return rec_nums, receive
 
@@ -148,16 +149,16 @@ class Hoverboard(object):
             print("incorrect start bytes")
             return [-1]
 
-	def _check_range(self, value, lower_range, upper_range, name='value'):
-		if value < lower_range or value > upper_range:
-			raise ValueError(name + ' must be set in the range from ' + str(lower_range) + ' to ' + str(upper_range))
+    def _check_range(self, value, lower_range, upper_range, name='value'):
+        if value < lower_range or value > upper_range:
+            raise ValueError(name + ' must be set in the range from ' + str(lower_range) + ' to ' + str(upper_range))
 
-	def _write_command(self, send):
-		self.myserial.flushOutput()
-		self.myserial.flushInput()
-		self.myserial.write(bytearray(send))
+    def _write_command(self, send):
+        self.myserial.flushOutput()
+        self.myserial.flushInput()
+        self.myserial.write(bytearray(send))
 
-	def _write_serial(self, send):
+    def _write_serial(self, send):
         self._write_command(send)
 
 # TEST :: set steer and speed and read its data
@@ -169,11 +170,11 @@ def main():
         hover.open_port()
         hover.set_port()
         hover.set_steer_speed(10,2000)
-	    time.sleep(1)
+        time.sleep(1)
         hover.set_steer_speed(100,200)
         ord_data, char_data = hover.read_data()	
         print(char_data)
-	    read_data = hover.parse_data(ord_data)
+        read_data = hover.parse_data(ord_data)
         print("speed R meas ",hover.speedR_meas, "speed L meas ",hover.speedL_meas, "wheelR ",hover.wheelR_cnt, "wheelL ",wheelL_cnt)
         print("batVoltage ",hover.speedR_meas.batVoltage, "board temp. ",hover.boardTemp)
         rpts += 1 
