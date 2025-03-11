@@ -139,7 +139,7 @@ class Hover_Comms():
         self.upd = False   
         ord_data, char_data = self.hover.read_data()	
         print(char_data)
-        if not self.hover.parse_data(ord_data) == -1:
+        if not self.hover.parse_data(ord_data) == [-1]:
             self.r_speed = self.dir_correction * (abs(self.hover.speedR_meas) * 0.10472);
             self.l_speed = self.dir_correction * (abs(self.hover.speedL_meas) * 0.10472);
             self.b_volts = self.hover.batVoltage/100.0;
