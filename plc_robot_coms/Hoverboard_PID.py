@@ -187,9 +187,9 @@ class Hover_Comms():
         posRDiff = 0;
 
         #if node is just starting keep odom at zeros
-	    if(self.nodeStartFlag):
-		    self.nodeStartFlag = False;
-	    else:
+        if (self.nodeStartFlag):
+            self.nodeStartFlag = False;
+        else:
             posLDiff = posL - self.lastPosL;
             posRDiff = posR - self.lastPosR;
 
