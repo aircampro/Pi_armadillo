@@ -126,7 +126,10 @@ class Hover_Comms():
         self.pos_L = 0.0
         self.pos_R = 0.0
         self.MAX_STEER_DEG = msa
-        
+
+    def __del__(self):
+        self.close_comm()
+	    
     # Calculate steering from difference of left and right wheel PID outputs
     def set_speed_steer(self, spd_lft, spd_rht):
         self.avspeed = (spd_lft + spd_rht)/2.0;
