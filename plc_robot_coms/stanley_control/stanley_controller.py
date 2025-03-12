@@ -290,8 +290,8 @@ def do_stanley():
         gTwister.linear.x = state.v
         gTwister.angular.x = state.x
         gTwister.angular.y = state.y
-        gTwister.angular.z =  state.v
-	    lock.release()
+        gTwister.angular.z =  state.yaw
+        lock.release()
         
         if show_animation:  
             plt.cla()
