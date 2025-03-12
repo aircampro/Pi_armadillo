@@ -304,7 +304,7 @@ def do_stanley():
         gTwister.angular.x = state.x
         gTwister.angular.y = state.y
         gTwister.angular.z =  state.yaw
-	    lock.release()
+        lock.release()
         
         if show_animation:  
             plt.cla()
@@ -549,7 +549,7 @@ def do_simulation(cx, cy, cyaw, ck, speed_profile, goal):
         gTwister.angular.x = state.x
         gTwister.angular.y = state.y
         gTwister.angular.z =  state.yaw
-	    lock.release()
+        lock.release()
         
         if target_ind % 1 == 0 and show_animation:
             plt.cla()
