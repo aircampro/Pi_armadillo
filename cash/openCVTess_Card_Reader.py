@@ -275,7 +275,7 @@ def find_details(loc):
 	
     return card_number, card_expiry, card_name
 
-def check_for_matches(arrnm): 
+def check_for_matches(arrnm) -> bool: 
     match = 0   
     for i in range(0,len(arrnm)):
         if i > 0:
