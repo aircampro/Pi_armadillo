@@ -236,16 +236,15 @@ def find_details(loc):
     #thresholding
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     gray_thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
-    filename_thresh = "C:\\Users\\Man$\\Desktop\\{}.png".format(os.getpid())
+    filename_thresh = "save_pics/{}.png".format(os.getpid())
     cv2.imwrite(filename_thresh, gray)
     # load the image as a PIL/Pillow image, apply OCR, and then delete
     # the temporary file
     text_thresh = tes.image_to_string(gray_thresh)
     
-
     gray_blur = cv2.medianBlur(gray, 3)
-    #filename_blur = "C:\\Users\\Man$\\Desktop\\a.png".format(os.getpid())
-    #cv2.imwrite(filename_blur, gray)
+    filename_blur = "save_pics/a.png".format(os.getpid())
+    cv2.imwrite(filename_blur, gray_blur)
     # load the image as a PIL/Pillow image, apply OCR, and then delete
     # the temporary file
     text_blur = tes.image_to_string(gray_blur)
@@ -270,8 +269,10 @@ def find_details(loc):
         if not card_expiry:
             card_name= find_c_name(text_blur)
     print("Card_Name: ",card_name)
-    os.remove(filename_thresh)
-    os.remove(filename_blur)
+    if os.path.exists(filename_thresh):
+        os.remove(filename_thresh)
+    if os.path.exists(filename_blur):
+        os.remove(filename_blur)
 	
     return card_number, card_expiry, card_name
 
@@ -340,7 +341,8 @@ def main(w=640, h=480) -> None:
             if len(cca) > 10:
                 c = check_for_matches(cca)  
             d = len(cc) > 4 and len(cn) == 13 and len(ce) > 4  
-            os.remove(fileout)            
+            if os.path.exists(fileout):
+                os.remove(fileout)            
             if a and b and c and d:
                 break
             
