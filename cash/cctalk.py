@@ -4,6 +4,7 @@
 # https://github.com/Baldanos/ccTools/blob/master/ccTalk.py
 #
 # examples of messages can be seen here with further info https://balda.ch/posts/2013/Aug/11/cctalk-part1/
+# example unit https://www.payment-technology.com/Banknote-reader
 #
 import serial
 import ccTalk
