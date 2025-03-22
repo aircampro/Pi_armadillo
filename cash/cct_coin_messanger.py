@@ -14,7 +14,7 @@ __all__ = __autodoc__
 
 import time
 
-from . tools import make_serial_object, make_msg, send_message_and_get_reply
+from cct_tools import make_serial_object, make_msg, send_message_and_get_reply
 
 def log(message, verbose=False):
     if verbose:
@@ -135,7 +135,7 @@ class CoinMessenger(object):
                   cnt2EEProm=(198, 0, int),
                   )
         
-    def __init__(self, serial_object, verbose = False, model=1):                     # default the model to the alberici billy one dictionaty
+    def __init__(self, serial_object, verbose = False, model=1):                          # default the model to the alberici billy one dictionaty
         self.serial_object = serial_object
         self.request_data = {}
         self.verbose = verbose
@@ -152,7 +152,7 @@ class CoinMessenger(object):
 
     def change_model(self, modl):
         self.model = modl
-        for k, v in list(self.machine_type[model].items()):
+        for k, v in list(self.machine_type[self.model].items()):
             self.request_data[k] = dict(message=make_msg(v[0]),
                                         request_code=v[0],
                                         bytes_expected=v[1],
