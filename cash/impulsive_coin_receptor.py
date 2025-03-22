@@ -47,12 +47,12 @@ pulse_output = {
     "pulse_count": 0,
     "pps_mult": 0,
     "ppm_mult": 0,
-	"1Euro" : 0,
-	"50Cent" : 0,
-	"20Cent" : 0,
-	"10Cent" : 0,
-	"total_coin" : 0,
-	"triggers" : 0,
+    "1Euro" : 0,
+    "50Cent" : 0,
+    "20Cent" : 0,
+    "10Cent" : 0,
+    "total_coin" : 0,
+    "triggers" : 0,
     "pph_mult": 0
 }
 env_vars = {
