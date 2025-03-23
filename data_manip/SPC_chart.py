@@ -13,6 +13,7 @@ import matplotlib
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qtagg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
+import numpy as np
 
 class SPCChart(FigureCanvas):
     fig = Figure()
@@ -84,6 +85,12 @@ class Example(QMainWindow):
         self.resize(1000, 500)
         print('PySide6', PySide6.__version__)
         print('matplotlib', matplotlib.__version__)
+        self.tot = 0
+        for e in dataY:
+            self.tot += e
+        self.mean = self.tot / len(dataY)
+        print("mean ", self.mean)
+        print("std dev ", np.std(dataY))
 
     def init_ui(self):
         # Example dataframe
