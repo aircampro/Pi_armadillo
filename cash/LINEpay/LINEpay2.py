@@ -110,7 +110,7 @@ def pay_request():
     return render_template("request.html", result=response)
 
 @app.route("/request_order_choco", methods=['GET'])
-def pay_request2():
+def pay_request1():
     order_id = str(uuid.uuid4())
     amount = 1.5
     currency = CURRENCY_NOTE
@@ -130,7 +130,7 @@ def pay_request2():
                 "name": "Sample package",
                 "products": [
                     {
-                        "id": "OJ001-A",
+                        "id": "CM001-A",
                         "name": product_name,
                         "imageUrl": "https://www.creamoland.com/img/COLproducts/40930.jpg",
                                     "quantity": 1,
@@ -161,6 +161,58 @@ def pay_request2():
     response["paymentStatusCheckReturnMessage"] = check_result.get("returnMessage", None)
     return render_template("request.html", result=response)
 
+@app.route("/request_order_orange", methods=['GET'])
+def pay_request2():
+    order_id = str(uuid.uuid4())
+    amount = 1.2
+    currency = CURRENCY_NOTE
+    product_name = "Fresh Orange Juice"
+    CACHE["order_id"] = order_id
+    CACHE["amount"] = amount
+    CACHE["currency"] = currency
+    CACHE["product_name"] = product_name
+    request_options = {
+        "amount": amount,
+        "currency": currency,
+        "orderId": order_id,
+        "packages": [
+            {
+                "id": "package-999",
+                "amount": 1,
+                "name": "Sample package",
+                "products": [
+                    {
+                        "id": "OJ001-A",
+                        "name": product_name,
+                        "imageUrl": "https://www.creamoland.com/img/COLproducts/40064.jpg",
+                                    "quantity": 1,
+                                    "price": amount
+                    }
+                ]
+            }
+        ],
+        "options": {
+            "payment": {
+                "payType": "PREAPPROVED"
+            }
+        },
+        "redirectUrls": {
+            "confirmUrl": LINE_PAY_REQEST_BASE_URL + "/confirm",
+            "cancelUrl": LINE_PAY_REQEST_BASE_URL + "/cancel"
+        }
+    }
+    logger.debug(request_options)
+    response = api.request(request_options)
+    logger.debug(response)
+    # Check Payment Status
+    transaction_id = int(response.get("info", {}).get("transactionId", 0))
+    check_result = api.check_payment_status(transaction_id)
+    logger.debug(check_result)
+    response["transaction_id"] = transaction_id
+    response["paymentStatusCheckReturnCode"] = check_result.get("returnCode", None)
+    response["paymentStatusCheckReturnMessage"] = check_result.get("returnMessage", None)
+    return render_template("request.html", result=response)
+    
 @app.route("/confirm", methods=['GET'])
 def pay_confirm():
     transaction_id = int(request.args.get('transactionId'))
