@@ -228,7 +228,7 @@ int open_connection(uint32_t reader_type, uint32_t port_interface, c_string port
     {
         std::cout << "Port not opened!" << std::endl;
     }
-	return ret;
+    return ret;
 }
 
 // reset connection
@@ -259,7 +259,7 @@ int close_conenction()
     if (status == UFR_OK)
     {
         std::cout << "Reader closed" << std::endl;
-		ret = 1;
+	ret = 1;
     }
     else if (status != UFR_OK)
     {
@@ -301,12 +301,10 @@ int tryEmvPseCardRead(const char *df_name, const char *szTitlePse)
 
         std::cout << "THIS IS SIMPLY A DEBUG LINE HERE" << std::endl;
 
-
         Status = UFR_Status2String(status);
 
         if (status != UFR_OK)
         {
-
             std::cout << " Error while switching into ISO 14443-4 mode, uFR status is: " << Status << "\n";
             return 0;
             //break;
@@ -323,7 +321,6 @@ int tryEmvPseCardRead(const char *df_name, const char *szTitlePse)
 
         if (status != UFR_OK)
         {
-
             std::cout << " Error while executing APDU command, uFR status is: " << Status;
 
             return 0;
@@ -334,7 +331,6 @@ int tryEmvPseCardRead(const char *df_name, const char *szTitlePse)
 
             if (*sw16_ptr != 0x90)
             {
-
                 sw_int[0] = sw[0];
                 sw_int[1] = sw[1];
 
@@ -352,7 +348,6 @@ int tryEmvPseCardRead(const char *df_name, const char *szTitlePse)
 
                 for (uint32_t i = 0; i < Ne; i++)
                 {
-
                     response_integer[i] = r_apdu[i];
                 }
 
@@ -361,7 +356,6 @@ int tryEmvPseCardRead(const char *df_name, const char *szTitlePse)
 
                     dec_to_hex(response_integer[j], RESPONSE);
                 }
-
                 std::cout << "\n[R] : " << RESPONSE;
             }
 
@@ -404,7 +398,6 @@ int tryEmvPseCardRead(const char *df_name, const char *szTitlePse)
 
             do
             {
-
                 std::cout << cnt_integer << ". Issuing Read Record command (record = " << record_integer << ", sfi = " << sfi_integer << " )";
                 std::cout << "\n[C] 00 B2 " << SFI_HEX;
 
@@ -432,13 +425,11 @@ int tryEmvPseCardRead(const char *df_name, const char *szTitlePse)
 
                         for (uint32_t i = 0; i < Ne; i++)
                         {
-
                             response_integer[i] = r_apdu[i];
                         }
 
                         for (uint32_t j = 0; j < Ne; j++)
                         {
-
                             dec_to_hex(response_integer[j], RESPONSE);
                         }
 
@@ -484,7 +475,6 @@ int tryEmvPseCardRead(const char *df_name, const char *szTitlePse)
 
         if (emv_status == UFR_OK)
         {
-
             std::cout << " \n--------------------------------------------------------------------------------------------------------------------\n";
             std::cout << (int)cnt++ << ". Issuing Select the application command:\n";
             std::cout << "  [C] 00 A4 04 00 ";
@@ -497,7 +487,6 @@ int tryEmvPseCardRead(const char *df_name, const char *szTitlePse)
 
             if (status != UFR_OK)
             {
-
                 std::cout << " Error while executing APDU command, uFR status is: " << Status;
 
                 return 0;
@@ -508,7 +497,6 @@ int tryEmvPseCardRead(const char *df_name, const char *szTitlePse)
 
                 if (*sw16_ptr != 0x90)
                 {
-
                     sw_int[0] = sw[0];
                     sw_int[1] = sw[1];
 
@@ -587,7 +575,6 @@ int tryEmvPseCardRead(const char *df_name, const char *szTitlePse)
 
         if (emv_status)
         {
-
             std::cout << " EMV parsing error code: " << EMV_STATUS_error;
         }
 
@@ -601,9 +588,7 @@ int tryEmvPseCardRead(const char *df_name, const char *szTitlePse)
 
         if (status != UFR_OK)
         {
-
             std::cout << " Error while executing APDU command, uFR status is: " << Status;
-
             return 0;
             //break;
         }
@@ -633,13 +618,11 @@ int tryEmvPseCardRead(const char *df_name, const char *szTitlePse)
 
                 for (uint32_t i = 0; i < Ne; i++)
                 {
-
                     response_integer[i] = r_apdu[i];
                 }
 
                 for (uint32_t j = 0; j < Ne; j++)
                 {
-
                     dec_to_hex(response_integer[j], RESPONSE);
                 }
 
@@ -654,7 +637,6 @@ int tryEmvPseCardRead(const char *df_name, const char *szTitlePse)
 
             std::cout << "\n [SW] : " << sw_string1 << " " << sw_string2;
         }
-
         emv_status = newEmvTag(&temp, r_apdu, Ne, false);
 
         sprintf(EMV_STATUS_error, "%08X", emv_status);
@@ -683,7 +665,6 @@ int tryEmvPseCardRead(const char *df_name, const char *szTitlePse)
         {
 
             std::cout << " EMV parsing error code: " << EMV_STATUS_error;
-
             return 0;
             //break;
         }
@@ -758,8 +739,6 @@ int tryEmvPseCardRead(const char *df_name, const char *szTitlePse)
                 }
                 else
                 {
-
-
                     if (*sw16_ptr != 0x90)
                     {
 
@@ -827,7 +806,7 @@ int checkEmvPse(const char *df_name, const char *szTitlePse)
         if (status != UFR_OK)
         {
             std::cout << "Error while switching into ISO 14443-4 mode, uFR status is: " << Status;
-			return 0;
+	    return 0;
         }
         else
         {
@@ -1004,7 +983,7 @@ int checkEmvPse(const char *df_name, const char *szTitlePse)
     while (0);
 
     emvTreeCleanup(head);
-	return 1;
+    return 1;
 }
 
 // check Emv
@@ -1023,7 +1002,7 @@ int CheckEmv(int pse)
     {
        std::cout << "read error \n";
     }
-	return ret;
+    return ret;
 }
 
 // read the card
@@ -1036,7 +1015,7 @@ int ReadTheCard(int pse)
         if(tryEmvPseCardRead("1PAY.SYS.DDF01", "PSE1")==0)
         {
             std::cout << "read error \n";
-			ret = 0;
+	    ret = 0;
         }
     }
     else if (pse == 2)
@@ -1044,15 +1023,15 @@ int ReadTheCard(int pse)
         if(tryEmvPseCardRead("2PAY.SYS.DDF01", "PSE2")==0)
         {
             std::cout << "read error \n";
-			ret = 0;
+	    ret = 0;
         }
     }
     else
     {
        std::cout << "read error \n";
-	   ret = 0;
+       ret = 0;
     }
-	return ret;
+    return ret;
 }
 
 // get pan
@@ -1073,7 +1052,7 @@ int GetPan(int pse, uint64_t *pan_rcv)
     else
     {
        std::cout << "read error \n";
-	   return 0;
+       return 0;
     }
 	
     status = SetISO14443_4_Mode();
@@ -1084,17 +1063,17 @@ int GetPan(int pse, uint64_t *pan_rcv)
         {
             std::string pan = std::string(pan_str);
             std::cout << "pan " << pan << "\n";
-			*pan_rcv = std::stoull(pan);
+	    *pan_rcv = std::stoull(pan);
         } else
         {
             std::cout << "read error \n";
-			return 0;
+	    return 0;
         }
 
     } else
     {
         std::cout << "Error while switching into ISO 14443-3 mode: " << UFR_Status2String(status);
-		return 0;
+	return 0;
     }
     return 1;
 }
@@ -1145,13 +1124,13 @@ int GetLastTranasction(int pse)
         } else
         {
             std::cout << "EMV_GetLastTransaction() error occurred: " << UFR_Status2String(status) << std::endl;
-			ret = 0;
+	    ret = 0;
         }
 
     } else
     {
         std::cout << "Error while switching into ISO 14443-3 mode: " << UFR_Status2String(status) << std::endl;
-		ret = 0;
+	ret = 0;
     }
     return ret;
 }
@@ -1164,11 +1143,11 @@ int main(int argc, char** argv)
     c_string port_name = " ";
     c_string additional = " ";
     bool checkAdvanced = false;                                                  // open default connection	
-	int ret = 1;
+    int ret = 1;
     int pse = 1;                                                                 // default PSE1		
-	cxxopts::Options options("emv_reader");
+    cxxopts::Options options("emv_reader");
 	
-	try {
+     try {
 		
 		options.add_options()
 			("port_name", "Port name", cxxopts::value<std::string>())
@@ -1186,58 +1165,58 @@ int main(int argc, char** argv)
 
 		if (result.count("help"))
 		{
-			std::cout << options.help({}) << std::endl;
-			return 0;
+		    std::cout << options.help({}) << std::endl;
+		    return 0;
 		}
 		std::stringstream ss;                                                               // i think we need this ? if not use std::string for them 
-        if (result.count("port_name")) {
+                if (result.count("port_name")) {
 		    std::string port_names = result["port_name"].as<std::string>();
-			ss << port_names;
+		    ss << port_names;
 		    ss >> port_name;
 		}
-        if (result.count("additional")) {
-		    std::string additionals = result["additional"].as<std::string>();                                                
-		    ss << additionals;
-		    ss >> additional;
-        }
-        if (result.count("reader_type")) {		
-		    reader_type = result["reader_type"].as<uint32_t>();
-        }
-        if (result.count("port_interface")) {	
-		    port_interface = result["port_interface"].as<uint32_t>();
-        }
-	}
-	catch (cxxopts::OptionException &e) {
+                if (result.count("additional")) {
+	           std::string additionals = result["additional"].as<std::string>();                                                
+	           ss << additionals;
+	           ss >> additional;
+                }
+                if (result.count("reader_type")) {		
+	           reader_type = result["reader_type"].as<uint32_t>();
+                }
+                if (result.count("port_interface")) {	
+	            port_interface = result["port_interface"].as<uint32_t>();
+                }
+	   }
+    catch (cxxopts::OptionException &e) {
 		std::cout << options.usage() << std::endl;
 		std::cerr << e.what() << std::endl;
 		std::cerr << "defaulting to use standard connection" << std::endl;
-	}
+    }
 	
     if (open_connection(reader_type, port_interface, port_name, additional, checkAdvanced) == 1) {
-		if (CheckEmv(pse) == 1) {
+	if (CheckEmv(pse) == 1) {
             reset_connection();	
-			int fret = 0;
+	    int fret = 0;
             fret = ReadTheCard(pse);
-            if (fret == 0)	{
+            if (fret == 0) {
                 std::cout << "Error in reading card !" << std::endl;
                 ret = 2;
             } else {
-			    std::cout << "Read Ok DataPrinted above and put into gloabl variables \n [SW] read for example was : " << sw_string1 << " " << sw_string2;	
+		std::cout << "Read Ok DataPrinted above and put into gloabl variables \n [SW] read for example was : " << sw_string1 << " " << sw_string2;	
             }				
             reset_connection();	
-			fret = 0;
-			uint64_t pan_read = 0;                                                           // primary account number
+	    fret = 0;
+	    uint64_t pan_read = 0;                                                           // primary account number
             fret = GetPan(pse, &pan_read);
-            if (fret == 0)	{
+            if (fret == 0) {
                 std::cout << "Error in reading pan from card !" << std::endl;
                 ret = 3;
             } else {
-				std::cout << "pan read returned = " << pan_read << std::endl;
+		std::cout << "pan read returned = " << pan_read << std::endl;
             }
             reset_connection();	
-			fret = 0;
+	    fret = 0;
             fret = GetLastTranasction(pse);
-            if (fret == 0)	{
+            if (fret == 0) {
                 std::cout << "Error in reading last transaction from card !" << std::endl;
                 ret = 4;
             }	
