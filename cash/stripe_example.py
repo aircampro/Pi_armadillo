@@ -9,7 +9,7 @@ stripe.api_key = "sk_test_4eC39HqLyjWDarjtT1zdp7dc"                             
 #creation
 def create_strike_cust(nme="your_name",em="has@noemail.com"):
     stripe_customer = stripe.Customer.create(name=nme,email=em)
-    return stripe_customer
+    return stripe_customer, stripe_customer.id
 	
 # aquire e.g. id="cus_XXXXX"
 def get_customer(id="stripe_customer_id"):
