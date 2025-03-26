@@ -522,15 +522,15 @@ int main(int argc, char *argv[]) {
     float drone_speed = 20;                                                      // Set speed to x[cm/s] (value range: 10~100)  
     bool speed_change = false;
 	
-	// Initialize input event structures
-	memset(&keyEv, 0, sizeof(keyEv));
-	keyEv.type  = EV_KEY;
-	memset(&synEv, 0, sizeof(synEv));
-	synEv.type  = EV_SYN;
-	synEv.code  = SYN_REPORT;
-	synEv.value = 0;
+    // Initialize input event structures
+    memset(&keyEv, 0, sizeof(keyEv));
+    keyEv.type  = EV_KEY;
+    memset(&synEv, 0, sizeof(synEv));
+    synEv.type  = EV_SYN;
+    synEv.code  = SYN_REPORT;
+    synEv.value = 0;
 
-	// 'fd' is now open file descriptor for issuing uinput events
+    // 'fd' is now open file descriptor for issuing uinput events
 
     // set video stream to be on and open it.
     command = "streamon";
@@ -550,7 +550,7 @@ int main(int argc, char *argv[]) {
     }
     cv::Mat frame;
     int edge_det_sel = 0;                                                                                   // if true to video edge detection
-	cv::Mat img_c, img_l, img_s_x, img_s_y, img_s;
+    cv::Mat img_c, img_l, img_s_x, img_s_y, img_s;
     bool save_frames = false;
 	
 	// set speed to nominal speed
@@ -572,38 +572,38 @@ int main(int argc, char *argv[]) {
         }
         switch(edge_det_sel) {
             case 1: 
-		    cv::Canny(frame, img_c, 125, 255);
+	    cv::Canny(frame, img_c, 125, 255);
             cv::imshow("Tello Stream Canny", img_c);			
-		    break;
+	    break;
 			
-			case 2:
+    	    case 2:
             cv::Laplacian(frame, img_l, 3);
-	        cv::convertScaleAbs(img_l, img_l, 1, 0);
-	        cv::threshold(img_l, img_l, 0, 255, cv::THRESH_BINARY|cv::THRESH_OTSU);
+	    cv::convertScaleAbs(img_l, img_l, 1, 0);
+	    cv::threshold(img_l, img_l, 0, 255, cv::THRESH_BINARY|cv::THRESH_OTSU);
             cv::imshow("Tello Stream Laplace", img_l);	
             break;
 			
-			case 3:
-	        cv::Sobel(frame, img_s_x, CV_8UC1, 1, 0, 3);
-	        cv::Sobel(frame, img_s_y, CV_8UC1, 0, 1, 3);
-	        img_s = abs(img_s_x) + abs(img_s_y);
-	        cv::convertScaleAbs(img_s, img_s, 1, 0);
-	        cv::threshold(img_s, img_s, 0, 255, cv::THRESH_BINARY|cv::THRESH_OTSU);
+	    case 3:
+	    cv::Sobel(frame, img_s_x, CV_8UC1, 1, 0, 3);
+	    cv::Sobel(frame, img_s_y, CV_8UC1, 0, 1, 3);
+	    img_s = abs(img_s_x) + abs(img_s_y);
+	    cv::convertScaleAbs(img_s, img_s, 1, 0);
+	    cv::threshold(img_s, img_s, 0, 255, cv::THRESH_BINARY|cv::THRESH_OTSU);
             cv::imshow("Tello Stream Sobel", img_s);	
             break;
 			
-			case 0:
+	    case 0:
             cv::imshow("Tello Stream", frame);
-		    break;
+	    break;
         }
 
         if (save_frames == true) {
-	        cv::imwrite("normal.jpg", frame);
-	        cv::imwrite("canny.jpg", img_c);
-	        cv::imwrite("laplace.jpg", img_l);
-	        cv::imwrite("sobel.jpg", img_s);
+	    cv::imwrite("normal.jpg", frame);
+	    cv::imwrite("canny.jpg", img_c);
+	    cv::imwrite("laplace.jpg", img_l);
+	    cv::imwrite("sobel.jpg", img_s);
             save_frames = false;
-			std::cout << "frames we saved .... " << std::endl;
+	    std::cout << "frames we saved .... " << std::endl;
         }
 		
 		// Wait for IRQ on pin (or timeout for button debounce)
@@ -744,44 +744,44 @@ int main(int argc, char *argv[]) {
                             } else {
                                speed_change == false;
                             }							   
-						}							
-						//if ((keyEv.code==KEY_0)&&(keyEv.value==1))
-						//{
-						//	system("sudo halt");
-							//system("echo \"that works\"");
-						//}
-						//else
-						//{
-							write(fd, &keyEv,
-							sizeof(keyEv));
-						//}
-						//write(fd, &keyEv,
-						//sizeof(keyEv));
-						c = 1; // Follow w/SYN event
-						if(intstate[j]) { // Press?
-							// Note pressed key
-							// and set initial
-							// repeat interval.
-							lastKey = i;
-							timeout = repTime1;
-						} else { // Release?
-							// Stop repeat and
-							// return to normal
-							// IRQ monitoring
-							// (no timeout).
-							lastKey = timeout = -1;
-						}
-					}
-					j++;
-					if(intstate[i]) bitMask |= bit;
+			}							
+			//if ((keyEv.code==KEY_0)&&(keyEv.value==1))
+			//{
+			//	system("sudo halt");
+			//system("echo \"that works\"");
+			//}
+			//else
+			//{
+			write(fd, &keyEv,
+			sizeof(keyEv));
+			//}
+			//write(fd, &keyEv,
+			//sizeof(keyEv));
+			c = 1; // Follow w/SYN event
+			if(intstate[j]) { // Press?
+				// Note pressed key
+				// and set initial
+				// repeat interval.
+				lastKey = i;
+				timeout = repTime1;
+			} else { // Release?
+				// Stop repeat and
+				// return to normal
+				// IRQ monitoring
+				// (no timeout).
+				lastKey = timeout = -1;
+			}
+		}
+		j++;
+		if(intstate[i]) bitMask |= bit;
 				}
 			}
 
 			// If the "Vulcan nerve pinch" buttons are pressed,
 			// set long timeout -- if this time elapses without
 			// a button state change, esc keypress will be sent.
-			if((bitMask & vulcanMask) == vulcanMask)
-				timeout = vulcanTime;
+		if((bitMask & vulcanMask) == vulcanMask)
+			timeout = vulcanTime;
 		} else if(timeout == vulcanTime) { // Vulcan timeout occurred
 			// Send keycode (MAME exits or displays exit menu)
 			keyEv.code = vulcanKey;
@@ -812,9 +812,8 @@ int main(int argc, char *argv[]) {
 	close(fd);                 // close uinput
 	cleanup();                 // Un-export pins
 
-    // Close the socket
-    close(socket_desc);
-	
+        // Close the socket
+        close(socket_desc);
 	puts("Done.");
 
 	return 0;
