@@ -127,10 +127,10 @@ def create_product(nm="Whole Milk", t="Milk"):
     product = stripe.Product.create(name=nm,  type=t)	
     return product
 
-def monthy_price_to_product(pn="prod_XXXXX", a=2000, c="usd"):
+def price_to_product(pn="prod_XXXXX", a=2000, c="usd"):
     price = stripe.Price.create( unit_amount=a, currency=c, product=pn)
 	
-def monthy_price_to_product(pn="prod_XXXXX",a=2000, c="usd"):
+def monthly_price_to_product(pn="prod_XXXXX",a=2000, c="usd"):
     price = stripe.Price.create( unit_amount=a, currency=c, recurring={"interval": "month"},  product=pn)	
 
 def verify_pm(a=[32, 45],pm="pm_XXXXX"):
