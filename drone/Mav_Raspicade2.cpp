@@ -312,13 +312,15 @@ void signalHandler(int signo) {
 volatile int g_timer_state = InterruptTimerStates::TACT;
 void alrm(int signo)
 {
-    g_timer_state = InterruptTimerStates::TRUN;                                                                                    // timer alarm is running
-    int st = clock();
-    // you can do something here too...
-    int en = clock();
-    std::cout << "time from alarm handler : " << (en - st) / double(CLOCKS_PER_SEC) * 1000.0f << "\n";
-    std::cout << "timer completed.." << "\n";
-    g_timer_state = InterruptTimerStates::TEXP;                                                                                    // timer alarm is complete	
+    if (g_timer_state == InterruptTimerStates::TEXP) {
+        g_timer_state = InterruptTimerStates::TRUN;                                                                                    // timer alarm is running
+        int st = clock();
+        // you can do something here too...
+        int en = clock();
+        std::cout << "time from alarm handler : " << (en - st) / double(CLOCKS_PER_SEC) * 1000.0f << "\n";
+        std::cout << "timer completed.." << "\n";
+        g_timer_state = InterruptTimerStates::TEXP; // timer alarm is complete	
+    }
 }
 
 // Detect Pi board type.  Doesn't return super-granular details,
@@ -789,7 +791,7 @@ int main(int argc, char *argv[]) {
     if ((g_timer_state == InterruptTimerStates::TEXP) {                                                            // timer timed out
         std::cout << "Video did not start-up correctly" << "\n";
     }
-	
+    g_timer_state = InterruptTimerStates::TEXP;                                                                    // disble timer
 	// ----------------------------------------------------------------
 	// Monitor GPIO file descriptors for button events.  The poll()
 	// function watches for GPIO IRQs in this case; it is NOT
