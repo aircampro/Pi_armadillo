@@ -304,7 +304,7 @@ void signalHandler(int signo) {
     if (signo == SIGUSR1) {
         std::cout << "A separate trap for kill -10 (-12 will kill clean)" << "\n";
     } else {
-	    g_running = 0;
+	g_running = 0;
     }
 }
 
@@ -312,13 +312,13 @@ void signalHandler(int signo) {
 volatile int g_timer_state = InterruptTimerStates::TACT;
 void alrm(int signo)
 {
-	g_timer_state = InterruptTimerStates::TRUN;                                                                                    // timer alarm is running
+    g_timer_state = InterruptTimerStates::TRUN;                                                                                    // timer alarm is running
     int st = clock();
     // you can do something here too...
     int en = clock();
     std::cout << "time from alarm handler : " << (en - st) / double(CLOCKS_PER_SEC) * 1000.0f << "\n";
     std::cout << "timer completed.." << "\n";
-	g_timer_state = InterruptTimerStates::TEXP;                                                                                    // timer alarm is complete	
+    g_timer_state = InterruptTimerStates::TEXP;                                                                                    // timer alarm is complete	
 }
 
 // Detect Pi board type.  Doesn't return super-granular details,
