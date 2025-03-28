@@ -440,7 +440,7 @@ int main(int argc, char *argv[]) {
     struct sigaction sa_alarm;
     struct itimerval itimer;
 
-    // this is an alternate signal handler
+    // tie the alrm function to the SIGALRM signal handler
     //
     memset(&sa_alarm, 0, sizeof(sa_alarm));
     sa_alarm.sa_handler = &alrm;
@@ -464,7 +464,7 @@ int main(int argc, char *argv[]) {
     }
 
     /*
-        cant do
+        cant do signal can not be trapped
 
     if (signal(SIGKILL, signalHandler) == SIG_ERR) {
         std::cout << "cant catch SIGKILL " << "\n";
@@ -756,7 +756,7 @@ int main(int argc, char *argv[]) {
 	
 	// we set a timeout to 2 seconds using the timer global g_timer_state
 	itimer.it_value.tv_sec = itimer.it_interval.tv_sec = 5;                                                     // This is the time before the timer event activates
-	itimer.it_value.tv_usec = itimer.it_interval.tv_usec = 0;                                                   // e.g. 500000
+	itimer.it_value.tv_usec = itimer.it_interval.tv_usec = 0;                                                   // e.g. 500000 in microseconds 
 	bool skip_timer = false;
     if (setitimer(ITIMER_REAL, &itimer, NULL) < 0) {                                                            // cant make concurrent timer then just sleep for 2 seconds
         std::cout << "coulnt make timer event" << std::endl;
@@ -791,7 +791,16 @@ int main(int argc, char *argv[]) {
     if ((g_timer_state == InterruptTimerStates::TEXP) {                                                            // timer timed out
         std::cout << "Video did not start-up correctly" << "\n";
     }
-    g_timer_state = InterruptTimerStates::TEXP;                                                                    // disble timer
+    g_timer_state = InterruptTimerStates::TEXP;                                                                    // expire the timer to disable it
+
+    struct sigaction sa_ignore;                                                                                    // now set the signal to ignore
+    memset(&sa_ignore, 0, sizeof(sa_ignore));
+    sa_ignore.sa_handler = SIG_IGN;
+
+    if (sigaction(SIGALRM, &sa_ignore, NULL) < 0) {                                                                // ignore any further signal alarms
+        std::cout << "couldnt set sig ignore on timer" << "\n";
+    }
+ 
 	// ----------------------------------------------------------------
 	// Monitor GPIO file descriptors for button events.  The poll()
 	// function watches for GPIO IRQs in this case; it is NOT
