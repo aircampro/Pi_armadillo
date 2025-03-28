@@ -697,13 +697,13 @@ int main(int argc, char *argv[]) {
     }
     std::cout << "System is ready\n";
 	
-	// Initialize input event structures
-	memset(&keyEv, 0, sizeof(keyEv));
-	keyEv.type  = EV_KEY;
-	memset(&synEv, 0, sizeof(synEv));
-	synEv.type  = EV_SYN;
-	synEv.code  = SYN_REPORT;
-	synEv.value = 0;
+    // Initialize input event structures
+    memset(&keyEv, 0, sizeof(keyEv));
+    keyEv.type  = EV_KEY;
+    memset(&synEv, 0, sizeof(synEv));
+    synEv.type  = EV_SYN;
+    synEv.code  = SYN_REPORT;
+    synEv.value = 0;
 
 	// 'fd' is now open file descriptor for issuing uinput events
 
@@ -727,8 +727,7 @@ int main(int argc, char *argv[]) {
     // First, make sure camera is in photo mode.
     const auto mode_result = camera.set_mode(component_id, Camera::Mode::Video);                              // @@1
     if (mode_result != Camera::Result::Success) {
-        std::cerr << "Could not switch to Photo mode: " << mode_result;
-        return 1;
+        std::cerr << "Could not switch to Video mode: " << mode_result;
     }
 
     // We want to subscribe to information about pictures that are taken.
@@ -754,38 +753,38 @@ int main(int argc, char *argv[]) {
     // Wait a bit to make sure we see capture information.
     // sleep_for(seconds(2));
 	
-	// we set a timeout to 2 seconds using the timer global g_timer_state
-	itimer.it_value.tv_sec = itimer.it_interval.tv_sec = 5;                                                     // This is the time before the timer event activates
-	itimer.it_value.tv_usec = itimer.it_interval.tv_usec = 0;                                                   // e.g. 500000 in microseconds 
-	bool skip_timer = false;
+    // we set a timeout to 2 seconds using the timer global g_timer_state
+    itimer.it_value.tv_sec = itimer.it_interval.tv_sec = 5;                                                     // This is the time before the timer event activates
+    itimer.it_value.tv_usec = itimer.it_interval.tv_usec = 0;                                                   // e.g. 500000 in microseconds 
+    bool skip_timer = false;
     if (setitimer(ITIMER_REAL, &itimer, NULL) < 0) {                                                            // cant make concurrent timer then just sleep for 2 seconds
         std::cout << "coulnt make timer event" << std::endl;
-		sleep_for(seconds(2));
-		skip_timer = true;
+	sleep_for(seconds(2));
+	skip_timer = true;
     } else {
         g_timer_state = InterruptTimerStates::TACT;                                                             // ensure timer state is active
     }		
 
     while (((g_timer_state == InterruptTimerStates::TACT) || (g_timer_state == InterruptTimerStates::TRUN)) || (skip_timer == true)) {	
         if (photo_result == Camera::Result::Success) {
-		    std::pair< Result, Camera::VideoStreamInfo > pRes = camera.get_video_stream_info(component_id);
-		    if ((pRes.first == Camera::VideoStreamStatus::InProgress) && (pRes.second == Camera::VideoStreamSpectrum::VisibleLight)) {
+		std::pair< Result, Camera::VideoStreamInfo > pRes = camera.get_video_stream_info(component_id);
+		if ((pRes.first == Camera::VideoStreamStatus::InProgress) && (pRes.second == Camera::VideoStreamSpectrum::VisibleLight)) {
 
-                std::this_thread::sleep_for(std::chrono::seconds(1));                                              // Wait 1 second
-                std::string mavStreamAddress = capture_info.uri;
-                cv::VideoCapture cap(mavStreamAddress);
+                   std::this_thread::sleep_for(std::chrono::seconds(1));                                              // Wait 1 second
+                   std::string mavStreamAddress = capture_info.uri;
+                   cv::VideoCapture cap(mavStreamAddress);
 
-                if (!cap.isOpened()) {                                                                            // stream opened ok
-                    std::cout << "Error: Cloud not open video stream." << std::endl;
-                    return 1;
-                } else {
-                    break;
-                }
+                   if (!cap.isOpened()) {                                                                            // stream opened ok
+                       std::cout << "Error: Cloud not open video stream." << std::endl;
+                       // return 1;
+                   } else {
+                       break;
+                   }
             } else {
                 std::cout << "Error: Video stream opened with wrong type of camera or not yet started correctly" << std::endl;			
             }
-		}
-		skip_timer = false;
+	}
+	skip_timer = false;
     } 
 	
     if ((g_timer_state == InterruptTimerStates::TEXP) {                                                            // timer timed out
@@ -806,7 +805,7 @@ int main(int argc, char *argv[]) {
 	// function watches for GPIO IRQs in this case; it is NOT
 	// continually polling the pins!  Processor load is near zero.
 
-	while(g_running) {                                                                      // Signal handler will set this to 0 to exit
+    while(g_running) {                                                                      // Signal handler will set this to 0 to exit
         cap >> frame;
         if (frame.empty()) {
             printf("Error: Received empty frame.");
@@ -814,38 +813,38 @@ int main(int argc, char *argv[]) {
         }
         switch(edge_det_sel) {
             case 1: 
-		    cv::Canny(frame, img_c, 125, 255);
+	    cv::Canny(frame, img_c, 125, 255);
             cv::imshow("Mavlink Stream Canny", img_c);			
-		    break;
+	    break;
 			
-			case 2:
+	    case 2:
             cv::Laplacian(frame, img_l, 3);
-	        cv::convertScaleAbs(img_l, img_l, 1, 0);
-	        cv::threshold(img_l, img_l, 0, 255, cv::THRESH_BINARY|cv::THRESH_OTSU);
+	    cv::convertScaleAbs(img_l, img_l, 1, 0);
+	    cv::threshold(img_l, img_l, 0, 255, cv::THRESH_BINARY|cv::THRESH_OTSU);
             cv::imshow("Mavlink Stream Laplace", img_l);	
             break;
 			
-			case 3:
-	        cv::Sobel(frame, img_s_x, CV_8UC1, 1, 0, 3);
-	        cv::Sobel(frame, img_s_y, CV_8UC1, 0, 1, 3);
-	        img_s = abs(img_s_x) + abs(img_s_y);
-	        cv::convertScaleAbs(img_s, img_s, 1, 0);
-	        cv::threshold(img_s, img_s, 0, 255, cv::THRESH_BINARY|cv::THRESH_OTSU);
-            cv::imshow("Mavlink Stream Sobel", img_s);	
-            break;
+	     case 3:
+	     cv::Sobel(frame, img_s_x, CV_8UC1, 1, 0, 3);
+	     cv::Sobel(frame, img_s_y, CV_8UC1, 0, 1, 3);
+	     img_s = abs(img_s_x) + abs(img_s_y);
+	     cv::convertScaleAbs(img_s, img_s, 1, 0);
+	     cv::threshold(img_s, img_s, 0, 255, cv::THRESH_BINARY|cv::THRESH_OTSU);
+             cv::imshow("Mavlink Stream Sobel", img_s);	
+             break;
 			
-			case 0:
-            cv::imshow("Mavlink Stream", frame);
-		    break;
+	      case 0:
+              cv::imshow("Mavlink Stream", frame);
+	      break;
         }
 
         if (save_frames == true) {
-	        cv::imwrite("normal.jpg", frame);
-	        cv::imwrite("canny.jpg", img_c);
-	        cv::imwrite("laplace.jpg", img_l);
-	        cv::imwrite("sobel.jpg", img_s);
+	    cv::imwrite("normal.jpg", frame);
+	    cv::imwrite("canny.jpg", img_c);
+	    cv::imwrite("laplace.jpg", img_l);
+	    cv::imwrite("sobel.jpg", img_s);
             save_frames = false;
-			std::cout << "frames we saved .... " << std::endl;
+	    std::cout << "frames are saved .... " << std::endl;
         }
 		
 		// Wait for IRQ on pin (or timeout for button debounce)
@@ -943,7 +942,7 @@ int main(int argc, char *argv[]) {
                             if (drone_state == on_ground) {
                                 Action::Result takeoff_result = action.takeoff();
                                 if (takeoff_result != Action::Result::Success) {
-                                    std::cout << "Arming failed: " << takeoff_result << '\n';
+                                    std::cout << "take-off failed: " << takeoff_result << '\n';
                                 } else {
                                     drone_state = in_air;
                                 }
@@ -952,7 +951,7 @@ int main(int argc, char *argv[]) {
                             if (drone_state == in_air) {
                                 const Action::Result land_result = action.land();
                                 if (land_result != Action::Result::Success) {
-                                    std::cout << "Arming failed: " << land_result << '\n';
+                                    std::cout << "landing failed: " << land_result << '\n';
                                 } else {
                                     drone_state = on_ground;
                                 }
@@ -1036,7 +1035,7 @@ int main(int argc, char *argv[]) {
     // Land
     const Action::Result land_result = action.land();
     if (land_result != Action::Result::Success) {
-        std::cerr << "Arming failed: " << land_result << '\n';
+        std::cerr << "landing failed: " << land_result << '\n';
         return 1;
     }
 
@@ -1055,6 +1054,6 @@ int main(int argc, char *argv[]) {
     if (photo_result != Camera::Result::Success) {
         std::cout << "Stop Video Stream failed: " << photo_result;
     }	
-	puts("Done.");
+    puts("Done.");
 
-	return 0;
+    return 0;
