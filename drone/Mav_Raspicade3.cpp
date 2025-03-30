@@ -97,6 +97,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <mavsdk/plugins/manual_control/manual_control.h>
 #include <mavsdk/plugins/telemetry/telemetry.h>
 #include <mavsdk/plugins/camera/camera.h>
+#include <mavsdk/plugins/gimbal/gimbal.h>
 #include <mutex>
 #include <vector>
 #include <thread>
@@ -243,13 +244,20 @@ const int           vulcanKey  = KEY_ESC, // Keycode to send
 // A few globals ---------------------------------------------------------
 
 char
-  *progName,                         // Program name (for error reporting)
-   sysfs_root[] = "/sys/class/gpio", // Location of Sysfs GPIO files
-   running      = 1;                 // Signal handler will set to 0 (exit)
-volatile unsigned int  *gpio;       // GPIO register table
+  *progName,                           // Program name (for error reporting)
+   sysfs_root[] = "/sys/class/gpio",   // Location of Sysfs GPIO files
+   g_running      = 1;                 // Signal handler will set to 0 (exit)
+volatile unsigned int  *gpio;          // GPIO register table
 const int
-   debounceTime = 20;                // 20 ms for button debouncing
+   debounceTime = 20;                  // 20 ms for button debouncing
 
+// the states of a timed event
+enum InterruptTimerStates : int
+{
+    TACT = 0,
+    TRUN = 1,
+    TEXP = 2,
+};
 
 // Some utility functions ------------------------------------------------
 
@@ -303,9 +311,28 @@ void err(char *msg) {
 	exit(1);
 }
 
-// Interrupt handler -- set global flag to abort main loop.
-void signalHandler(int n) {
-	running = 0;
+// Interrupt handler -- set global flag to abort main running loop. unless signal 10
+void signalHandler(int signo) {
+    if (signo == SIGUSR1) {
+        std::cout << "A separate trap for kill -10 (-12 will kill clean)" << "\n";
+    } else {
+	    g_running = 0;
+    }
+}
+
+// this is a timed interrupt routine 
+volatile int g_timer_state = InterruptTimerStates::TACT;
+void alrm(int signo)
+{
+    if (g_timer_state == InterruptTimerStates::TEXP) {
+        g_timer_state = InterruptTimerStates::TRUN;                                                                                    // timer alarm is running
+        int st = clock();
+        // you can do something here too...
+        int en = clock();
+        std::cout << "time from alarm handler : " << (en - st) / double(CLOCKS_PER_SEC) * 1000.0f << "\n";
+        std::cout << "timer completed.." << "\n";
+        g_timer_state = InterruptTimerStates::TEXP; // timer alarm is complete	
+    }
 }
 
 // Detect Pi board type.  Doesn't return super-granular details,
@@ -313,7 +340,9 @@ void signalHandler(int n) {
 // 0: Pi 1 Model B revision 1
 // 1: Pi 1 Model B revision 2, Model A, Model B+, Model A+
 // 2: Pi 2 Model B
-
+// 
+// TBD Add memory map for Pi3 and Pi4
+//
 static int boardType(void) {
 	FILE *fp;
 	char  buf[1024], *ptr;
@@ -362,7 +391,9 @@ static int boardType(void) {
 }
 
 // Main stuff ------------------------------------------------------------
-
+// to find your chip look in /proc/cpuinfo
+// hopefully its listed below
+//
 #define PI1_BCM2708_PERI_BASE 0x20000000
 #define PI1_GPIO_BASE         (PI1_BCM2708_PERI_BASE + 0x200000)
 #define PI2_BCM2708_PERI_BASE 0x3F000000
@@ -370,6 +401,28 @@ static int boardType(void) {
 #define BLOCK_SIZE            (4*1024)
 #define GPPUD                 (0x94 / 4)
 #define GPPUDCLK0             (0x98 / 4)
+#define PI3_BCM2708_PERI_BASE 0x3F000000
+#define PI3_GPIO_BASE (PI3_BCM2708_PERI_BASE + 0x200000)
+#define PI4_BCM2711_PERI_BASE 0xFE000000
+#define PI4_GPIO_BASE (PI4_BCM2711_PERI_BASE + 0x200000) /* GPIO controller */
+
+#define PI2_BCM2709_PERI_BASE 0x3F000000
+#define PI2_BCM2709_GPIO_BASE (PI2_BCM2709_PERI_BASE + 0x200000)
+#define PI3_BCM2835_PERI_BASE 0xFE000000
+#define PI3_BCM2835_GPIO_BASE (PI3_BCM2835_PERI_BASE + 0x200000)
+
+// this was also found and different not sure which Pi it relates too ?
+#define BCM2835_PERI_BASE 0x20000000
+/// Base Physical Address of the System Timer registers
+#define BCM2835_ST_BASE (BCM2835_PERI_BASE + 0x3000)
+/// Base Physical Address of the Pads registers
+#define BCM2835_GPIO_PADS (BCM2835_PERI_BASE + 0x100000)
+/// Base Physical Address of the Clock/timer registers
+#define BCM2835_CLOCK_BASE (BCM2835_PERI_BASE + 0x101000)
+/// Base Physical Address of the GPIO registers
+#define BCM2835_GPIO_BASE (BCM2835_PERI_BASE + 0x200000)
+/// Base Physical Address of the SPI0 registers
+#define BCM2835_SPI0_BASE (BCM2835_PERI_BASE + 0x204000)
 
 int main(int argc, char *argv[]) {
 
@@ -394,9 +447,98 @@ int main(int argc, char *argv[]) {
 	struct pollfd          p[32];        // GPIO file descriptors
 
 	progName = argv[0];             // For error reporting
-	signal(SIGINT , signalHandler); // Trap basic signals (exit cleanly)
-	signal(SIGKILL, signalHandler);
 
+    // timer defined interrupt code
+    struct sigaction sa_alarm;
+    struct itimerval itimer;
+
+    // tie the alrm function to the SIGALRM signal handler
+    //
+    memset(&sa_alarm, 0, sizeof(sa_alarm));
+    sa_alarm.sa_handler = &alrm;
+    sa_alarm.sa_flags = SA_RESTART;
+    if (sigaction(SIGALRM, &sa_alarm, NULL) < 0) {
+       std::cout << "error creating SIGALRM " << "\n";
+    }
+	
+    // define the signal handlers which will clean up if needed
+    //
+    if (signal(SIGINT, signalHandler) == SIG_ERR) {
+        std::cout << "cant catch SIGINT " << "\n";
+    }
+
+    if (signal(SIGQUIT, signalHandler) == SIG_ERR) {
+        std::cout << "cant catch SIGQUIT " << "\n";
+    }
+	
+    if (signal(SIGFPE, signalHandler) == SIG_ERR) {
+        std::cout << "cant catch SIGFPE " << "\n";
+    }
+
+    /*
+        cant do signal can not be trapped
+
+    if (signal(SIGKILL, signalHandler) == SIG_ERR) {
+        std::cout << "cant catch SIGKILL " << "\n";
+        BOOST_LOG_SEV(lg,error) << "cat catch SIGKILL";
+    }
+    */
+
+    if (signal(SIGSEGV, signalHandler) == SIG_ERR) {
+        std::cout << "cant catch SIGSEGV " << "\n";
+    }
+
+    if (signal(SIGPIPE, signalHandler) == SIG_ERR) {
+        std::cout << "cant catch SIGPIPE " << "\n";
+    }
+
+    if (signal(SIGTERM, signalHandler) == SIG_ERR) {
+        std::cout << "cant catch SIGTERM " << "\n";
+    }
+
+    if (signal(SIGCONT, signalHandler) == SIG_ERR) {
+        std::cout << "cant catch SIGCONT " << "\n";
+    }
+
+    /*
+    if (signal(SIGSTOP, signalHandler) == SIG_ERR) {
+        std::cout << "cant catch SIGSTOP " << "\n";
+        BOOST_LOG_SEV(lg,error) << "cat catch SIGSTOP";
+    }
+    */
+
+    if (signal(SIGTSTP, signalHandler) == SIG_ERR) {
+        std::cout << "cant catch SIGTSTP " << "\n";
+    }
+
+    // kill -10 <pid>
+	if (signal(SIGUSR1, signalHandler) == SIG_ERR) {
+        std::cout << "cant catch SIGUSR1 " << "\n";
+    }
+
+    // kill -12 <pid>
+	if (signal(SIGUSR2, signalHandler) == SIG_ERR) {
+        std::cout << "cant catch SIGUSR2 " << "\n";
+    }
+
+    // Bus error (incorrect memory access)
+	if (signal(SIGBUS, signalHandler) == SIG_ERR) {
+        std::cout << "cant catch SIGBUS " << "\n";
+    }
+
+    // CPU Time Limit Exceeded (4.2BSD) report this error
+	if (signal(SIGXCPU, signalHandler) == SIG_ERR) {
+        std::cout << "cant catch SIGBUS " << "\n";
+    }
+	
+    if (signal(SIGHUP, signalHandler) == SIG_ERR) {
+        std::cout << "cant catch SIGHUP " << "\n";
+    }
+
+    if (signal(SIGALRM, alrm) == SIG_ERR) {
+        std::cout << "cant catch SIGALRM " << "\n";
+    }
+	
 //not needed
 /*
 	// Select io[] table for Cupcade (TFT) or 'normal' project.
@@ -595,7 +737,7 @@ int main(int argc, char *argv[]) {
     const auto component_id = camera.camera_list().cameras[0].component_id;
 
     // First, make sure camera is in photo mode.
-    const auto mode_result = camera.set_mode(component_id, Camera::Mode::Photo);
+    const auto mode_result = camera.set_mode(component_id, Camera::Mode::Video);                              // @@1
     if (mode_result != Camera::Result::Success) {
         std::cerr << "Could not switch to Photo mode: " << mode_result;
         return 1;
@@ -619,21 +761,108 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    // take a picture using the camera 
-    const auto photo_result = camera.take_photo(component_id);
-    if (photo_result != Camera::Result::Success) {
-        std::cout << "Taking Photo failed: " << photo_result;
-    }
+    const auto photo_result = camera.start_video_streaming(component_id, 0);                                    // start the video stream
+
     // Wait a bit to make sure we see capture information.
-    sleep_for(seconds(2));
+    // sleep_for(seconds(2));
 	
+	// we set a timeout to 2 seconds using the timer global g_timer_state
+	itimer.it_value.tv_sec = itimer.it_interval.tv_sec = 5;                                                     // This is the time before the timer event activates
+	itimer.it_value.tv_usec = itimer.it_interval.tv_usec = 0;                                                   // e.g. 500000 in microseconds 
+	bool skip_timer = false;
+    if (setitimer(ITIMER_REAL, &itimer, NULL) < 0) {                                                            // cant make concurrent timer then just sleep for 2 seconds
+        std::cout << "coulnt make timer event" << std::endl;
+		sleep_for(seconds(2));
+		skip_timer = true;
+    } else {
+        g_timer_state = InterruptTimerStates::TACT;                                                             // ensure timer state is active
+    }		
+
+    while (((g_timer_state == InterruptTimerStates::TACT) || (g_timer_state == InterruptTimerStates::TRUN)) || (skip_timer == true)) {	
+        if (photo_result == Camera::Result::Success) {
+		    std::pair< Result, Camera::VideoStreamInfo > pRes = camera.get_video_stream_info(component_id);
+		    if ((pRes.first == Camera::VideoStreamStatus::InProgress) && (pRes.second == Camera::VideoStreamSpectrum::VisibleLight)) {
+
+                std::this_thread::sleep_for(std::chrono::seconds(1));                                              // Wait 1 second
+                std::string mavStreamAddress = capture_info.uri;
+                cv::VideoCapture cap(mavStreamAddress);
+
+                if (!cap.isOpened()) {                                                                            // stream opened ok
+                    std::cout << "Error: Cloud not open video stream." << std::endl;
+                    return 1;
+                } else {
+                    break;
+                }
+            } else {
+                std::cout << "Error: Video stream opened with wrong type of camera or not yet started correctly" << std::endl;			
+            }
+		}
+		skip_timer = false;
+    } 
+	
+    if ((g_timer_state == InterruptTimerStates::TEXP) {                                                            // timer timed out
+        std::cout << "Video did not start-up correctly" << "\n";
+    }
+    g_timer_state = InterruptTimerStates::TEXP;                                                                    // expire the timer to disable it
+
+    struct sigaction sa_ignore;                                                                                    // now set the signal to ignore
+    memset(&sa_ignore, 0, sizeof(sa_ignore));
+    sa_ignore.sa_handler = SIG_IGN;
+
+    if (sigaction(SIGALRM, &sa_ignore, NULL) < 0) {                                                                // ignore any further signal alarms
+        std::cout << "couldnt set sig ignore on timer" << "\n";
+    }
+ 
+    auto gimbal = Gimbal{system.value()};
+
+    auto prom = std::promise<int32_t>();
+    auto fut = prom.get_future();
+    std::once_flag once_flag;
+    // Wait for a gimbal.
+    gimbal.subscribe_gimbal_list([&prom, &once_flag](const Gimbal::GimbalList& gimbal_list) {
+        std::cout << "Found a gimbal: " << gimbal_list.gimbals.back().model_name << " by "
+                  << gimbal_list.gimbals.back().vendor_name << '\n';
+        std::call_once(once_flag, [&prom, &gimbal_list]() {
+            prom.set_value(gimbal_list.gimbals.back().gimbal_id);
+        });
+    });
+
+    if (fut.wait_for(std::chrono::seconds(3)) == std::future_status::timeout) {
+        std::cerr << "Could not find a gimbal, exiting...";
+        return 1;
+    }
+
+    const int32_t gimbal_id = fut.get();
+    std::cout << "Use gimbal ID: " << gimbal_id << '\n';
+
+    // Set up callback to monitor camera/gimbal angle
+    gimbal.subscribe_attitude([](Gimbal::Attitude attitude) {
+        std::cout << "Gimbal angle pitch: " << attitude.euler_angle_forward.pitch_deg
+                  << " deg, yaw: " << attitude.euler_angle_forward.yaw_deg
+                  << " yaw (relative to forward)\n";
+        std::cout << "Gimbal angle pitch: " << attitude.euler_angle_north.pitch_deg
+                  << " deg, yaw: " << attitude.euler_angle_north.yaw_deg
+                  << " yaw (relative to North)\n";
+    });
+
+    std::cout << "Start controlling gimbal...\n";
+    Gimbal::Result gimbal_result = gimbal.take_control(gimbal_id, Gimbal::ControlMode::Primary);
+    if (gimbal_result != Gimbal::Result::Success) {
+        std::cerr << "Could not take gimbal control: " << gimbal_result << '\n';
+        return 1;
+    }
+
+    // Fetch the gimbal attitude
+    auto [result, attitude] = gimbal.get_attitude(gimbal_id);
+
+    std::cout << "Use yaw mode to lock to a specific direction...\n";
 	// ----------------------------------------------------------------
 	// Monitor GPIO file descriptors for button events.  The poll()
 	// function watches for GPIO IRQs in this case; it is NOT
 	// continually polling the pins!  Processor load is near zero.
 
-	while(running) {                                                                      // Signal handler will set this to 0 to exit
-        frame = cv::imread(capture_info.file_url, 0);                                     // read picture taken
+	while(g_running) {                                                                      // Signal handler will set this to 0 to exit
+        cap >> frame;
         if (frame.empty()) {
             printf("Error: Received empty frame.");
             continue;
@@ -720,6 +949,7 @@ int main(int argc, char *argv[]) {
                             
 	                        { 10,     KEY_1  },    		// START Player1
 	                        {  9,     KEY_5  },   		// COIN/SELECT Player1
+                            ( 26,     KEY_6  },   		// COIN/SELECT Player2
 							
 	                        { 14,     KEY_Z  },   		// BUTTON5/TL Player1
 	                        { 15,     KEY_SPACE  },   	// BUTTON2/X Player1
@@ -735,6 +965,7 @@ int main(int argc, char *argv[]) {
 	                        {  20,    KEY_A  },   		// BUTTON1/A Player2
 	                        {  21,    KEY_S  },   		// BUTTON2/B Player2
 	                    */
+
                         if ((keyEv.code==KEY_UP)&&(keyEv.value==1)) {
                             manual_control.set_manual_control_input(0.2f, 0.0f, throttle, 0.0f);
                         } else if ((keyEv.code==KEY_DOWN)&&(keyEv.value==1)) {		
@@ -749,6 +980,49 @@ int main(int argc, char *argv[]) {
                             manual_control.set_manual_control_input(0.0f, 0.0f, throttle, 0.2f); 	
                         } else if ((keyEv.code==KEY_X)&&(keyEv.value==1)) {	
                             manual_control.set_manual_control_input(0.0f, 0.0f, throttle, -0.2f); 
+                        } else if ((keyEv.code==KEY_D)&&(keyEv.value==1)) {	
+                          auto [result, attitude] = gimbal.get_attitude(gimbal_id);						
+                          std::cout << "Look North...\n";
+                          gimbal.set_angles(
+                                            gimbal_id,
+                                            0.0f,
+                                            0.0f,
+                                            -attitude.euler_angle_north.yaw_deg,
+                                            Gimbal::GimbalMode::YawLock,
+                                            Gimbal::SendMode::Once);						
+                        } else if ((keyEv.code==KEY_G)&&(keyEv.value==1)) {	
+                          auto [result, attitude] = gimbal.get_attitude(gimbal_id);
+                          std::cout << "Look East...\n";
+                          gimbal.set_angles(
+                                            gimbal_id,
+                                            0.0f,
+                                            0.0f,
+                                            -attitude.euler_angle_north.yaw_deg + 90.0f,
+                                            Gimbal::GimbalMode::YawLock,
+                                            Gimbal::SendMode::Once); 	 		
+                        } else if ((keyEv.code==KEY_R)&&(keyEv.value==1)) {	
+                           auto [result, attitude] = gimbal.get_attitude(gimbal_id);
+                           std::cout << "Look South...\n";
+                           gimbal.set_angles(
+                                              gimbal_id,
+                                              0.0f,
+                                              0.0f,
+                                              -attitude.euler_angle_north.yaw_deg + 180.0f,
+                                              Gimbal::GimbalMode::YawLock,
+                                              Gimbal::SendMode::Once);	
+                        } else if ((keyEv.code==KEY_F)&&(keyEv.value==1)) {	
+                            auto [result, attitude] = gimbal.get_attitude(gimbal_id);
+                            std::cout << "Look West...\n";
+                            gimbal.set_angles(
+                                               gimbal_id,
+                                               0.0f,
+                                               0.0f,
+                                               -attitude.euler_angle_north.yaw_deg - 90.0f,
+                                               Gimbal::GimbalMode::YawLock,
+                                               Gimbal::SendMode::Once);
+                        } else if ((keyEv.code==KEY_6)&&(keyEv.value==1)) {	      
+                            std::cout << "Back to the center...\n";
+                            gimbal.set_angles(0, 0.0f, 0.0f, 0.0f, Gimbal::GimbalMode::YawFollow, Gimbal::SendMode::Once); 	
                         } else if ((keyEv.code==KEY_LEFTSHIFT)&&(keyEv.value==1)) {	      // speed up
                             throttle += 0.05f;						
                             speed_change = true; 	
@@ -847,11 +1121,6 @@ int main(int argc, char *argv[]) {
 		}
 		if(c) write(fd, &synEv, sizeof(synEv));
 		
-		// take a picture using the camera 
-        const auto photo_result = camera.take_photo(component_id);
-        if (photo_result != Camera::Result::Success) {
-            std::cout << "Taking Photo failed: " << photo_result;
-        }
 	}
 
 	// ----------------------------------------------------------------
@@ -871,6 +1140,13 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
+    std::cout << "Stop controlling gimbal...\n";
+    gimbal_result = gimbal.release_control(gimbal_id);
+    if (gimbal_result != Gimbal::Result::Success) {
+        std::cerr << "Could not release gimbal control: " << gimbal_result << '\n';
+        return 1;
+    }
+	
     while (telemetry.in_air()) {
         std::cout << "waiting until landed\n";
         sleep_for(seconds(1));
@@ -881,7 +1157,11 @@ int main(int argc, char *argv[]) {
         std::cout << "waiting until disarmed\n";
         sleep_for(seconds(1));
     }
-	
+
+    const auto photo_result = camera.stop_video_streaming(component_id, 0);
+    if (photo_result != Camera::Result::Success) {
+        std::cout << "Stop Video Stream failed: " << photo_result;
+    }	
 	puts("Done.");
 
 	return 0;
