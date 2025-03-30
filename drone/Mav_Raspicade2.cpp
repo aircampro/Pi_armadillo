@@ -765,22 +765,22 @@ int main(int argc, char *argv[]) {
     // Wait a bit to make sure we see capture information.
     // sleep_for(seconds(2));
 	
-	// we set a timeout to 2 seconds using the timer global g_timer_state
-	itimer.it_value.tv_sec = itimer.it_interval.tv_sec = 5;                                                     // This is the time before the timer event activates
-	itimer.it_value.tv_usec = itimer.it_interval.tv_usec = 0;                                                   // e.g. 500000 in microseconds 
-	bool skip_timer = false;
+    // we set a timeout to 2 seconds using the timer global g_timer_state
+    itimer.it_value.tv_sec = itimer.it_interval.tv_sec = 5;                                                     // This is the time before the timer event activates
+    itimer.it_value.tv_usec = itimer.it_interval.tv_usec = 0;                                                   // e.g. 500000 in microseconds 
+    bool skip_timer = false;
     if (setitimer(ITIMER_REAL, &itimer, NULL) < 0) {                                                            // cant make concurrent timer then just sleep for 2 seconds
         std::cout << "coulnt make timer event" << std::endl;
-		sleep_for(seconds(2));
-		skip_timer = true;
+	sleep_for(seconds(2));
+	skip_timer = true;
     } else {
         g_timer_state = InterruptTimerStates::TACT;                                                             // ensure timer state is active
     }		
 
     while (((g_timer_state == InterruptTimerStates::TACT) || (g_timer_state == InterruptTimerStates::TRUN)) || (skip_timer == true)) {	
         if (photo_result == Camera::Result::Success) {
-		    std::pair< Result, Camera::VideoStreamInfo > pRes = camera.get_video_stream_info(component_id);
-		    if ((pRes.first == Camera::VideoStreamStatus::InProgress) && (pRes.second == Camera::VideoStreamSpectrum::VisibleLight)) {
+	     std::pair< Result, Camera::VideoStreamInfo > pRes = camera.get_video_stream_info(component_id);
+	     if ((pRes.first == Camera::VideoStreamStatus::InProgress) && (pRes.second == Camera::VideoStreamSpectrum::VisibleLight)) {
 
                 std::this_thread::sleep_for(std::chrono::seconds(1));                                              // Wait 1 second
                 std::string mavStreamAddress = capture_info.uri;
@@ -795,8 +795,8 @@ int main(int argc, char *argv[]) {
             } else {
                 std::cout << "Error: Video stream opened with wrong type of camera or not yet started correctly" << std::endl;			
             }
-		}
-		skip_timer = false;
+	}
+	skip_timer = false;
     } 
 	
     if ((g_timer_state == InterruptTimerStates::TEXP) {                                                            // timer timed out
@@ -825,38 +825,38 @@ int main(int argc, char *argv[]) {
         }
         switch(edge_det_sel) {
             case 1: 
-		    cv::Canny(frame, img_c, 125, 255);
+	    cv::Canny(frame, img_c, 125, 255);
             cv::imshow("Mavlink Stream Canny", img_c);			
-		    break;
+	    break;
 			
-			case 2:
+	    case 2:
             cv::Laplacian(frame, img_l, 3);
-	        cv::convertScaleAbs(img_l, img_l, 1, 0);
-	        cv::threshold(img_l, img_l, 0, 255, cv::THRESH_BINARY|cv::THRESH_OTSU);
+	    cv::convertScaleAbs(img_l, img_l, 1, 0);
+	    cv::threshold(img_l, img_l, 0, 255, cv::THRESH_BINARY|cv::THRESH_OTSU);
             cv::imshow("Mavlink Stream Laplace", img_l);	
             break;
 			
-			case 3:
-	        cv::Sobel(frame, img_s_x, CV_8UC1, 1, 0, 3);
-	        cv::Sobel(frame, img_s_y, CV_8UC1, 0, 1, 3);
-	        img_s = abs(img_s_x) + abs(img_s_y);
-	        cv::convertScaleAbs(img_s, img_s, 1, 0);
-	        cv::threshold(img_s, img_s, 0, 255, cv::THRESH_BINARY|cv::THRESH_OTSU);
+	    case 3:
+	    cv::Sobel(frame, img_s_x, CV_8UC1, 1, 0, 3);
+	    cv::Sobel(frame, img_s_y, CV_8UC1, 0, 1, 3);
+	    img_s = abs(img_s_x) + abs(img_s_y);
+	    cv::convertScaleAbs(img_s, img_s, 1, 0);
+	    cv::threshold(img_s, img_s, 0, 255, cv::THRESH_BINARY|cv::THRESH_OTSU);
             cv::imshow("Mavlink Stream Sobel", img_s);	
             break;
 			
-			case 0:
+	    case 0:
             cv::imshow("Mavlink Stream", frame);
-		    break;
+	    break;
         }
 
         if (save_frames == true) {
-	        cv::imwrite("normal.jpg", frame);
-	        cv::imwrite("canny.jpg", img_c);
-	        cv::imwrite("laplace.jpg", img_l);
-	        cv::imwrite("sobel.jpg", img_s);
+	    cv::imwrite("normal.jpg", frame);
+	    cv::imwrite("canny.jpg", img_c);
+	    cv::imwrite("laplace.jpg", img_l);
+	    cv::imwrite("sobel.jpg", img_s);
             save_frames = false;
-			std::cout << "frames we saved .... " << std::endl;
+	    std::cout << "frames we saved .... " << std::endl;
         }
 		
 		// Wait for IRQ on pin (or timeout for button debounce)
