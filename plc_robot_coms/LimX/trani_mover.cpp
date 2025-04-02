@@ -92,7 +92,11 @@ public:
   {
        mod_params(pb, pd);
   }
-  
+
+  void change_dt(double dt)
+  {
+       set_dt(dt);
+  }
 private:
   /**
    * @brief Overrides the update function to do nothing, as the stand-up behavior does not require continuous updates.
@@ -257,7 +261,7 @@ int main(int argc, char *argv[])
   WLAction ctl;                                                                      // create robot controller class
   double tt = static_cast<double>(t_band) / 1000.0;                                  // read 
   if (ts_from_file == true) {
-	  ctl.set_dt(static_cast<double>(t_step)/1000.0);                                // set the time step from the ini file
+	  ctl.change_dt(static_cast<double>(t_step)/1000.0);                                // set the time step from the ini file
   }
   ctl.change_pd_param(p_band, d_band);                                               // initialise pd controller
   ctl.starting(tt);                                                                  // Start the stand-up behavior
