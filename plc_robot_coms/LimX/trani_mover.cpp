@@ -203,11 +203,12 @@ int main(int argc, char *argv[])
     return 1;
   }
 
+  // read the setting sfrom the .ini file
   double p_band = static_cast<double>(reader.GetInteger("PID", "KP", 600)) / 10.0;
   double d_band = static_cast<double>(reader.GetInteger("PID", "KD", 4.5)) / 1000.0;
   int t_band = reader.GetInteger("TIME", "TM", 700);                                               // Movement speed
   int t_step = reader.GetInteger("TIME", "TS", 2);                                                 // Time step
-  bool ts_from_file = reader.GetBoolean("TIME", "ts_from_file", false);                              // get time step from file above
+  bool ts_from_file = reader.GetBoolean("TIME", "ts_from_file", false);                            // get time step from file above
 	
   int i;
   int fd;
@@ -252,16 +253,16 @@ int main(int argc, char *argv[])
     }
   });
 
-  std::cout << "Waitting calibration begin." << std::endl;
+  std::cout << "Waiting for calibration to begin." << std::endl;
   while(!is_calibration) {
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
   }
-  std::cout << "Waitting calibration end." << std::endl;
+  std::cout << "calibration end......" << std::endl;
 
   WLAction ctl;                                                                      // create robot controller class
   double tt = static_cast<double>(t_band) / 1000.0;                                  // read 
   if (ts_from_file == true) {
-	  ctl.change_dt(static_cast<double>(t_step)/1000.0);                                // set the time step from the ini file
+	ctl.change_dt(static_cast<double>(t_step)/1000.0);                            // set the time step from the ini file
   }
   ctl.change_pd_param(p_band, d_band);                                               // initialise pd controller
   ctl.starting(tt);                                                                  // Start the stand-up behavior
@@ -277,22 +278,22 @@ int main(int argc, char *argv[])
 
   while (state==1)
   {
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-	state = 2;
+       std::this_thread::sleep_for(std::chrono::milliseconds(100));
+       state = 2;
   }
 
   while (g_run == 1) {                                                              // read the joystick from i2c and move in accordance
 	    if (ioctl(fd, I2CRDWR, &cmd) == -1) {
-		    fprintf(stderr, "%d Error %s\n", __LINE__, strerror(errno));
+		fprintf(stderr, "%d Error %s\n", __LINE__, strerror(errno));
 	    } else {
-		    printf("x = %02x y = %02x btn = %02x  \n", cmdbuff[0], cmdbuff[1], cmdbuff[2]);
-		    int x = cmdbuff[0];
-		    int y = cmdbuff[1];	
-            int b = cmdbuff[2];
-			double xr = static_cast<double>(x) / JOYSPAN;
-			double yr = static_cast<double>(y) / JOYSPAN;
-			ctl.moving(x, y, b);
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+		printf("x = %02x y = %02x btn = %02x  \n", cmdbuff[0], cmdbuff[1], cmdbuff[2]);
+		int x = cmdbuff[0];
+		int y = cmdbuff[1];	
+                int b = cmdbuff[2];
+		double xr = static_cast<double>(x) / JOYSPAN;
+		double yr = static_cast<double>(y) / JOYSPAN;
+		ctl.moving(x, y, b);
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
 	    }
    }
 
