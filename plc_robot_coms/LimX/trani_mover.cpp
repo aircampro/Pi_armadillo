@@ -271,7 +271,7 @@ int main(int argc, char *argv[])
   int state = 0;
   while (state==0)
   {
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
 	state = 1;
   }
   ctl.sitting(tt);                                                                   // now sit down
