@@ -35,12 +35,12 @@ class CardHashCollector(Enum):
     
 class PayterPSP(object):
 
-	def __init__(self):
-		self.myserial = serial.Serial()
-		print('Generated the serial object for the Payter PSP over serial')
+    def __init__(self):
+        self.myserial = serial.Serial()
+        print('Generated the serial object for the Payter PSP over serial')
 
-	def __del__(self):
-		self.myserial.close()
+    def __del__(self):
+        self.myserial.close()
 
     def search_com_port(self):
         coms = serial.tools.list_ports.comports()
@@ -52,164 +52,163 @@ class PayterPSP(object):
         print('Using first listed COM port: ' + used_port)
         return used_port
     
-	def open_port(self, port=None, baudrate=115200, timeout=1):
+    def open_port(self, port=None, baudrate=115200, timeout=1):
         if port == None:
             port = self.search_com_port()		
-		self.myserial.port = port
-		self.myserial.baudrate = baudrate
-		self.myserial.timeout = timeout
-		self.myserial.parity = serial.PARITY_NONE
-		try:
-			self.myserial.open()
-		except IOError:
-			raise IOError('Failed to open port, check the device and port number')
-		else:
-			print('Succeede to open port: ' + port)
+            self.myserial.port = port
+            self.myserial.baudrate = baudrate
+            self.myserial.timeout = timeout
+            self.myserial.parity = serial.PARITY_NONE
+            try:
+                self.myserial.open()
+            except IOError:
+                raise IOError('Failed to open port, check the device and port number')
+            else:
+                print('Succeede to open port: ' + port)
 
-	def close_port(self):
-		self.myserial.close()
+    def close_port(self):
+        self.myserial.close()
 
-	def set_port(self, baudrate=57600, timeout=0x01):
-		self.myserial.baudrate = baudrate
-		self.myserial.timeout = timeout
-		self.myserial._reconfigurePort()
-		print('Succeede to set baudrate:%d, timeout:%d' % (baudrate, timeout))
+    def set_port(self, baudrate=57600, timeout=0x01):
+        self.myserial.baudrate = baudrate
+        self.myserial.timeout = timeout
+	self.myserial._reconfigurePort()
+	print('Succeede to set baudrate:%d, timeout:%d' % (baudrate, timeout))
 
-	def enable_terminal(self, return_packet=0x01):
-		self._check_range(return_packet, 0, 1, 'return_packet')
+    def enable_terminal(self, return_packet=0x01):
+        self._check_range(return_packet, 0, 1, 'return_packet')
 
         # CCh 02h 3Ch 12h 1Ch
-		send = [0xCC,
-				0x02,
-				0x3C,
-				0x12,
-				0x1C]
-		# send.append(self._calc_checksum(send))
-		self._write_serial(send)
+        send = [0xCC,
+                0x02,
+                0x3C,
+                0x12,
+                0x1C]
+        # send.append(self._calc_checksum(send))
+        self._write_serial(send)
+        if return_packet == 0x00:
+            return True
+        elif return_packet == 0x01:
+            return self._check_ack()
 
-		if return_packet == 0x00:
-			return True
-		elif return_packet == 0x01:
-			return self._check_ack()
-
-	def disable_terminal(self, return_packet=0x01):
-		self._check_range(return_packet, 0, 1, 'return_packet')
+    def disable_terminal(self, return_packet=0x01):
+        self._check_range(return_packet, 0, 1, 'return_packet')
 
         # CCh 02h 3Ch 11h 1Ch
-		send = [0xCC,
-				0x02,
-				0x3C,
-				0x11,
-				0x1C]
-		self._write_serial(send)
+        send = [0xCC,
+                0x02,
+                0x3C,
+                0x11,
+                0x1C]
+        self._write_serial(send)
 
-		if return_packet == 0x00:
-			return True
-		elif return_packet == 0x01:
-			return self._check_ack()
+        if return_packet == 0x00:
+            return True
+        elif return_packet == 0x01:
+            return self._check_ack()
 
-	def reset_terminal(self, return_packet=0x01):
-		self._check_range(return_packet, 0, 1, 'return_packet')
+    def reset_terminal(self, return_packet=0x01):
+        self._check_range(return_packet, 0, 1, 'return_packet')
 
         # CCh 02h 3Ch 55h 5Fh
-		send = [0xCC,
-				0x02,
-				0x3C,
-				0x55,
-				0x5F]
-		self._write_serial(send)
+        send = [0xCC,
+                0x02,
+                0x3C,
+                0x55,
+                0x5F]
+        self._write_serial(send)
 
-		if return_packet == 0x00:
-			return True
-		elif return_packet == 0x01:
-			return self._check_ack()            
+        if return_packet == 0x00:
+            return True
+        elif return_packet == 0x01:
+            return self._check_ack()            
 
-	def sync_terminal(self, return_packet=0x01):
-		self._check_range(return_packet, 0, 1, 'return_packet')
+    def sync_terminal(self, return_packet=0x01):
+        self._check_range(return_packet, 0, 1, 'return_packet')
 
         # CCh 02h 3Ch 24h 2Eh
-		send = [0xCC,
-				0x02,
-				0x3C,
-				0x24,
-				0x2E]
-		self._write_serial(send)
+        send = [0xCC,
+                0x02,
+                0x3C,
+                0x24,
+                0x2E]
+        self._write_serial(send)
 
-		if return_packet == 0x00:
-			return True
-		elif return_packet == 0x01:
-			return self._check_ack(ReplyMessage.SYNC.value)
+        if return_packet == 0x00:
+            return True
+        elif return_packet == 0x01:
+            return self._check_ack(ReplyMessage.SYNC.value)
 
     # Set protocol version 3 with DOL Authorization enabled
-	def set_protocol(self, return_packet=0x01):
-		self._check_range(return_packet, 0, 1, 'return_packet')
+    def set_protocol(self, return_packet=0x01):
+        self._check_range(return_packet, 0, 1, 'return_packet')
 
         # CCh 07h 3Ch 13h 03h 00h 00h 00h 02h 27h
-		send = [0xCC,
-				0x07,
-				0x3C,
-				0x13,
-				0x03,
-				0x00,
-				0x00,
-				0x00,
-				0x02,
-				0x27]
-		self._write_serial(send)
+        send = [0xCC,
+               0x07,
+               0x3C,
+               0x13,
+               0x03,
+               0x00,
+               0x00,
+               0x00,
+               0x02,
+               0x27]
+        self._write_serial(send)
 
-		if return_packet == 0x00:
-			return True
-		elif return_packet == 0x01:
-			return self._check_ack(ReplyMessage.PROTO.value)
+        if return_packet == 0x00:
+            return True
+        elif return_packet == 0x01:
+            return self._check_ack(ReplyMessage.PROTO.value)
 
     # Setup for 48 hour session time, with commit on timeout.
-	def set_up(self, return_packet=0x01):
-		self._check_range(return_packet, 0, 1, 'return_packet')
+    def set_up(self, return_packet=0x01):
+        self._check_range(return_packet, 0, 1, 'return_packet')
 
         # CCh 07h 3Ch 23h 00h 02h A3h 00h 00h D7h
-		send = [0xCC,
-				0x07,
-				0x3C,
-				0x23,
-				0x00,
-				0x02,
-				0xA3,
-				0x00,
-				0x00,
-				0xD7]
-		self._write_serial(send)
+        send = [0xCC,
+                0x07,
+                0x3C,
+                0x23,
+                0x00,
+                0x02,
+                0xA3,
+                0x00,
+                0x00,
+                0xD7]
+        self._write_serial(send)
 
-		if return_packet == 0x00:
-			return True
-		elif return_packet == 0x01:
-			return self._check_ack()           
+        if return_packet == 0x00:
+            return True
+        elif return_packet == 0x01:
+            return self._check_ack()           
 
     # Start session for 2500 cents with session ref 10 and default card data to return.
-	def start_sess(self, money_val, ref_no, return_packet=0x01):
-		self._check_range(return_packet, 0, 1, 'return_packet')
+    def start_sess(self, money_val, ref_no, return_packet=0x01):
+        self._check_range(return_packet, 0, 1, 'return_packet')
 
         # Start session for 2500 cents with session ref 10 and default card data to return
         # CCh 0Ah 3Ch 34h 00h 00h 09h C4h 00h 00h 00h 0Ah 1Dh - TBD verify checksum is 1D
-		send = [0xCC,
-				0x0A,
-				0x3C,
-				0x34,
-				0x00,
-				0x00,
-				(money_val & 0xFF00) >> 8,
-				money_val & 0xFF,
-				0x00,
-				0x00,
-				0x00,
-				ref_no]
-		send.append(self._calc_checksum(send))  # -- check if the last byte is correct checksum !
-		self._write_serial(send)
+        send = [0xCC,
+                0x0A,
+                0x3C,
+                0x34,
+                0x00,
+                0x00,
+                (money_val & 0xFF00) >> 8,
+                money_val & 0xFF,
+                0x00,
+                0x00,
+                0x00,
+                ref_no]
+        send.append(self._calc_checksum(send))  # -- check if the last byte is correct checksum !
+        self._write_serial(send)
 
-		if return_packet == 0x00:
-			return True
-		elif return_packet == 0x01:
-            dr = self._check_ack(ReplyMessage.DATA_READ.value)
-			return not self._check_ack(ReplyMessage.NOK.value,2,dr), dr  
+         if return_packet == 0x00:
+             return True
+         elif return_packet == 0x01:
+             dr = self._check_ack(ReplyMessage.DATA_READ.value)
+             return not self._check_ack(ReplyMessage.NOK.value,2,dr), dr  
 
     # AAh xxh 3Ch 31h "(User ref)" xxh DFh F0h 06h xxh "(CARDHASH)" DFh CAh 0Bh xxh "(masked PAN)" xxh
     #
@@ -248,107 +247,107 @@ class PayterPSP(object):
                 append.cardhash(sess_reply[i])
             elif state == CardHashCollector.ENDED.value :  
                 append.maskedpan(sess_reply[i])
-        return id, cardhash, maskedpan
+       return id, cardhash, maskedpan
         
-    # This binary didnt seem to add up i cant see the 100 cent so i dont know ?
-	def commit_sess(self, money_val, ref_no, return_packet=0x01):
-		self._check_range(return_packet, 0, 1, 'return_packet')
+       # This binary didnt seem to add up i cant see the 100 cent so i dont know ?
+     def commit_sess(self, money_val, ref_no, return_packet=0x01):
+         self._check_range(return_packet, 0, 1, 'return_packet')
 
-        # Commit session for 100 cents with session id 10
-        # CCh 0Ah 3Ch 35h 00h 00h 00h 04h 00h 00h 00h 6Ah B5h
-		send = [0xCC,
-				0x0A,
-				0x3C,
-				0x35,
-				0x00,
-				0x00,
-				0x00,
-				0x04,
-				0x00,
-				0x00,
-				0x00,
-				0x6A,
-				0xB5]
-		#send.append(self._calc_checksum(send))  # -- check if the last byte is correct checksum !
-		self._write_serial(send)
+           # Commit session for 100 cents with session id 10
+           # CCh 0Ah 3Ch 35h 00h 00h 00h 04h 00h 00h 00h 6Ah B5h
+           send = [0xCC,
+                   0x0A,
+                   0x3C,
+                   0x35,
+                   0x00,
+                   0x00,
+                   0x00,
+                   0x04,
+                   0x00,
+                   0x00,
+                   0x00,
+                   0x6A,
+                   0xB5]
+           #send.append(self._calc_checksum(send))  # -- check if the last byte is correct checksum !
+           self._write_serial(send)
 
-		if return_packet == 0x00:
-			return True
-		elif return_packet == 0x01:
-			return self._check_ack()
+           if return_packet == 0x00:
+               return True
+           elif return_packet == 0x01:
+               return self._check_ack()
             
-	def cancel_sess(self, return_packet=0x01):
-		self._check_range(return_packet, 0, 1, 'return_packet')
+    def cancel_sess(self, return_packet=0x01):
+        self._check_range(return_packet, 0, 1, 'return_packet')
 
         # CCh 02h 3Ch 37h 41h
-		send = [0xCC,
-				0x02,
-				0x3C,
-				0x37,
-				0x41]
-		self._write_serial(send)
+        send = [0xCC,
+                0x02,
+                0x3C,
+                0x37,
+                0x41]
+        self._write_serial(send)
 
-		if return_packet == 0x00:
-			return True
-		elif return_packet == 0x01:
-			return self._check_ack(ReplyMessage.CANCEL.value)
+        if return_packet == 0x00:
+            return True
+        elif return_packet == 0x01:
+            return self._check_ack(ReplyMessage.CANCEL.value)
 
-	def auth_sess(self, return_packet=0x01):
-		self._check_range(return_packet, 0, 1, 'return_packet')
+    def auth_sess(self, return_packet=0x01):
+        self._check_range(return_packet, 0, 1, 'return_packet')
 
         # CCh 02h 3Ch 36h 40h
-		send = [0xCC,
-				0x02,
-				0x3C,
-				0x36,
-				0x40]
-		self._write_serial(send)
+        send = [0xCC,
+		0x02,
+		0x3C,
+		0x36,
+		0x40]
+        self._write_serial(send)
 
-		if return_packet == 0x00:
-			return True
-		elif return_packet == 0x01:
+        if return_packet == 0x00:
+            return True
+        elif return_packet == 0x01:
             dr = self._check_ack(ReplyMessage.DATA_READ.value)
-			a = self._check_ack(ReplyMessage.NOK.value,2,dr)
-			b = self._check_ack(ReplyMessage.DECLINE.value,2,dr)
+            a = self._check_ack(ReplyMessage.NOK.value,2,dr)
+	    b = self._check_ack(ReplyMessage.DECLINE.value,2,dr)
             if a == True or b == True :
                 return False
             else:
                 return dr
                 
-	def void_sess(self, sess_id=10, return_packet=0x01):
-		self._check_range(return_packet, 0, 1, 'return_packet')
+    def void_sess(self, sess_id=10, return_packet=0x01):
+        self._check_range(return_packet, 0, 1, 'return_packet')
 
         # Void session ref 10
         # CCh 06h 3Ch 33h 00h 00h 00h 0Ah 4Bh
-		send = [0xCC,
-				0x06,
-				0x3C,
-				0x33,
-				0x00,
-				0x00,
-				0x00,                
-				sess_id]
+        send = [0xCC,
+                0x06,
+                0x3C,
+                0x33,
+                0x00,
+                0x00,
+                0x00,                
+                sess_id]
         send.append(self._calc_checksum(send))
-		self._write_serial(send)
+        self._write_serial(send)
 
-		if return_packet == 0x00:
-			return True
-		elif return_packet == 0x01:
-			return self._check_ack()
+        if return_packet == 0x00:
+            return True
+        elif return_packet == 0x01:
+            return self._check_ack()
 
     def get_term_status(self, return_packet=0x01):
         #CCh 02h 3Ch 26h 30h
-		send = [0xCC,
-				0x02,
-				0x3C,
-				0x26,
-				0x30]
-]
-		self._write_serial(send)
+        send = [0xCC,
+                0x02,
+                0x3C,
+                0x26,
+                0x30]
 
-		if return_packet == 0x00:
-			return True
-		elif return_packet == 0x01:
+        self._write_serial(send)
+
+        if return_packet == 0x00:
+            return True
+        elif return_packet == 0x01:
             ret = False
             if self._check_ack(ReplyMessage.STAT_RUN.value) == True:
                 print("WAIT_CARD & Transaction runnning")
@@ -358,63 +357,63 @@ class PayterPSP(object):
                     print("Offline & No transaction runnning")
                 else:        
                     print("Invalid ststus returned")  
-            return ret
+        return ret
             
     # Send ppse to proprietary card
-	def send_ppse(self, return_packet=0x01):
-		self._check_range(return_packet, 0, 1, 'return_packet')
+    def send_ppse(self, return_packet=0x01):
+        self._check_range(return_packet, 0, 1, 'return_packet')
 
         # CCh 16h 3Ch 38h 00h A4h 04h 00h 0Eh 32h 50h 41h 59h 2Eh 53h 59h 53h 2Eh 44h 44h 46h 30h 31h 00h B2h
-		send = [0xCC,
-				0x16,
-				0x3C,
-				0x38,
-				0x00,
-				0xA4,
-				0x04,
-				0x00,
-				0x0E,
-				0x32,
-				0x50,
-				0x41,
-				0x59,
-				0x2E,
-				0x53,
-				0x59,
-				0x53,
-				0x2E,
-				0x44,
-				0x44,
-				0x46,
-				0x30,
-				0x31,
-				0x00,
-				0xB2]
-		self._write_serial(send)
+        send = [0xCC,
+		0x16,
+		0x3C,
+		0x38,
+		0x00,
+		0xA4,
+		0x04,
+		0x00,
+		0x0E,
+		0x32,
+		0x50,
+		0x41,
+		0x59,
+		0x2E,
+		0x53,
+		0x59,
+		0x53,
+		0x2E,
+		0x44,
+		0x44,
+		0x46,
+		0x30,
+		0x31,
+		0x00,
+		0xB2]
+        self._write_serial(send)
 
-		if return_packet == 0x00:
-			return True
-		elif return_packet == 0x01:
-			return self._check_ack()
+        if return_packet == 0x00:
+            return True
+        elif return_packet == 0x01:
+            return self._check_ack()
             
-	# The following functions are provided for use in PRS class
-	def _calc_checksum(self, send):
-		checksum = send[2]
-		for i in range(3, len(send)):
-			checksum ^= send[i]
-		return checksum
+    # The following functions are provided for use in PRS class
+    def _calc_checksum(self, send):
+        checksum = send[2]
+        for i in range(3, len(send)):
+            checksum ^= send[i]
+        return checksum
 
-	def _check_range(self, value, lower_range, upper_range, name='value'):
-		if value < lower_range or value > upper_range:
-			raise ValueError(name + ' must be set in the range from ' + str(lower_range) + ' to ' + str(upper_range))
+    def _check_range(self, value, lower_range, upper_range, name='value'):
+        if value < lower_range or value > upper_range:
+            raise ValueError(name + ' must be set in the range from ' + str(lower_range) + ' to ' + str(upper_range))
 
     # checks the ack message from either a read or a message array
-	def _check_ack(self, type=ReplyMessage.OK_NOK.value, readp=0, read_val):
+    def _check_ack(self, type=ReplyMessage.OK_NOK.value, readp=0, read_val):
         if readp == 0:
-		    if self.myserial.in_waiting >0: receive = self.myserial.read_all()
+            if self.myserial.in_waiting >0: receive = self.myserial.read_all()
         else:
             receive = read_val       
-		length = len(receive)
+            length = len(receive)
         ok = [ 0xAA, 0x03, 0x3C, 0x00, 0x00, 0xE9 ]
         nok = [ 0xAA 0x03, 0x3C, 0x00, 0x01, 0xEA ]  
         sync = [ 0xAA, 0x02, 0x3C, 0x24, 0x0C ]  
@@ -431,25 +430,25 @@ class PayterPSP(object):
         if type == ReplyMessage.DATA_READ.value:  
             return receive       
         else:        
-		    if length >= 1 :
+            if length >= 1 :
                 for i in range(0,length):
-			        ack = ord(receive[i])
-			        if not (ack == poss_replies[type][i]):
-				        return False
+                    ack = ord(receive[i])
+                    if not (ack == poss_replies[type][i]):
+                        return False
                 return True
-		    else:
+            else:
                 if type == ReplyMessage.NOK.value:
                     return True
                 else:                
-			        return False
+                    return False
 
-	def _write_command(self, send):
-		self.myserial.flushOutput()
-		self.myserial.flushInput()
-		self.myserial.write(bytearray(send))
+    def _write_command(self, send):
+        self.myserial.flushOutput()
+        self.myserial.flushInput()
+        self.myserial.write(bytearray(send))
 
-	def _write_serial(self, send):
-		self._write_command(send)
+    def _write_serial(self, send):
+        self._write_command(send)
 
 # UNIT TEST MODULE :: 
 #
