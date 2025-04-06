@@ -10,7 +10,9 @@
 import serial
 import serial.tools.list_ports
 from enum import Enum
-
+import socket
+# for random id generation uncomment ---> import numpy as np
+ 
 # chooses the message to match with the reply message matches the list order of poss_replies
 class ReplyMessage(Enum):
     OK_NOK = 0
@@ -32,16 +34,88 @@ class CardHashCollector(Enum):
     ENDING = 4
     ENDING2 = 5
     ENDED = 6
+
+class TerminalType(Enum):
+    APOLLO = 0
+    P6X = 1
+
+class CheckumType(Enum):
+    ADDITION = 0
+    XORING = 1
+
+def connectTCP(host, port):
+    TCP_client = socket.socket(socket.AF_INET,socket.SOCK_STREAM)   
+    TCP_client.settimeout(10)
+    try:
+        TCP_client.connect((host, port))
+        return TCP_client
+    except socket.error:
+        TCP_client.close()
+        return -1
+    
+def connectUDP(host, port):
+    UDP_client = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)   
+    UDP_client.settimeout(10)   
+    try:
+        UDP_client.connect((host, port))
+        return UDP_client
+    except socket.error:
+        UDP_client.close()
+        return -1
+
+def disconnectTCP(TCP_client):
+    TCP_client.close()
+
+def disconnectUDP(UDP_client):
+    UDP_client.close()
     
 class PayterPSP(object):
 
-    def __init__(self):
+    def __init__(self, ttype=TerminalType.APOLLO.value, p6xbyte=0x3C, hst="192.168.0.1", prtno=3201):
         self.myserial = serial.Serial()
+        self.mytcp = "not_used"
+        self.myudp = "not_used"
+        self.comm_method = "serial"
         print('Generated the serial object for the Payter PSP over serial')
-
+        # Magic Byte
+        # For P6X
+        # The magic byte can be set to any value for example 0x3C. The terminal will ignore it and will place a configurable value in the location.
+        # For APOLLO
+        # The magic byte is always 0x3C
+        #    
+        self.APOLLOMAGIC_NO = 0x3C
+        # Preamble Byte
+        # The preamble byte is used to provide a device address.
+        #
+        # For P6X
+        # A device will put a configurable address byte here.
+        #
+        # For APOLLO
+        # The preamble to the terminal is 0xCC
+        # The preamble to the host is 0xAA
+        self.TPRE_APOLLO = 0xCC
+        self.HPRE_APOLLO = 0xAA
+        # The Apollo terminal has a server-side socket open that accepts an incoming connection on its IP address 
+        # or hostname using the default port: 3201
+        self.PT_HOST = hst
+        self.PT_PORT = prtno
+        if ttype == TerminalType.APOLLO.value:
+            self.PreByteT = self.TPRE_APOLLO
+            self.PreByteH = self.HPRE_APOLLO       
+            self.magic = self.APOLLOMAGIC_NO
+        elif ttype == TerminalType.P6X.value:      
+            self.PreByteT = p6xbyte
+            self.PreByteH = p6xbyte       
+            self.magic = p6xbyte
+            
     def __del__(self):
-        self.myserial.close()
-
+        if self.comm_method = "serial":
+            self.myserial.close()
+        elif self.comm_method = "tcp":            
+            disconnectTCP(self.mytcp)
+        elif self.comm_method = "tcp":            
+            disconnectUDP(self.myudp)
+            
     def search_com_port(self):
         coms = serial.tools.list_ports.comports()
         list_com = []
@@ -52,9 +126,21 @@ class PayterPSP(object):
         print('Using first listed COM port: ' + used_port)
         return used_port
     
-    def open_port(self, port=None, baudrate=115200, timeout=1):
-        if port == None:
-            port = self.search_com_port()		
+    def open_port(self, port=None, baudrate=57600, timeout=1):
+        if port == "tcp":
+            self.mytcp = connectTCP(self.PT_HOST, self.PT_PORT)
+            if not self.mytcp == -1:
+                self.comm_method = "tcp"
+            else:
+                print("cannot open tcp port")            
+        elif port == "udp":
+            self.myudp = connectUDP(self.PT_HOST, self.PT_PORT)    
+            if not self.myudp == -1:            
+                self.comm_method = "udp" 
+            else:
+                print("cannot open udp port")                
+        elif port == None:
+            port = self.search_com_port()	            
             self.myserial.port = port
             self.myserial.baudrate = baudrate
             self.myserial.timeout = timeout
@@ -64,28 +150,46 @@ class PayterPSP(object):
             except IOError:
                 raise IOError('Failed to open port, check the device and port number')
             else:
-                print('Succeede to open port: ' + port)
-
+                print('Succeeded to open port: ' + port)
+                self.comm_method = "serial"
+        else:
+            self.myserial.port = port
+            self.myserial.baudrate = baudrate
+            self.myserial.timeout = timeout
+            self.myserial.parity = serial.PARITY_NONE
+            try:
+                self.myserial.open()
+            except IOError:
+                raise IOError('Failed to open port, check the device and port number')
+            else:
+                print('Succeeded to open port: ' + port)
+                self.comm_method = "serial"            
+                
     def close_port(self):
-        self.myserial.close()
+        if self.comm_method = "serial":
+            self.myserial.close()
+        elif self.comm_method = "tcp":            
+            disconnectTCP(self.mytcp)
+        elif self.comm_method = "tcp":            
+            disconnectUDP(self.myudp)
 
     def set_port(self, baudrate=57600, timeout=0x01):
         self.myserial.baudrate = baudrate
         self.myserial.timeout = timeout
-	self.myserial._reconfigurePort()
-	print('Succeede to set baudrate:%d, timeout:%d' % (baudrate, timeout))
+        self.myserial._reconfigurePort()
+        print('Succeede to set baudrate:%d, timeout:%d' % (baudrate, timeout))
 
     def enable_terminal(self, return_packet=0x01):
         self._check_range(return_packet, 0, 1, 'return_packet')
 
         # CCh 02h 3Ch 12h 1Ch
-        send = [0xCC,
+        send = [self.PreByteT,
                 0x02,
-                0x3C,
+                self.magic,
                 0x12,
                 0x1C]
         # send.append(self._calc_checksum(send))
-        self._write_serial(send)
+        self._write_command(send)
         if return_packet == 0x00:
             return True
         elif return_packet == 0x01:
@@ -95,12 +199,12 @@ class PayterPSP(object):
         self._check_range(return_packet, 0, 1, 'return_packet')
 
         # CCh 02h 3Ch 11h 1Ch
-        send = [0xCC,
+        send = [self.PreByteT,
                 0x02,
-                0x3C,
+                self.magic,
                 0x11,
                 0x1C]
-        self._write_serial(send)
+        self._write_command(send)
 
         if return_packet == 0x00:
             return True
@@ -111,12 +215,12 @@ class PayterPSP(object):
         self._check_range(return_packet, 0, 1, 'return_packet')
 
         # CCh 02h 3Ch 55h 5Fh
-        send = [0xCC,
+        send = [self.PreByteT,
                 0x02,
-                0x3C,
+                self.magic,
                 0x55,
                 0x5F]
-        self._write_serial(send)
+        self._write_command(send)
 
         if return_packet == 0x00:
             return True
@@ -127,12 +231,12 @@ class PayterPSP(object):
         self._check_range(return_packet, 0, 1, 'return_packet')
 
         # CCh 02h 3Ch 24h 2Eh
-        send = [0xCC,
+        send = [self.PreByteT,
                 0x02,
-                0x3C,
+                self.magic,
                 0x24,
                 0x2E]
-        self._write_serial(send)
+        self._write_command(send)
 
         if return_packet == 0x00:
             return True
@@ -144,9 +248,9 @@ class PayterPSP(object):
         self._check_range(return_packet, 0, 1, 'return_packet')
 
         # CCh 07h 3Ch 13h 03h 00h 00h 00h 02h 27h
-        send = [0xCC,
+        send = [self.PreByteT,
                0x07,
-               0x3C,
+               self.magic,
                0x13,
                0x03,
                0x00,
@@ -154,7 +258,7 @@ class PayterPSP(object):
                0x00,
                0x02,
                0x27]
-        self._write_serial(send)
+        self._write_command(send)
 
         if return_packet == 0x00:
             return True
@@ -166,9 +270,9 @@ class PayterPSP(object):
         self._check_range(return_packet, 0, 1, 'return_packet')
 
         # CCh 07h 3Ch 23h 00h 02h A3h 00h 00h D7h
-        send = [0xCC,
+        send = [self.PreByteT,
                 0x07,
-                0x3C,
+                self.magic,
                 0x23,
                 0x00,
                 0x02,
@@ -176,7 +280,7 @@ class PayterPSP(object):
                 0x00,
                 0x00,
                 0xD7]
-        self._write_serial(send)
+        self._write_command(send)
 
         if return_packet == 0x00:
             return True
@@ -189,9 +293,9 @@ class PayterPSP(object):
 
         # Start session for 2500 cents with session ref 10 and default card data to return
         # CCh 0Ah 3Ch 34h 00h 00h 09h C4h 00h 00h 00h 0Ah 1Dh - TBD verify checksum is 1D
-        send = [0xCC,
+        send = [self.PreByteT,
                 0x0A,
-                0x3C,
+                self.magic,
                 0x34,
                 0x00,
                 0x00,
@@ -202,13 +306,13 @@ class PayterPSP(object):
                 0x00,
                 ref_no]
         send.append(self._calc_checksum(send))  # -- check if the last byte is correct checksum !
-        self._write_serial(send)
+        self._write_command(send)
 
-         if return_packet == 0x00:
-             return True
-         elif return_packet == 0x01:
-             dr = self._check_ack(ReplyMessage.DATA_READ.value)
-             return not self._check_ack(ReplyMessage.NOK.value,2,dr), dr  
+        if return_packet == 0x00:
+            return True
+        elif return_packet == 0x01:
+            dr = self._check_ack(ReplyMessage.DATA_READ.value)
+            return not self._check_ack(ReplyMessage.NOK.value,2,dr) 
 
     # AAh xxh 3Ch 31h "(User ref)" xxh DFh F0h 06h xxh "(CARDHASH)" DFh CAh 0Bh xxh "(masked PAN)" xxh
     #
@@ -247,45 +351,45 @@ class PayterPSP(object):
                 append.cardhash(sess_reply[i])
             elif state == CardHashCollector.ENDED.value :  
                 append.maskedpan(sess_reply[i])
-       return id, cardhash, maskedpan
+        return id, cardhash, maskedpan
         
        # This binary didnt seem to add up i cant see the 100 cent so i dont know ?
      def commit_sess(self, money_val, ref_no, return_packet=0x01):
-         self._check_range(return_packet, 0, 1, 'return_packet')
+        self._check_range(return_packet, 0, 1, 'return_packet')
 
-           # Commit session for 100 cents with session id 10
-           # CCh 0Ah 3Ch 35h 00h 00h 00h 04h 00h 00h 00h 6Ah B5h
-           send = [0xCC,
-                   0x0A,
-                   0x3C,
-                   0x35,
-                   0x00,
-                   0x00,
-                   0x00,
-                   0x04,
-                   0x00,
-                   0x00,
-                   0x00,
-                   0x6A,
-                   0xB5]
-           #send.append(self._calc_checksum(send))  # -- check if the last byte is correct checksum !
-           self._write_serial(send)
+        # Commit session for 100 cents with session id 10
+        # CCh 0Ah 3Ch 35h 00h 00h 00h 04h 00h 00h 00h 6Ah B5h
+        send = [self.PreByteT,
+                0x0A,
+                self.magic,
+                0x35,
+                0x00,
+                0x00,
+                0x00,
+                0x04,
+                0x00,
+                0x00,
+                0x00,
+                0x6A,
+                0xB5]
+        #send.append(self._calc_checksum(send))  # TBD add checksum when you know how to form this message from money_val and ref_no ??
+        self._write_command(send)
 
-           if return_packet == 0x00:
-               return True
-           elif return_packet == 0x01:
-               return self._check_ack()
+        if return_packet == 0x00:
+            return True
+        elif return_packet == 0x01:
+            return self._check_ack()
             
     def cancel_sess(self, return_packet=0x01):
         self._check_range(return_packet, 0, 1, 'return_packet')
 
         # CCh 02h 3Ch 37h 41h
-        send = [0xCC,
+        send = [self.PreByteT,
                 0x02,
-                0x3C,
+                self.magic,
                 0x37,
                 0x41]
-        self._write_serial(send)
+        self._write_command(send)
 
         if return_packet == 0x00:
             return True
@@ -296,19 +400,19 @@ class PayterPSP(object):
         self._check_range(return_packet, 0, 1, 'return_packet')
 
         # CCh 02h 3Ch 36h 40h
-        send = [0xCC,
-		0x02,
-		0x3C,
-		0x36,
-		0x40]
-        self._write_serial(send)
+        send = [self.PreByteT,
+               0x02,
+               self.magic,
+               0x36,
+               0x40]
+        self._write_command(send)
 
         if return_packet == 0x00:
             return True
         elif return_packet == 0x01:
             dr = self._check_ack(ReplyMessage.DATA_READ.value)
             a = self._check_ack(ReplyMessage.NOK.value,2,dr)
-	    b = self._check_ack(ReplyMessage.DECLINE.value,2,dr)
+            b = self._check_ack(ReplyMessage.DECLINE.value,2,dr)
             if a == True or b == True :
                 return False
             else:
@@ -319,16 +423,16 @@ class PayterPSP(object):
 
         # Void session ref 10
         # CCh 06h 3Ch 33h 00h 00h 00h 0Ah 4Bh
-        send = [0xCC,
+        send = [self.PreByteT,
                 0x06,
-                0x3C,
+                self.magic,
                 0x33,
                 0x00,
                 0x00,
                 0x00,                
                 sess_id]
         send.append(self._calc_checksum(send))
-        self._write_serial(send)
+        self._write_command(send)
 
         if return_packet == 0x00:
             return True
@@ -337,13 +441,12 @@ class PayterPSP(object):
 
     def get_term_status(self, return_packet=0x01):
         #CCh 02h 3Ch 26h 30h
-        send = [0xCC,
+        send = [self.PreByteT,
                 0x02,
-                0x3C,
+                self.magic,
                 0x26,
                 0x30]
-
-        self._write_serial(send)
+        self._write_command(send)
 
         if return_packet == 0x00:
             return True
@@ -364,32 +467,32 @@ class PayterPSP(object):
         self._check_range(return_packet, 0, 1, 'return_packet')
 
         # CCh 16h 3Ch 38h 00h A4h 04h 00h 0Eh 32h 50h 41h 59h 2Eh 53h 59h 53h 2Eh 44h 44h 46h 30h 31h 00h B2h
-        send = [0xCC,
-		0x16,
-		0x3C,
-		0x38,
-		0x00,
-		0xA4,
-		0x04,
-		0x00,
-		0x0E,
-		0x32,
-		0x50,
-		0x41,
-		0x59,
-		0x2E,
-		0x53,
-		0x59,
-		0x53,
-		0x2E,
-		0x44,
-		0x44,
-		0x46,
-		0x30,
-		0x31,
-		0x00,
-		0xB2]
-        self._write_serial(send)
+        send = [self.PreByteT,
+                0x16,
+                self.magic,
+                0x38,
+                0x00,
+                0xA4,
+                0x04,
+                0x00,
+                0x0E,
+                0x32,
+                0x50,
+                0x41,
+                0x59,
+                0x2E,
+                0x53,
+                0x59,
+                0x53,
+                0x2E,
+                0x44,
+                0x44,
+                0x46,
+                0x30,
+                0x31,
+                0x00,
+                0xB2]
+        self._write_command(send)
 
         if return_packet == 0x00:
             return True
@@ -397,10 +500,20 @@ class PayterPSP(object):
             return self._check_ack()
             
     # The following functions are provided for use in PRS class
-    def _calc_checksum(self, send):
-        checksum = send[2]
-        for i in range(3, len(send)):
-            checksum ^= send[i]
+    # A checksum byte must be sent at the end of each command. The checksum byte is a checksum 
+    # calculated by adding all bytes in the block together. The checksum byte is not included in 	
+    # the summation. The carry bit for checksum additions is ignored since the checksum byte is limited to eight bits   
+    # therefore the mode is ADDITION starting at 0 in the message array (default)
+    #    
+    def _calc_checksum(self, send, j=0, mode=CheckumType.ADDITION.value):
+        checksum = send[j]
+        for i in range(j+1, len(send)):
+            if mode == CheckumType.ADDITION.value:
+                checksum += send[i]
+            elif mode == CheckumType.XORING.value:
+                checksum ^= send[i]
+        if mode == CheckumType.ADDITION.value:
+            checksum = checksum & 0xFF
         return checksum
 
     def _check_range(self, value, lower_range, upper_range, name='value'):
@@ -414,18 +527,18 @@ class PayterPSP(object):
         else:
             receive = read_val       
             length = len(receive)
-        ok = [ 0xAA, 0x03, 0x3C, 0x00, 0x00, 0xE9 ]
-        nok = [ 0xAA 0x03, 0x3C, 0x00, 0x01, 0xEA ]  
-        sync = [ 0xAA, 0x02, 0x3C, 0x24, 0x0C ]  
+        ok = [ self.PreByteH, 0x03, self.magic, 0x00, 0x00, 0xE9 ]
+        nok = [ self.PreByteH, 0x03, self.magic, 0x00, 0x01, 0xEA ]  
+        sync = [ self.PreByteH, 0x02, self.magic, 0x24, 0x0C ]  
         # card read AAh xxh 3Ch 34h xxh DFh F0h 06h "(CARDHASH)" DFh CAh 0Bh "(masked PAN)" xxh
         #
         # session appr AAh xxh 3Ch 31h "(User ref)" xxh DFh F0h 06h xxh "(CARDHASH)" DFh CAh 0Bh xxh "(masked PAN)" xxh
         #
-        sess_canc = [ 0xAA, 0x02, 0x3C, 0x33, 0x1B ]
-        sess_decl = [ 0xAA, 0x02, 0x3C, 0x32, 0x1A ]
-        proto = [ 0xAA, 0x07, 0x3C, 0x13, 0x03, 0x00, 0x00, 0x00, 0x02, 0x05 ]
-        stat_offline = [ 0xAA, 0x04, 0x3C, 0x26, 0x01, 0x00, 0x11 ]
-        stat_running = [ 0xAA, 0x04, 0x3C, 0x26, 0x10, 0x01, 0x21 ]
+        sess_canc = [ self.PreByteH, 0x02, self.magic, 0x33, 0x1B ]
+        sess_decl = [ self.PreByteH, 0x02, self.magic, 0x32, 0x1A ]
+        proto = [ self.PreByteH, 0x07, self.magic, 0x13, 0x03, 0x00, 0x00, 0x00, 0x02, 0x05 ]
+        stat_offline = [ self.PreByteH, 0x04, self.magic, 0x26, 0x01, 0x00, 0x11 ]
+        stat_running = [ self.PreByteH, 0x04, self.magic, 0x26, 0x10, 0x01, 0x21 ]
         poss_replies = [ ok, sync, sess_canc, proto, nok, sess_decl, stat_offline, stat_running ]       
         if type == ReplyMessage.DATA_READ.value:  
             return receive       
@@ -443,26 +556,33 @@ class PayterPSP(object):
                     return False
 
     def _write_command(self, send):
-        self.myserial.flushOutput()
-        self.myserial.flushInput()
-        self.myserial.write(bytearray(send))
-
-    def _write_serial(self, send):
-        self._write_command(send)
+        if self.comm_method = "serial":
+            self.myserial.flushOutput()
+            self.myserial.flushInput()
+            self.myserial.write(bytearray(send))
+        elif self.comm_method = "tcp":
+            self.mytcp.send(bytearray(send)) 
+        elif self.comm_method = "udp":
+            self.myudp.send(bytearray(send)) 
 
 # UNIT TEST MODULE :: 
 #
-def main():
+def main(mval=100):
     rpts = 0
-    money = 100                                                               # ammount of money in cents
-    id = 10                                                                   # session id 
+    money = mval                                                              # ammount of money in cents
+    id = 10                                                                   # session id to use a random e.g. round(np.random.rand()*1000)
+    ppsp = PayterPSP()                                                        # create psp communication object
+    ppsp.open_port()                                                          # open serial port
+    ppsp.set_port()                                                           # set port parmeters
+    if not ppsp.reset_terminal() == True:                                     # reset terminal
+        print("could not reset the terminal")
+    if not ppsp.sync_terminal() == True:                                      # syncronise terminal
+        print("could not syncronise the terminal")    
     while rpts < 2:
-        ppsp = PayterPSP()                                                    # create psp communication object
-        ppsp.open_port()                                                      # open serial port
-        ppsp.set_port()                                                       # set port parmeters
         if rpts == 0:                                                         # first run try to do transaction
             if (ppsp.enable_terminal() == True):                              # enable terminal mode
-                ret, msg = ppsp.start_sess(money, id)                         # start session                             
+                ret, msg = ppsp.start_sess(money, id)                         # start session  
+                print("please tap card")                
                 if ret == True:
                     id, ch, mp = ppsp.parse_sess_data(msg)                    # parse data returned 
                     print(f"id={id} ch={ch} mp={mp}") 
