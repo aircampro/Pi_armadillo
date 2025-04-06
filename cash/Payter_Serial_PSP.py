@@ -11,6 +11,7 @@ import serial
 import serial.tools.list_ports
 from enum import Enum
 import socket
+import sys
 # for random id generation uncomment ---> import numpy as np
  
 # chooses the message to match with the reply message matches the list order of poss_replies
@@ -43,6 +44,7 @@ class CheckumType(Enum):
     ADDITION = 0
     XORING = 1
 
+# functions to provide IP functionality
 def connectTCP(host, port):
     TCP_client = socket.socket(socket.AF_INET,socket.SOCK_STREAM)   
     TCP_client.settimeout(10)
@@ -68,7 +70,9 @@ def disconnectTCP(TCP_client):
 
 def disconnectUDP(UDP_client):
     UDP_client.close()
-    
+
+# -------------- class for communication with payter terminals on psp protocol -----------------------
+#    
 class PayterPSP(object):
 
     def __init__(self, ttype=TerminalType.APOLLO.value, p6xbyte=0x3C, hst="192.168.0.1", prtno=3201):
@@ -127,18 +131,23 @@ class PayterPSP(object):
         return used_port
     
     def open_port(self, port=None, baudrate=57600, timeout=1):
+        ret = 0
         if port == "tcp":
             self.mytcp = connectTCP(self.PT_HOST, self.PT_PORT)
             if not self.mytcp == -1:
                 self.comm_method = "tcp"
+                print('Changed the object for the Payter PSP to over tcp')
             else:
-                print("cannot open tcp port")            
+                print("cannot open tcp port")     
+                ret = -11                
         elif port == "udp":
             self.myudp = connectUDP(self.PT_HOST, self.PT_PORT)    
             if not self.myudp == -1:            
                 self.comm_method = "udp" 
+                print('Changed the object for the Payter PSP to over tcp')
             else:
-                print("cannot open udp port")                
+                print("cannot open udp port") 
+                ret = -12                
         elif port == None:
             port = self.search_com_port()	            
             self.myserial.port = port
@@ -148,7 +157,8 @@ class PayterPSP(object):
             try:
                 self.myserial.open()
             except IOError:
-                raise IOError('Failed to open port, check the device and port number')
+                ret = -13
+                #raise IOError('Failed to open port, check the device and port number')
             else:
                 print('Succeeded to open port: ' + port)
                 self.comm_method = "serial"
@@ -160,11 +170,13 @@ class PayterPSP(object):
             try:
                 self.myserial.open()
             except IOError:
-                raise IOError('Failed to open port, check the device and port number')
+                ret = -13
+                #raise IOError('Failed to open port, check the device and port number')
             else:
                 print('Succeeded to open port: ' + port)
                 self.comm_method = "serial"            
-                
+        return ret
+        
     def close_port(self):
         if self.comm_method = "serial":
             self.myserial.close()
@@ -173,11 +185,12 @@ class PayterPSP(object):
         elif self.comm_method = "tcp":            
             disconnectUDP(self.myudp)
 
+    # set up the port (serial only)
     def set_port(self, baudrate=57600, timeout=0x01):
         self.myserial.baudrate = baudrate
         self.myserial.timeout = timeout
         self.myserial._reconfigurePort()
-        print('Succeede to set baudrate:%d, timeout:%d' % (baudrate, timeout))
+        print('Succeeded to set baudrate:%d, timeout:%d' % (baudrate, timeout))
 
     def enable_terminal(self, return_packet=0x01):
         self._check_range(return_packet, 0, 1, 'return_packet')
@@ -523,7 +536,12 @@ class PayterPSP(object):
     # checks the ack message from either a read or a message array
     def _check_ack(self, type=ReplyMessage.OK_NOK.value, readp=0, read_val):
         if readp == 0:
-            if self.myserial.in_waiting >0: receive = self.myserial.read_all()
+            if self.comm_method = "tcp": 
+                receive = self.mytcp.recv(1024)
+            elif self.comm_method = "udp": 
+                receive = self.myudp.recv(1024)  
+            elif self.comm_method = "serial":            
+                if self.myserial.in_waiting >0: receive = self.myserial.read_all()
         else:
             receive = read_val       
             length = len(receive)
@@ -568,16 +586,21 @@ class PayterPSP(object):
 # UNIT TEST MODULE :: 
 #
 def main(mval=100):
+    ret = 0
     rpts = 0
     money = mval                                                              # ammount of money in cents
     id = 10                                                                   # session id to use a random e.g. round(np.random.rand()*1000)
     ppsp = PayterPSP()                                                        # create psp communication object
-    ppsp.open_port()                                                          # open serial port
+    ret = ppsp.open_port() 
+    if ret < 0:                                                               # open serial port
+        return ret
     ppsp.set_port()                                                           # set port parmeters
     if not ppsp.reset_terminal() == True:                                     # reset terminal
         print("could not reset the terminal")
+        ret = -1
     if not ppsp.sync_terminal() == True:                                      # syncronise terminal
-        print("could not syncronise the terminal")    
+        print("could not syncronise the terminal")  
+        ret = -2        
     while rpts < 2:
         if rpts == 0:                                                         # first run try to do transaction
             if (ppsp.enable_terminal() == True):                              # enable terminal mode
@@ -594,21 +617,29 @@ def main(mval=100):
                             print("session comitted")
                         else:
                             print("commit session error")
+                            ret = 1
                     else:
                         print("error in auth sess")
+                        ret = 2                        
                 else:
-                    print("error starting session")                
+                    print("error starting session") 
+                    ret = 3                    
         else:                                                                  # second run disable the terminal
             if (ppsp.disable_terminal() == True):
                 print("terminal disabled")  
             else:
-                print("failed to diable the terminal")            
+                print("failed to diable the terminal")
+                ret = -3                
         rpts += 1        
     ppsp.close_port()	
     # same as del ppsp
+    return ret
     
 # set this parameter True to enable the unit test on library load or False to disable it
 LIB_TEST_ON = True	
 if __name__ == "__main__":
     if LIB_TEST_ON == True:
-        main()
+        if len(sys.argv) == 1:
+            return main()
+        else:
+            return main(int(sys.argv[1]))
