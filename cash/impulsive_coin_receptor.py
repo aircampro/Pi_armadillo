@@ -38,6 +38,11 @@ SERVER_PORT = 7575
 		
 pulse_per_second= 0
 pulse_count = 0
+pulse_trip = 0
+pulse_trip_spt = 0
+refund_pin = 23
+accept_pin = 24
+
 pulse_output = {
     "uuid": os.environ.get('BALENA_DEVICE_UUID'),
     "gpio": 0,
@@ -45,6 +50,7 @@ pulse_output = {
     "pulse_per_minute": 0,
     "pulse_per_hour": 0,
     "pulse_count": 0,
+    "pulse_trip": 0,
     "pps_mult": 0,
     "ppm_mult": 0,
     "1Euro" : 0,
@@ -61,7 +67,10 @@ env_vars = {
     "bounce_time": 200,
     "mqtt_address": "none",
     "gpio_reset_pin": 38,
+    "gpio_refund_pin": 23,
+    "gpio_accept_pin": 24,
     "enable_webserver": 0,
+    "pulse_trip_spt": 50,
     "mode": 1,
     "pull_up_down": "down"
 }
@@ -146,13 +155,23 @@ def signal_handler(signum, frame):
 # This method fires on edge detection from a reset button
 def on_reset(channel):
     global pulse_count
+    global coin, refund_pin
     print("pulse reset detected")
     pulse_count = 0
+    print("coin reset detected")
+    coin.euro1 = 0
+    coin.cent50 = 0
+    coin.cent20 = 0
+    coin.cent10 = 0
+    coin.total_sum = 0
+    GPIO.output(refund_pin,1)                              # open hatch for refund of coins
+    time.sleep(1)
+    GPIO.output(refund_pin,0)
 
 # This function serves as the callback triggered on every run of our IntervalThread
 def action() :
     global pulse_per_second, sum_queue, client, env_vars, pulse_output
-	global coin
+    global coin, pulse_trip
     pulse_per_minute = 0
     pulse_per_hour = 0
     pulse_multiplier = env_vars["pulse_multiplier"]
@@ -176,6 +195,7 @@ def action() :
     pulse_output["10Cent"] = coin.cent10
     pulse_output["triggers"] = coin.triggers
     pulse_output["total_coin"] = coin.total_sum
+    pulse_output["pulse_trip"] = pulse_trip
     #print(pulse_output)
     if env_vars["mqtt_address"] != "none":
         client.publish('pulse_data', json.dumps(pulse_output))
@@ -202,6 +222,7 @@ class IntervalThread(threading.Thread) :
 def main():
 
     global pulse_per_second, pulse_count, env_vars, client, coin
+    global pulse_trip, pulse_trip_spt, refund_pin, accept_pin
 
     # device variables
     env_vars["pulse_multiplier"] = float(os.getenv('PULSE_MULTIPLIER', '1'))
@@ -209,11 +230,17 @@ def main():
     env_vars["bounce_time"]  = os.getenv('BOUNCE_TIME', 0)
     env_vars["mqtt_address"] = os.getenv('MQTT_ADDRESS', 'none')
     env_vars["gpio_reset_pin"] = os.getenv('GPIO_RESET_PIN', 38)
+    env_vars["gpio_refund_pin"] = os.getenv('GPIO_REFUND_PIN', 23)
+    env_vars["gpio_accept_pin"] = os.getenv('GPIO_ACCEPT_PIN', 24)
     env_vars["enable_webserver"] = os.getenv('ALWAYS_USE_HTTPSERVER', 0)
     env_vars["pull_up_down"] = os.getenv('PULL_UP_DOWN', 'NONE')
     env_vars["mode"] = os.getenv('PULSE_MODE', 1)
+    env_vars["pulse_trip_spt"] = os.getenv('PULSE_TRIP_SPT', 50)
     mode = env_vars["mode"]
-	
+    pulse_trip_spt = env_vars["pulse_trip_spt"]
+    refund_pin = env_vars["gpio_refund_pin"]
+    accept_pin = env_vars["gpio_accept_pin"]
+ 	
     if env_vars["enable_webserver"] == "1":
         env_vars["enable_webserver"] = "True"
     else:
@@ -232,6 +259,9 @@ def main():
     else:
         GPIO.setup(gpio_pin, GPIO.IN)
         test_cond = GPIO.HIGH
+
+    GPIO.setup(refund_pin, GPIO.OUT)
+    GPIO.setup(accept_pin, GPIO.OUT)
 
     if env_vars["bounce_time"] == 0:
         bounce_time = 0
@@ -286,6 +316,8 @@ def main():
 	
     # See https://www.g-loaded.eu/2016/11/24/how-to-terminate-running-python-threads-using-signals/
     while True:
+        env_vars["pulse_trip_spt"] = os.getenv('PULSE_TRIP_SPT', 50)                      # allow change of set-point all the time
+        pulse_trip_spt = env_vars["pulse_trip_spt"]
         try:
             if mode == 0:                                                                 # std pulse counter e.g. flowmeter
                 GPIO.wait_for_edge(gpio_pin, GPIO.FALLING)
@@ -294,11 +326,19 @@ def main():
                     if GPIO.input(gpio_pin) == test_cond:
                         pulse_per_second = pulse_per_second + 1
                         pulse_count = pulse_count + 1
+                        if pulse_count >= pulse_trip_spt:                                 # have we reached the desired number of pulses
+                            pulse_trip = 1
+                        else:
+                            pulse_trip = 0
                 else:
                     pulse_per_second = pulse_per_second + 1
                     pulse_count = pulse_count + 1
+                    if pulse_count >= pulse_trip_spt:                                      # have we reached the desired number of pulses
+                        pulse_trip = 1
+                    else:
+                        pulse_trip = 0
             elif mode == 1:                                                                # coin recptor e.g. CH-926 or EMP-500
-                if GPIO.input(gpio_pin) == 1 and vendingstate == 0:		                   # got a pulse
+                if GPIO.input(gpio_pin) == 1 and vendingstate == 0:		           # got a pulse
                     vendingstate == 1
                 elif GPIO.input(gpio_pin) == 0 and vendingstate == 1:	                   # it musr go to zero state to count	
                     vendingstate == 2
@@ -312,7 +352,15 @@ def main():
                     if mark_space >= PULSE_WIDTH_VENDING:
                         check_coin(vendingcnt1)                                            # update the right counter
                         vendingcnt1 = 0                                                    # reset counter
-                        vendingstate = 0		                                           # return to look for new coin				
+                        vendingstate = 0		                                   # return to look for new coin
+                        if coin.total_sum >= pulse_trip_spt:                               # coins have reached the desired quantity
+                            pulse_trip = 1
+                            GPIO.output(accept_pin,1)                                      # open hatch to accept coins to main storage (start process)
+                            time.sleep(1)
+                            GPIO.output(accept_pin,0)                                      # close hatch and reset the coin total
+                            coin.total_sum = 0
+                        else:
+                            pulse_trip = 0				
                 elif GPIO.input(gpio_pin) == 0 and vendingstate == 3:	                   # zero state from second pulse
                     vendingcnt1 += 1                                                       # count again
                     vendingtm_stop = time.time()                                           # collect stop time
