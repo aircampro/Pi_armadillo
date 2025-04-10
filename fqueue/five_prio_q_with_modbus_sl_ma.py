@@ -181,7 +181,7 @@ def ani_signal_chk(s, hl, id. reqlist):
         reqlist.append(id)
 
 # check digital signal against a setpoint and place id in request list
-def di_signal_chk(s, state, id. reqlist):
+def di_signal_chk(s, state, id, reqlist):
     if bool(s) == state:
         reqlist.append(id)
         
@@ -434,6 +434,71 @@ def make_next_day_date():
     return dt2
     
 async def main_filter_queue_task(): 
+
+    global INH_PLC1
+    global INH_PLC2 
+    global CHAN_LVL_PLC2 
+    global INH_HMI
+    global NO_OF_UNITS
+    global DP_TRIG 
+    global RUN_TIMES 
+    global ALUM_TR 
+    global TURBID_TR 
+    global MANU_TRIG 
+    global FLOAT32ARR 
+    global NO_OF_PLC2_FLOATS 
+    global DO_WRITE_SLAVE
+    global QUE_INH
+    global Q1 
+    global Q2 
+    global Q3 
+    global Q4 
+    global Q5 
+    global QUE_RST 
+    global QUE_RST_EDGE 
+    global ALARM_WORD 
+    global FILTER_INH 
+    global Q_INHS 
+    global U_STATES 
+
+    global Free
+    global Booked
+    global RESOURCE
+    global store_tm 
+    global INHIB
+    global INHIB_DOFF_TIME
+    global INHIB_ACTIVE 
+    global UNAVAIL_COMMON_RES 
+    global UNIT_NOS
+    global MAX_NO_OPS
+    global abon
+    global wwon 
+    global abon_unit 
+    global wwon_unit 
+    global WASH_TANK_REFIL_TM
+    global AB_TIMEOUT
+    global WW_TIMEOUT
+
+    global RNG_DP 
+    global RNG_TUR 
+
+    # trigger request lists
+    global man_req 
+    global dp_req 
+    global service_time_req 
+    global turb_req 
+    global alum_req 
+
+    # prioritized queues
+    global p1_q 
+    global p2_q 
+    global p3_q 
+    global p4_q 
+    global     global p5_q 
+
+    # shared resource queue
+    global ab_q 
+    global ww_q 
 
     if LATCH_QUE == True:
         # this option creates latched queue once seen it remains this would prioritise time it was in the queue 
@@ -714,7 +779,7 @@ async def main_filter_queue_task():
                 man_trig = di8_1_list
         
                 for i, man in enumerate(man_trig):
-                    di_signal_chk(man, man_spt, i+1. man_req) 
+                    di_signal_chk(man, man_spt, i+1, man_req) 
                 for dp in enumerate(dp_trig_ordered):
                     ani_signal_chk(dp[0], dp_spt, dp[1]+1. dp_req) 
                 for ser in (service_time_ordered):                                             # list is priority pairs
@@ -737,7 +802,7 @@ async def main_filter_queue_task():
                 remove_trig = four_list_or(remove_trig1, INH_HMI, INH_PLC1, INH_PLC2)
                 remove_spt = True
                 for i, rem in enumerate(remove_trig):
-                    di_signal_chk(rem, remove_spt, i+1. remove_list)        
+                    di_signal_chk(rem, remove_spt, i+1, remove_list)        
 
                 # remove from all queues any units listed in the remove_list
                 for r in remove_list:
@@ -954,6 +1019,10 @@ async def update_datablock(slave1: ModbusSlaveContext, slave2: ModbusSlaveContex
 
 # modbus tcp to HMI data transfer
 async def update_datablock2(store: ModbusSlaveContext):
+    global INH_HMI 
+    global QUE_WD 
+    global QUE_INH 
+    global QUE_RST 
     count = 0
     print('start of tcp slave interface')
     while True:
@@ -1007,7 +1076,7 @@ async def run_serial(do_it):
 async def run_tcp(do_it):
     if do_it == 1:
         # we are biulding a custom data block area
-        builder = BinaryPayloadBuilder(byteorder=Endian.Big) # we have so many integers and so many floats 
+        builder = BinaryPayloadBuilder(byteorder=Endian.Big)                             # we have so many integers and so many floats 
         for i in range(0, NO_IR_INTS):
             builder.add_16bit_int(i)
         for i in range(0, NO_IR_FLOATS):
