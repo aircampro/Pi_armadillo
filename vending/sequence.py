@@ -66,12 +66,12 @@ def readCoilModbus(client,addr=1,num=1):
         print("Exception in read_coils = ",e)    
 	return rr.bits[0]
 
-def writeHoldingRegisterModbus(client,addr,value): 
+def writeHoldingRegisterModbus(client, addr, value): 
     try:
         rr = client.write_register(addr, value)
     except Exception as e:
         print("Exception in write_holding_register = ",e)  
-    return readHoldingRegistersModbus(addr,1)
+    return read_holding_reg(client, addr, 1)
     
 def disconnectModbusTCP(client):
     client.close()
@@ -131,6 +131,7 @@ class HMI(object):
         self.lang = 0
         self.pay_meth = 0
         self.override = 0
+        self.step_state = 0
         
 # class describing the override actions
 class OverrideActions(Enum):
@@ -262,7 +263,8 @@ class vendingSequence(object):
         self.hmi_regs.lang = int(config_ini['HMI']['LNG'])
         self.hmi_regs.pay_meth = int(config_ini['HMI']['PAY_METHOD'])
         self.hmi_regs.override = int(config_ini['HMI']['OVD_PB'])
-        
+        self.hmi_regs.step_state = int(config_ini['HMI']['STEP_STATE'])
+       
         self.op_list = [ self.add1, self.add2, self.add3, self.add4, self.add5, self.add6, self.main, self.clean ]		
 
     # check the container levels        
@@ -299,11 +301,19 @@ class vendingSequence(object):
         if self.pay_method == PayMthd.PAYTER.value :
             self.pay_ok = cmdline(f'Payter_serial_PSP.py {self.cost}').stdout.readline()    # call the payment method with the cost 
 
+    # set data from the hmi via modbus tcp 
+    def mdbus_set_to_hmi(self, rr, v):
+        c = connectModbusTCP()  
+        writeHoldingRegisterModbus(c,rr,v)
+        disconnectModbusTCP(c)
+        return c
+
     # choose payment method            
     def choose_method(self, method_hmi):
         self.pay_method = PayMthd.NONE.value	
         while (OperationSteps.CHOOSE_PAY.value == self.step):
             self.pay_method = method_hmi
+            r = mdbus_set_to_hmi(self.hmi_regs.step_state, self.step)
             if not self.pay_method == PayMthd.NONE.value:
                 if self.pay_method == PayMthd.CANC.value:
                     self.step = OperationSteps.WAIT_FOR_START.value  
@@ -319,12 +329,13 @@ class vendingSequence(object):
         c = connectModbusTCP()  
         rhr = read_holding_reg(c, reg=rr, method="tcp") 
         disconnectModbusTCP(c)
-        return c
+        return rhr
 
     # wait for the start signal from the hmi       
     def wait_for_start(self, hmi_start):
         while (OperationSteps.WAIT_FOR_START.value == self.step):
             hmi_start = self.mdbus_get_from_hmi(self.hmi_regs.st)
+            r = mdbus_set_to_hmi(self.hmi_regs.step_state, self.step)
             if not hmi_start == 0:
                 self.step = OperationSteps.CHOOSE_PRODUCT.value
 
@@ -345,7 +356,8 @@ class vendingSequence(object):
     def choose_product(self, prod_id_hmi, lang_hmi):
         while (OperationSteps.CHOOSE_PRODUCT.value == self.step):
             prod_id_hmi = self.mdbus_get_from_hmi(self.hmi_regs.prod)
-            lang_hmi  = self.mdbus_get_from_hmi(self.hmi_regs.lang)          
+            lang_hmi  = self.mdbus_get_from_hmi(self.hmi_regs.lang)    
+            r = mdbus_set_to_hmi(self.hmi_regs.step_state, self.step)      
             self.read_ini(prod_id_hmi, lang_hmi)
             self.lvls = self.check_levels()
             if (self.lvls == 0):
@@ -357,6 +369,7 @@ class vendingSequence(object):
     def wait_for_fill(self):
         while (OperationSteps.WAIT_FOR_FILL.value == self.step):
             self.lvls = self.check_levels()
+            r = mdbus_set_to_hmi(self.hmi_regs.step_state, self.step)
             if not (self.lvls & 0x64):
                 self.step = OperationSteps.CHOOSE_PAY.value
                 
@@ -381,6 +394,7 @@ class vendingSequence(object):
     def choose_override(self, override_step_hmi):
         while (OperationSteps.CHOOSE_OVR.value == self.step):
             override_step_hmi = self.mdbus_get_from_hmi(self.hmi_regs.override) 
+            r = mdbus_set_to_hmi(self.hmi_regs.step_state, self.step)
             if override_step_hmi == OverrideActions.OVR.value:
                 self.step = OperationSteps.CHOOSE_PAY.value
                 self.set_not_used(self.lvls)
@@ -438,6 +452,7 @@ class vendingSequence(object):
     def additive_1(self):
         ok = 0
         while (OperationSteps.ADD_1.value == self.step):
+            r = mdbus_set_to_hmi(self.hmi_regs.step_state, self.step)
             if self.op_list[self.step].used == 0:
                 self.step += 1
                 break
@@ -447,6 +462,7 @@ class vendingSequence(object):
     # banana
     def additive_2(self):
         while (OperationSteps.ADD_2.value == self.step):
+            r = mdbus_set_to_hmi(self.hmi_regs.step_state, self.step)
             if self.op_list[self.step].used == 0:
                 self.step += 1
                 break
@@ -456,6 +472,7 @@ class vendingSequence(object):
     # strawberry
     def additive_3(self):	
         while (OperationSteps.ADD_3.value == self.step):
+            r = mdbus_set_to_hmi(self.hmi_regs.step_state, self.step)
             if self.op_list[self.step].used == 0:
                 self.step += 1
                 break
@@ -465,6 +482,7 @@ class vendingSequence(object):
     # vanilla
     def additive_4(self):	
         while (OperationSteps.ADD_4.value == self.step):
+            r = mdbus_set_to_hmi(self.hmi_regs.step_state, self.step)
             if self.op_list[self.step].used == 0:
                 self.step += 1
                 break
@@ -474,6 +492,7 @@ class vendingSequence(object):
     # cherry
     def additive_5(self):
         while (OperationSteps.ADD_5.value == self.step):
+            r = mdbus_set_to_hmi(self.hmi_regs.step_state, self.step)
             if self.op_list[self.step].used == 0:
                 self.step += 1
                 break
@@ -483,6 +502,7 @@ class vendingSequence(object):
     # lime
     def additive_6(self):
         while (OperationSteps.ADD_6.value == self.step):
+            r = mdbus_set_to_hmi(self.hmi_regs.step_state, self.step)
             if self.op_list[self.step].used == 0:
                 self.step += 1
                 break
@@ -506,6 +526,7 @@ class vendingSequence(object):
     # clean
     def clean(self):
         while (OperationSteps.CLEAN.value == self.step):
+            r = mdbus_set_to_hmi(self.hmi_regs.step_state, self.step)
             if self.io_mode == IOMode.DIRECT_GPIO.value:
                 GPIO.output(self.op_list[self.step].flush,1)
                 time.sleep(self.op_list[self.step].time) 
