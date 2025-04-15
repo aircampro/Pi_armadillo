@@ -32,6 +32,9 @@ echo $third_chan_val
 echo "print fourth channel value"
 fourth_chan_val=`echo $temp_read | awk '{ print $4 }' | awk '-F:' '{ print $2 }'`
 echo $fourth_chan_val
+# first and fourth averaged
+avg14=`echo 'scale=4; ' $first_chan_val '* 0.1 +' $fourth_chan_val '* 0.1 / 2.0'  | bc`
+echo $avg14
 
 # read 8 channel rtd
 temp8_read=`LucidIoCtrl –d/dev/ttyACM0 –c0,1,2,3,4,5,6,7 –tT –r`
