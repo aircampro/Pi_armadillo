@@ -6,6 +6,7 @@
 # HMI is modbus slave
 # I/O is direct if there is enough pins (need use extended version or reduce additives)
 #     or via a modbus slave device
+# rev 1.1 added lucid io module support
 # =====================================================================================
 #
 from enum import Enum
@@ -75,7 +76,125 @@ def writeHoldingRegisterModbus(client, addr, value):
     
 def disconnectModbusTCP(client):
     client.close()
-    
+ 
+# lucid io support library for dot/din modules requires library LucidIoCtrl from www.lucid.com
+# Also supports pulse width modulation (PWM) for DC motors and pulse output mode
+#
+def set_dot_lucid(ini_reg="/dev/ttyACM3:0", state_v=1):
+    addrs = str(ini_reg).split(":")
+    if len(addrs) == 2:
+        port_usb = addrs[0]
+        chanl = addrs[1]
+    elif len(addrs) == 4:                                                   # e.g. it was something like drs485:/dev/ttyACM2:11
+        port_usb = addrs[0] + ":" + addrs[1] + ":" + addrs[2]
+        chanl = addrs[3] 
+    else:
+        print("invalid address", ini_reg)
+        return -1
+    cmd_printed = cmdline(f'./LucidIoCtrl –d{port_usb} –tL –c{chanl} –w{state_v}').stdout.readline() 
+
+def get_din_lucid(ini_reg="/dev/ttyACM3:0", state_v=1):
+    addrs = str(ini_reg).split(":")
+    if len(addrs) == 2:
+        port_usb = addrs[0]
+        chanl = addrs[1]
+    elif len(addrs) == 4:                                                   # e.g. it was something like drs485:/dev/ttyACM2:11
+        port_usb = addrs[0] + ":" + addrs[1] + ":" + addrs[2]
+        chanl = addrs[3] 
+    else:
+        print("invalid address", ini_reg)
+        return -1
+    cmd_printed = cmdline(f'./LucidIoCtrl –d{port_usb} –tL –c{chanl} –r').stdout.readline()
+    return int(cmd_printed(" ")[0].split(":")[1])
+
+# set a dot to be a pwm output
+def set_dot_pwm_mode(ini_reg="/dev/ttyACM3:2"):
+    addrs = str(ini_reg).split(":")
+    if len(addrs) == 2:
+        port_usb = addrs[0]
+        chanl = addrs[1]
+    elif len(addrs) == 4:                                                   # e.g. it was something like drs485:/dev/ttyACM2:11
+        port_usb = addrs[0] + ":" + addrs[1] + ":" + addrs[2]
+        chanl = addrs[3] 
+    else:
+        print("invalid address", ini_reg)
+        return -1
+    cmd_printed = cmdline(f'./LucidIoCtrl –d{port_usb} –tL –c{chanl} –soutDiMode=dutyCycle').stdout.readline() 
+
+# set the duty cycle for the pwm
+def set_dot_pwm_value(ini_reg="/dev/ttyACM3:2", duty_cycle=750):
+    addrs = str(ini_reg).split(":")
+    if len(addrs) == 2:
+        port_usb = addrs[0]
+        chanl = addrs[1]
+    elif len(addrs) == 4:                                                   # e.g. it was something like drs485:/dev/ttyACM2:11
+        port_usb = addrs[0] + ":" + addrs[1] + ":" + addrs[2]
+        chanl = addrs[3] 
+    else:
+        print("invalid address", ini_reg)
+        return -1
+    cmd_printed = cmdline(f'./LucidIoCtrl –d{port_usb} –tL –c{chanl} –soutDiDutyCycle={duty_cycle}').stdout.readline() 
+
+# start the pwm by writing the coil high state
+def start_dot_pwm(ini_reg="/dev/ttyACM3:2"):
+    set_dot_lucid(ini_reg)
+
+# stop the pwm by writing the coil low state
+def stop_dot_pwm(ini_reg="/dev/ttyACM3:2"):
+    set_dot_lucid(ini_reg, 0)
+
+# configure the dot channel as a one-shot pulse output
+def set_dot_pulse_mode(ini_reg="/dev/ttyACM3:2"):
+    addrs = str(ini_reg).split(":")
+    if len(addrs) == 2:
+        port_usb = addrs[0]
+        chanl = addrs[1]
+    elif len(addrs) == 4:                                                   # e.g. it was something like drs485:/dev/ttyACM2:11
+        port_usb = addrs[0] + ":" + addrs[1] + ":" + addrs[2]
+        chanl = addrs[3] 
+    else:
+        print("invalid address", ini_reg)
+        return -1
+    cmd_printed = cmdline(f'./LucidIoCtrl –d{port_usb} –tL –c{chanl} –soutDiMode=onoff').stdout.readline() 
+
+# configure pulse on delay and pulse duration for an output channel
+# delay before pulse is made from sewtting the output true state
+# default : Set TOnDelay of output channel 0 to 520 ms and make the setting persistent.
+# pulse width after pulse has been triggered
+# default : Set TOnHold of output channel 0 to 1200 ms and make the setting persistent.
+def config_dot_pulse(ini_reg="/dev/ttyACM3:2",tond=520000,pw=1200000):
+    addrs = str(ini_reg).split(":")
+    if len(addrs) == 2:
+        port_usb = addrs[0]
+        chanl = addrs[1]
+    elif len(addrs) == 4:                                                   # e.g. it was something like drs485:/dev/ttyACM2:11
+        port_usb = addrs[0] + ":" + addrs[1] + ":" + addrs[2]
+        chanl = addrs[3] 
+    else:
+        print("invalid address", ini_reg)
+        return -1
+    cmd_printed = cmdline(f'./LucidIoCtrl –d{port_usb} –tL –c{chanl} –soutDiOnDelay={tond} –p).stdout.readline()
+    cmd_printed = cmdline(f'./LucidIoCtrl –d{port_usb} –tL –c{chanl} –soutDiOnHold={pw} –p).stdout.readline()
+
+# Configure input channel 0 for rising edge detection mode
+# LucidIoCtrl –drs485:COM4:11 –c0 –sinDiMode=risingEdge alt fallingEdge
+# Set TScan to 90 µs
+# LucidIoCtrl –drs485:COM4:11 –c0 –sinDiScanTime=90000
+#
+def config_din_chan(ini_reg="/dev/ttyACM3:2",scant=90000):
+    addrs = str(ini_reg).split(":")
+    if len(addrs) == 2:
+        port_usb = addrs[0]
+        chanl = addrs[1]
+    elif len(addrs) == 4:                                                   # e.g. it was something like drs485:/dev/ttyACM2:11
+        port_usb = addrs[0] + ":" + addrs[1] + ":" + addrs[2]
+        chanl = addrs[3] 
+    else:
+        print("invalid address", ini_reg)
+        return -1
+    cmd_printed = cmdline(f'./LucidIoCtrl –d{port_usb} –tL –c{chanl} –sinDiMode=risingEdge).stdout.readline()
+    cmd_printed = cmdline(f'./LucidIoCtrl –d{port_usb} –tL –c{chanl} –sinDiScanTime={scant} –p).stdout.readline()
+  
 # list of possible operation steps
 class OperationSteps(Enum):
     WAIT_FOR_START = 8
@@ -158,6 +277,7 @@ class IOMode(Enum):
     MDBUS_SLV = 1
     MDBUS_MAS = 2
     MITSI = 3
+    LUCID = 4
     
 f_name = "vend.pkl"
         
@@ -172,7 +292,9 @@ class vendingSequence(object):
         self.pay_ok = 0
         self.io_mode = mode
                 
-    # reads the configuration for each possible selected product		
+    # reads the configuration for each possible selected product
+    # for gpio = pino, mdbus = addr, lucid = "/dev/ttyACM0:0"
+    #		
     def read_ini(self, recipe_indx, lang):     
         self.ini_file = recipe_indx + "_" + lang + ".ini"
 
@@ -275,7 +397,7 @@ class vendingSequence(object):
             for i in range(0,5):
                 if not GPIO.input(self.op_list[i].lvl):
                     ret |= pow(2,i)
-            if not GPIO.input(self.op_list[OperationSteps.MAIN_PROD.value].lvl:
+            if not GPIO.input(self.op_list[OperationSteps.MAIN_PROD.value].lvl):
                 ret |= pow(2,6)        
             return ret
         elif self.io_mode == IOMode.MDBUS_SLV.value:
@@ -287,6 +409,15 @@ class vendingSequence(object):
             if not readCoilModbus(mrio, self.op_list[OperationSteps.MAIN_PROD.value].lvl):
                 ret |= pow(2,6)   
             disconnectModbusTCP(mrio)                
+            return ret
+        elif self.io_mode == IOMode.LUCID.value:
+            # must return a bit map for the levels that are low (not enough product)
+            ret = 0
+            for i in range(0,5):
+                if not get_din_lucid(self.op_list[i].lvl):
+                    ret |= pow(2,i)
+            if not get_din_lucid(self.op_list[OperationSteps.MAIN_PROD.value].lvl):
+                ret |= pow(2,6)        
             return ret
 
     # calculate the total cost               
@@ -339,8 +470,8 @@ class vendingSequence(object):
             if not hmi_start == 0:
                 self.step = OperationSteps.CHOOSE_PRODUCT.value
 
-    # configure the GPIO i/o
-    def set_up_io(self):
+    # configure the GPIO i/o or lucid i/o (assumes only the additives are the don doff times specified)
+    def set_up_io(self, don=0, doff=0):
         if self.io_mode == IOMode.DIRECT_GPIO.value:
             GPIO.setmode(GPIO.BOARD)
             for j in range(0,5):       
@@ -351,7 +482,16 @@ class vendingSequence(object):
             GPIO.setup(self.op_list[OperationSteps.MAIN_PROD.value].lvl, GPIO.IN, pull_up_down=GPIO.PUD_UP)
             GPIO.setup(self.op_list[OperationSteps.MAIN_PROD.value].pump, GPIO.OUT)
             GPIO.setup(self.op_list[OperationSteps.CLEAN.value].flush, GPIO.OUT)
-        
+        elif self.io_mode == IOMode.LUCID.value:
+            GPIO.setmode(GPIO.BOARD)
+            for j in range(0,5):       
+                config_din_chan(self.op_list[j].lvl)                # set anti-bounce (default)
+                if not don==0 or not doff==0:
+                    config_dot_pulse(self.op_list[j].top, don, doff)
+                    config_dot_pulse(self.op_list[j].btm, don, doff)
+                    config_dot_pulse(self.op_list[j].mtr_pin, don, doff)
+            config_din_chan(self.op_list[OperationSteps.MAIN_PROD.value].lvl)
+
     # choose product               
     def choose_product(self, prod_id_hmi, lang_hmi):
         while (OperationSteps.CHOOSE_PRODUCT.value == self.step):
@@ -447,7 +587,28 @@ class vendingSequence(object):
             writeCoilModbus(mrio, add_obj.mtr_pin, False)  
             disconnectModbusTCP(mrio) 
             return 1
-            
+        elif self.io_mode == IOMode.LUCID.value:
+            set_dot_lucid(add_obj.top, 0)                                  # open top slot
+            set_dot_lucid(add_obj.mtr_pin, 1)
+            time.sleep(add_obj.mtr_time)
+            set_dot_lucid(add_obj.mtr_pin, 0)
+
+            set_dot_lucid(add_obj.top, 1)                                  # close top slot
+            set_dot_lucid(add_obj.mtr_pin, 1)
+            time.sleep(add_obj.mtr_time)
+            set_dot_lucid(add_obj.mtr_pin, 0)
+
+            set_dot_lucid(add_obj.btm, 0)                                  # open botom slot
+            set_dot_lucid(add_obj.mtr_pin, 1)
+            time.sleep(add_obj.mtr_time)
+            set_dot_lucid(add_obj.mtr_pin, 0)
+
+            set_dot_lucid(add_obj.btm, 1)                                  # close bottom slot
+            set_dot_lucid(add_obj.mtr_pin, 1)
+            time.sleep(add_obj.mtr_time)
+            set_dot_lucid(add_obj.mtr_pin, 0)   
+            return 1  
+          
     # choco	
     def additive_1(self):
         ok = 0
@@ -522,7 +683,13 @@ class vendingSequence(object):
                 writeCoilModbus(mrio, self.op_list[self.step].pump, True)
                 time.sleep(self.op_list[self.step].time) 
                 writeCoilModbus(mrio, self.op_list[self.step].pump, False)
-                disconnectModbusTCP(mrio)             
+                disconnectModbusTCP(mrio) 
+                self.step += 1  
+            elif self.io_mode == IOMode.LUCID.value:
+                set_dot_lucid(self.op_list[self.step].pump,1)
+                time.sleep(self.op_list[self.step].time) 
+                set_dot_lucid(self.op_list[self.step].pump,0)
+                self.step += 1            
     # clean
     def clean(self):
         while (OperationSteps.CLEAN.value == self.step):
@@ -538,6 +705,11 @@ class vendingSequence(object):
                 time.sleep(self.op_list[self.step].time) 
                 writeCoilModbus(mrio, self.op_list[self.step].flush, False)
                 disconnectModbusTCP(mrio) 
+            elif self.io_mode == IOMode.LUCID.value:
+                set_dot_lucid(self.op_list[self.step].flush,1)
+                time.sleep(self.op_list[self.step].time) 
+                set_dot_lucid(self.op_list[self.step].flush,0)
+                self.step = OperationSteps.WAIT_FOR_START.value 
 
     # save for recall if power fails                
     def save_pickle_file(self, o):
@@ -588,7 +760,7 @@ if __name__ == "__main__":
                 vm = pickle.load(f)                                       # load the last saved sequencer from pickle file
                 print("restarted using the pickle save file")
         else:                 
-            vm = vendingSequence()                                        # for modbus version vm = vendingSequence(IOMode.MDBUS_SLV.value)
+            vm = vendingSequence()                                        # for modbus version vm = vendingSequence(IOMode.MDBUS_SLV.value) or lucid usb i/o IOMode.LUCID.value
         hmi = HMI()                                                       # create the hmi reader object
         vm.set_up_io()
         while True:
