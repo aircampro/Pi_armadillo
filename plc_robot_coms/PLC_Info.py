@@ -134,6 +134,16 @@ def twosComplement_hex(hexval):
 # pip install pymodbus
 # coil,discrtete input, holding register read and write
 
+import serial
+# added initialization string for brodersen RTU8 PSTN modbus
+# baud rates can be  300, 600, 1200, 2400, 4800, 9600
+# https://brodersen.com/wp-content/uploads/dbc_optional_d_140.pdf
+def set_up_pstn_brodersen(brodersen_init_cmd="AT &C1 &D0 S0=1  E0 V0", spt='/dev/ttyUSB0', baud_rt=9600):
+    brodersen_init_snd=bytearray(brodersen_init_cmd.encode('utf-8'))
+    ser = serial.Serial(spt, baud_rt, timeout=0.1)
+    ser.write(brodersen_init_snd)
+    ser.close()
+
 import time
 
 MODBUS_TCP_SERVER_IP="10.0.0.1"
