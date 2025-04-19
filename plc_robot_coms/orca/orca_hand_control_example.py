@@ -585,6 +585,26 @@ def require_calibration(func):
         return func(self, *args, **kwargs)
     return wrapper
 
+# rotate a list so last entry becomes the first
+def rotate_list( finger_motion_list: list ) -> list:
+	g = finger_motion_list
+	g = g[-1:]+g[:-1]
+	return g
+
+# split motor number list into multiples of n=5 (per fingers)
+def split_list_into_fingers(finger_motion_list: list, no_in_group: int = 5 ) -> list:
+    kk = 0
+    lists_split = []
+    while kk < len(vals):
+        if kk == 0:
+            arr = vals[:(kk+no_in_group)]
+            lists_split.append(arr)
+        else:
+            arr = vals[(kk-no_in_group)+5:(kk+no_in_group)]
+            lists_split.append(arr)
+        kk += no_in_group
+    return lists_split
+    	
 if __name__ == "__main__":
 	
     hand = OrcaHand("./mymodel_path")                                   # create instance of ordca hand communication object
@@ -620,7 +640,7 @@ if __name__ == "__main__":
     # set all velocities from 0.5 upward
     vals = []
     for j in range(0,hand.motor_ids):                                   # iterate each motor
-        vals.append(0.5+abs(np.sin((j/2.0)))                            # set velocities to 0.5+abs(sin(j/2))
+        vals.append(0.5+abs(np.sin((j/2.0))))                           # set velocities to 0.5+abs(sin(j/2))
     hand._set_motor_vel(vals)
     time.sleep(2)
     vals = []
@@ -643,7 +663,7 @@ if __name__ == "__main__":
     # set all positions from 10.0 upward
     vals = []
     for j in range(0,hand.motor_ids):                                   # iterate each motor
-        vals.append(0.1+abs(np.cos((j/2.0)))                            # set angle positions (radians)
+        vals.append(0.1+abs(np.cos((j/2.0))))                       # set angle positions (radians)
     hand._set_motor_pos(vals)
     time.sleep(2)
     vals = []
@@ -651,7 +671,50 @@ if __name__ == "__main__":
         vals.append(0.0)                                                # reset angles
     hand._set_motor_pos(vals)
     time.sleep(1)
-                                
+
+    vals = []
+    for k in [1, 2, 3, 4, 5]:                                           # for 5 animation steps
+        for i, j in enumerate(range(0,hand.motor_ids)):                 # iterate each motor
+            ii = i % 5                                                  # each finger in 5's in groups of 5's
+            vals.append((np.pi/4.0) + (np.cos(((ii+k)/2.0))*(np.pi/4.0)))   # set angle positions (radians)
+        hand._set_motor_pos(vals)
+        time.sleep(2)
+    vals = []
+    for j in range(0,hand.motor_ids):                                   # iterate each motor
+        vals.append(0.0)                                                # reset angles
+    hand._set_motor_pos(vals)
+    time.sleep(1)
+    
+    # make a list that goes up then down for joints in groups of 5
+    vals = []
+    for i, j in enumerate(range(0,hand.motor_ids)):                     # iterate each motor
+        ii = i % 5                                                      # each finger in 5's in groups of 5's 
+        if ii <= 2:                                                     # first three
+            iii += 1
+        else:
+            iii -= 1
+        iii = iii % 5                                                   # limit in the range 0-4
+        vals.append((np.pi/4.0) + (np.sin((iii/2.0))*(np.pi/4.0)))      # set angle positions to those calculated in (radians)
+
+    hand._set_motor_pos(vals)                                           # set the hand to that sequence of positions
+    v = vals
+    for animate_stp in [ 1, 2, 3, 4, 5, 6, 7, 8, 9 ]:                   # for 9 animation steps rotate the positions in groups of 5
+        new_lists = []
+        split_lists = split_list_into_fingers(v)                        # split the list into finger groups of 5
+        for s in split_lists:
+            new_lists.append(rotate_list(s))                            # rotate the finger positions per step
+        v = []      	  
+        for n in new_lists:                                             # now re-construct the long list from the groups
+            v += n   
+        hand._set_motor_pos(v)                                          # set the motor position
+        time.sleep(0.5)
+
+    vals = []
+    for j in range(0,hand.motor_ids):                                   # iterate each motor
+        vals.append(0.0)                                                # reset angles
+    hand._set_motor_pos(vals)
+    time.sleep(1)
+                                                 
     hand.disable_torque()                                               # disable the torque
 
     mps = hand.get_motor_pos() 
@@ -669,4 +732,8 @@ if __name__ == "__main__":
     hand.disconnect()                                                   # disconnect the hand
     hand._dxl_client = None    
     
+     
+    
+    
+
     
