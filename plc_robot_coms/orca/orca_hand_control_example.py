@@ -187,7 +187,7 @@ class OrcaHand:
 
     def get_motor_vel(self) -> np.ndarray:
         """
-        Get the current motor velocities in radians (Note that this includes offsets of the motors).
+        Get the current motor velocities (Note that this includes offsets of the motors).
         
         Returns:
             np.ndarray: Motor velocities.
@@ -524,8 +524,7 @@ class OrcaHand:
             if self.motor_limits[motor_id][0] is None or self.motor_limits[motor_id][1] is None:
                 raise ValueError(f"Motor {motor_id} corresponding to joint {joint_name} is not calibrated.")
             motor_pos[motor_id - 1] = self.motor_limits[motor_id][0] + (pos - self.joint_roms[joint_name][0]) * self.joint_to_motor_ratios[motor_id]
-            
-            
+                        
         return motor_pos
                
     def _sanity_check(self):
@@ -605,15 +604,17 @@ if __name__ == "__main__":
     # Set the desired joint positions to 0
     hand.set_joint({joint: 0 for joint in hand.joint_ids})
     time.sleep(2)
-    # Set the desired joint positions to 45
-    hand.set_joint({joint: 45 for joint in hand.joint_ids})
+    # Set the desired joint positions to desired radians
+    desired = np.pi / 5.0
+    hand.set_joint({joint: desired for joint in hand.joint_ids})
     time.sleep(2)
-    hand.calibrate_manual()
+    hand.calibrate_manual()                                            # now manually calibrate
     # Set the desired joint positions to 0
     hand.set_joint({joint: 0 for joint in hand.joint_ids})
     time.sleep(2)
-    # Set the desired joint positions to 0
-    hand.set_joint({joint: 45 for joint in hand.joint_ids})
+    # Set the desired joint positions to desired
+    desired = np.pi / 5.0
+    hand.set_joint({joint: desired for joint in hand.joint_ids})
     time.sleep(2)
 
     # set all velocities from 0.5 upward
