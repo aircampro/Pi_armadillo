@@ -643,7 +643,7 @@ if __name__ == "__main__":
     # set all positions from 10.0 upward
     vals = []
     for j in range(0,hand.motor_ids):                                   # iterate each motor
-        vals.append(10+abs(np.cos((j/2.0)))                             # set angle positions
+        vals.append(0.1+abs(np.cos((j/2.0)))                            # set angle positions (radians)
     hand._set_motor_pos(vals)
     time.sleep(2)
     vals = []
