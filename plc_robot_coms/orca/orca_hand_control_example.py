@@ -660,7 +660,7 @@ if __name__ == "__main__":
 
     print(" ---------- motor ---------- ")                              # print position velocity current and temperture of each motor
     print('> Pos: {}'.format(mps.tolist()))
-    print('> Vel: {}'.format(mvs tolist()))
+    print('> Vel: {}'.format(mvs.tolist()))
     print('> Cur: {}'.format(mcs.tolist()))
                         
     mts = hand.get_motor_temp()    
