@@ -75,13 +75,13 @@ class FutabaRS_Servo(object):
     BAUD_RATE_INDEX_153600 = 0x08
     BAUD_RATE_INDEX_230400 = 0x09
     
-	def __init__(self):
-		self.myserial = serial.Serial()
-		print('Generated the serial object for the FutabaRS Servo')
-		self.mode = 'normal'
+    def __init__(self):
+        self.myserial = serial.Serial()
+        print('Generated the serial object for the FutabaRS Servo')
+        self.mode = 'normal'
 
-	def __del__(self):
-		self.myserial.close()
+    def __del__(self):
+        self.myserial.close()
 
     def search_com_port(self):
         coms = serial.tools.list_ports.comports()
@@ -93,81 +93,76 @@ class FutabaRS_Servo(object):
         print('Using first listed COM port: ' + used_port)
         return used_port
     
-	def open_port(self, port=None, baudrate=115200, timeout=1):
+    def open_port(self, port=None, baudrate=115200, timeout=1):
         if port == None:
             port = self.search_com_port()		
-		self.myserial.port = port
-		self.myserial.baudrate = baudrate
-		self.myserial.timeout = timeout
-		self.myserial.parity = serial.PARITY_NONE
-		try:
-			self.myserial.open()
-		except IOError:
-			raise IOError('Failed to open port, check the device and port number')
-		else:
-			print('Succeede to open port: ' + port)
+            self.myserial.port = port
+            self.myserial.baudrate = baudrate
+            self.myserial.timeout = timeout
+            self.myserial.parity = serial.PARITY_NONE
+            try:
+                self.myserial.open()
+            except IOError:
+                raise IOError('Failed to open port, check the device and port number')
+            else:
+                print('Succeeded to open port: ' + port)
 
-	def close_port(self):
-		self.myserial.close()
+    def close_port(self):
+        self.myserial.close()
 
-	def set_port(self, baudrate=115200, timeout=0x01):
-		self.myserial.baudrate = baudrate
-		self.myserial.timeout = timeout
-		self.myserial._reconfigurePort()
-		print('Succeede to set baudrate:%d, timeout:%d' % (baudrate, timeout))
+    def set_port(self, baudrate=115200, timeout=0x01):
+        self.myserial.baudrate = baudrate
+        self.myserial.timeout = timeout
+        self.myserial._reconfigurePort()
+        print('Succeede to set baudrate:%d, timeout:%d' % (baudrate, timeout))
 
-	def torque_on(self, id=0x01, mode=0x01, return_packet=0x01):
-		self._check_range(id, 1, 127, 'id')
-		self._check_range(mode, 0, 2, 'mode')
-		self._check_range(return_packet, 0, 15, 'return_packet')
+    def torque_on(self, id=0x01, mode=0x01, return_packet=0x01):
+        self._check_range(id, 1, 127, 'id')
+        self._check_range(mode, 0, 2, 'mode')
+        self._check_range(return_packet, 0, 15, 'return_packet')
 
-		send = [0xFA,
-				0xAF,
-				id,
-				return_packet,
-				0x24,
-				0x01,
-				0x01,
-				mode & 0x00FF]
-		send.append(self._calc_checksum(send))
+        send = [0xFA,
+                0xAF,
+                id,
+                return_packet,
+                0x24,
+                0x01,
+                0x01,
+                mode & 0x00FF]
+        send.append(self._calc_checksum(send))
+        self._write_serial(send, return_packet)
 
-		self._write_serial(send, return_packet)
-
-		if return_packet == 0x00:
-			return id, 0x00
-
-		elif return_packet == 0x01:
-			return self._check_ack(id)
+        if return_packet == 0x00:
+            return id, 0x00
+        elif return_packet == 0x01:
+            return self._check_ack(id)
 
     # Moving the servo to the target position (RAM=1EH)
-	#
-	def target_position(self, id-0x01, position, time, return_packet=0x01):
-		self._check_range(id, 1, 127, 'id')
-		self._check_range(position, -1500, 1500, 'position')
-		self._check_range(time, 0, 16383, 'time')
-		self._check_range(return_packet, 0, 15, 'return_packet')
+    #
+    def target_position(self, id-0x01, position, time, return_packet=0x01):
+        self._check_range(id, 1, 127, 'id')
+        self._check_range(position, -1500, 1500, 'position')
+        self._check_range(time, 0, 16383, 'time')
+        self._check_range(return_packet, 0, 15, 'return_packet')
 
-		send = [0xFA,
-				0xAF,
-				id,
-				return_packet,
-				0x1E,
-				0x04,
-				0x01,
-				position & 0x00FF,
-				(position & 0xFF00) >> 8,
-				time & 0x00FF,
-				(time & 0xFF00) >> 8]
-		send.append(self._calc_checksum(send))
+        send = [0xFA,
+                0xAF,
+                id,
+                return_packet,
+                0x1E,
+                0x04,
+                0x01,
+                position & 0x00FF,
+                (position & 0xFF00) >> 8,
+                time & 0x00FF,
+                (time & 0xFF00) >> 8]
+         send.append(self._calc_checksum(send))
+         self._write_serial(send, return_packet)
 
-		self._write_serial(send, return_packet)
-
-		if return_packet == 0x00:
-			return id, 0x00
-
-		elif return_packet == 0x01:
-			return self._check_ack(id)
-
+         if return_packet == 0x00:
+             return id, 0x00
+         elif return_packet == 0x01:
+             return self._check_ack(id)
 
     def set_target_time(self, speed_second, id=1, return_packet=0x01):
         """
@@ -175,113 +170,105 @@ class FutabaRS_Servo(object):
         :param id:
         :return:
         """
-		self._check_range(id, 1, 127, 'id')
-		self._check_range(speed_second, 0, 163.83, 'speed_second')
-		self._check_range(return_packet, 0, 15, 'return_packet')
+        self._check_range(id, 1, 127, 'id')
+        self._check_range(speed_second, 0, 163.83, 'speed_second')
+        self._check_range(return_packet, 0, 15, 'return_packet')
         speed_hex = format(int(speed_second * 100) & 0xffff, '04x')
         speed_hex_h = int(speed_hex[0:2], 16)
         speed_hex_l = int(speed_hex[2:4], 16)
         
-		send = [0xFA,
-				0xAF,
-				id,
-				return_packet,
-				self.ADDR_GOAL_TIME_L,
-				0x02,
-				0x01,
-				speed_hex_h,
-				speed_hex_l]
-		send.append(self._calc_checksum(send))
+        send = [0xFA,
+                0xAF,
+                id,
+                return_packet,
+                self.ADDR_GOAL_TIME_L,
+                0x02,
+                0x01,
+                speed_hex_h,
+                speed_hex_l]
+        send.append(self._calc_checksum(send))
+        self._write_serial(send, return_packet)
 
-		self._write_serial(send, return_packet)
-
-		if return_packet == 0x00:
-			return id, 0x00
-
-		elif return_packet == 0x01:
-			return self._check_ack(id)       
+        if return_packet == 0x00:
+            return id, 0x00
+        elif return_packet == 0x01:
+            return self._check_ack(id)       
         
     # Moving the servo to the target angle (RAM=1EH) Unit
     # =0.1 degree,
     # e.g. 123 degree→ 1230→04CEH
     # FA AF 01 00 1E 02 01 CE 04 D6
-	#
-	def target_angle(self, id=0x01, angle, return_packet=0x01):
-		self._check_range(id, 1, 127, 'id')
-		self._check_range(angle, -144, 144, 'angle')
-		self._check_range(return_packet, 0, 15, 'return_packet')
+    #
+    def target_angle(self, id=0x01, angle, return_packet=0x01):
+        self._check_range(id, 1, 127, 'id')
+        self._check_range(angle, -144, 144, 'angle')
+        self._check_range(return_packet, 0, 15, 'return_packet')
 
-		send = [0xFA,
-				0xAF,
-				id,
-				return_packet,
-				0x1E,
-				0x02,
-				0x01,
-				angle & 0x00FF,
-				(angle & 0xFF00) >> 8]
-		send.append(self._calc_checksum(send))
+        send = [0xFA,
+                0xAF,
+                id,
+                return_packet,
+                0x1E,
+                0x02,
+                0x01,
+                angle & 0x00FF,
+                (angle & 0xFF00) >> 8]
+        send.append(self._calc_checksum(send))
+        self._write_serial(send, return_packet)
 
-		self._write_serial(send, return_packet)
-
-		if return_packet == 0x00:
-			return id, 0x00
-
-		elif return_packet == 0x01:
-			return self._check_ack(id)
+        if return_packet == 0x00:
+            return id, 0x00
+        elif return_packet == 0x01:
+            return self._check_ack(id)
         
-	def send_command_byte(self, id=0x01, val, ram_cmd_reg=self.ADDR_PID_COEFFICIENT, return_packet=0x01, cnt=0x01):
-		self._check_range(id, 1, 127, 'id')
+    def send_command_byte(self, id=0x01, val, ram_cmd_reg=self.ADDR_PID_COEFFICIENT, return_packet=0x01, cnt=0x01):
+        self._check_range(id, 1, 127, 'id')
 
         if val == None:
-		    send = [0xFA,
-				    0xAF,
-				    id,
-				    return_packet,
-				    ram_cmd_reg,
-				    0x00,
-				    cnt ]
+            send = [0xFA,
+                    0xAF,
+                    id,
+                    return_packet,
+                    ram_cmd_reg,
+                    0x00,
+                    cnt ]
         else:      
-		    send = [0xFA,
-				    0xAF,
-				    id,
-				    return_packet,
-				    ram_cmd_reg,
-				    0x02,
-				    cnt,
-				    val & 0x00FF,
-				    (val & 0xFF00) >> 8]
-		send.append(self._calc_checksum(send))
+             send = [0xFA,
+                     0xAF,
+                     id,
+                     return_packet,
+                     ram_cmd_reg,
+                     0x02,
+                     cnt,
+                     val & 0x00FF,
+                     (val & 0xFF00) >> 8]
+        send.append(self._calc_checksum(send))
+        self._write_serial(send, return_packet)
 
-		self._write_serial(send, return_packet)
+        if return_packet == 0x00:
+            return id, 0x00
+        elif return_packet == 0x01:
+            return self._check_ack(id)
 
-		if return_packet == 0x00:
-			return id, 0x00
+    def send_command_byte_array(self, id=0x01, valArr, ram_cmd_reg=self.ADDR_WRITE_FLASH_ROM, return_packet=0x01):
+        self._check_range(id, 1, 127, 'id')
 
-		elif return_packet == 0x01:
-			return self._check_ack(id)
-
-	def send_command_byte_array(self, id=0x01, valArr, ram_cmd_reg=self.ADDR_WRITE_FLASH_ROM, return_packet=0x01):
-		self._check_range(id, 1, 127, 'id')
-
-		send = [0xFA,
-				0xAF,
-				id,
-				return_packet,
-				ram_cmd_reg,
-				len(valArr),
-				0x01]
+        send = [0xFA,
+                0xAF,
+                id,
+                return_packet,
+                ram_cmd_reg,
+                len(valArr),
+                0x01]
         for b in valArr:
             send.append(b)
-		send.append(self._calc_checksum(send))
+        send.append(self._calc_checksum(send))
+        self._write_serial(send, return_packet)
 
-		self._write_serial(send, return_packet)
-
-		if return_packet == 0x00:
-			return id, 0x00
-
-		elif return_packet == 0x01:
-			return self._check_ack(id)
+        if return_packet == 0x00:
+            return id, 0x00
+        elif return_packet == 0x01:
+            return self._check_ack(id)
             
     def save_rom(self,sid):
         return self.send_command_byte(id=sid, val=None, ram_cmd_reg=self.ADDR_WRITE_FLASH_ROM, return_packet=0x40, cnt=0x00 )
@@ -302,77 +289,72 @@ class FutabaRS_Servo(object):
         limit_position_hex_l = int(limit_position_hex[2:4], 16)
         return self.send_command_byte_array(id=sid, valArr=[limit_position_hex_l, limit_position_hex_h], ram_cmd_reg=self.ADDR_CCW_ANGLE_LIMIT_L, return_packet=0x00, cnt=0x01 )
         
-	def send_command_msg(self, id=0x01, valArr, ram_cmd_reg=self.ADDR_WRITE_FLASH_ROM, return_packet=0x01):
-		self._check_range(id, 1, 127, 'id')
+    def send_command_msg(self, id=0x01, valArr, ram_cmd_reg=self.ADDR_WRITE_FLASH_ROM, return_packet=0x01):
+        self._check_range(id, 1, 127, 'id')
 
-		send = [0xFA,
-				0xAF,
-				id,
-				return_packet,
-				ram_cmd_reg,
-				len(valArr)*2,
-				0x01]
+        send = [0xFA,
+                0xAF,
+                id,
+                return_packet,
+                ram_cmd_reg,
+                len(valArr)*2,
+                0x01]
         for b in valArr:
             send.append(b & 0x00FF)
             send.append((b & 0xFF00) >> 8)
-		send.append(self._calc_checksum(send))
+        send.append(self._calc_checksum(send))
 
-		self._write_serial(send, return_packet)
+        self._write_serial(send, return_packet)
 
-		if return_packet == 0x00:
-			return id, 0x00
-
-		elif return_packet == 0x01:
-			return self._check_ack(id)
+        if return_packet == 0x00:
+            return id, 0x00
+        elif return_packet == 0x01:
+            return self._check_ack(id)
 			
-	def multi_torque_on(self, servo_data):
-		for servo in servo_data:
-			self._check_range(servo[0], 1, 127, 'id')
-			self._check_range(servo[1], 0, 2, 'mode')
+    def multi_torque_on(self, servo_data):
+        for servo in servo_data:
+            self._check_range(servo[0], 1, 127, 'id')
+            self._check_range(servo[1], 0, 2, 'mode')
 
-		send = [0xFA, 0xAF, 0x00, 0x00, 0x24, 0x02, len(servo_data)]
-		for servo in servo_data:
-			send.append(servo[0])
-			send.append(servo[1])
-		send.append(self._calc_checksum(send))
+        send = [0xFA, 0xAF, 0x00, 0x00, 0x24, 0x02, len(servo_data)]
+        for servo in servo_data:
+            send.append(servo[0])
+            send.append(servo[1])
+        send.append(self._calc_checksum(send))
+        self._write_serial(send, 0)
 
-		self._write_serial(send, 0)
+        return 'multi_torque_on:' + str(servo_data)
 
-		return 'multi_torque_on:' + str(servo_data)
+    def multi_target_position(self, servo_data):
+        for servo in servo_data:
+            self._check_range(servo[0], 1, 127, 'id')
+            self._check_range(servo[1], -1500, 1500, 'position')
+            self._check_range(servo[2], 0, 16383, 'time')
 
-	def multi_target_position(self, servo_data):
-		for servo in servo_data:
-			self._check_range(servo[0], 1, 127, 'id')
-			self._check_range(servo[1], -1500, 1500, 'position')
-			self._check_range(servo[2], 0, 16383, 'time')
+        send = [0xFA, 0xAF, 0x00, 0x00, 0x1E, 0x05, len(servo_data)]
+        for servo in servo_data:
+            send.append(servo[0])
+            send.append(servo[1] & 0x00FF)
+            send.append((servo[1] & 0xFF00) >> 8)
+            send.append(servo[2] & 0x00FF)
+            send.append((servo[2] & 0xFF00) >> 8)
+        send.append(self._calc_checksum(send))
+        self._write_serial(send, 0)
 
-		send = [0xFA, 0xAF, 0x00, 0x00, 0x1E, 0x05, len(servo_data)]
-		for servo in servo_data:
-			send.append(servo[0])
-			send.append(servo[1] & 0x00FF)
-			send.append((servo[1] & 0xFF00) >> 8)
-			send.append(servo[2] & 0x00FF)
-			send.append((servo[2] & 0xFF00) >> 8)
-		send.append(self._calc_checksum(send))
+        return 'multi_target_position:' + str(servo_data)
 
-		self._write_serial(send, 0)
-
-		return 'multi_target_position:' + str(servo_data)
-
-	def get_selected_item(self, id=0x01, flags_memmap=self.FLAG30_MEM_MAP_SELECT, addr=self.ADDR_PRESENT_CURRENT_L, len=0x02, count=0x01, sign=False, endi='little'):
-		self._check_range(id, 1, 127, 'id')
-
-		send = [0xFA, 0xAF, id, flags_memmap, addr, len, count]
-		send.append(self._calc_checksum(send))
-
-		self._write_serial(send, 1)
+    def get_selected_item(self, id=0x01, flags_memmap=self.FLAG30_MEM_MAP_SELECT, addr=self.ADDR_PRESENT_CURRENT_L, len=0x02, count=0x01, sign=False, endi='little'):
+        self._check_range(id, 1, 127, 'id')
+        send = [0xFA, 0xAF, id, flags_memmap, addr, len, count]
+        send.append(self._calc_checksum(send))
+        self._write_serial(send, 1)
          
-		receive = self.myserial.read(len)                  # may also use if self.myserial.in_waiting >0: receive = self.myserial.read_all()
+        receive = self.myserial.read(len)                  # may also use if self.myserial.in_waiting >0: receive = self.myserial.read_all()
         
         num = int.from_bytes(receive, endi, signed=sign)
-		rec_nums = [ord(r) for r in receive]
-		receive = [chr(r) for r in receive]
-		print('received ', receive)
+        rec_nums = [ord(r) for r in receive]
+        receive = [chr(r) for r in receive]
+        print('received ', receive)
 
         return num, rec_nums, receive
 
@@ -434,182 +416,174 @@ class FutabaRS_Servo(object):
         a3, b, c = self.get_selected_item(id=sid, flags_memmap=self.FLAG30_MEM_MAP_SELECT, addr=self.ADDR_CCW_COMPLIANCE_SLOPE, len=2, count=0x01) 
         return a, a1, a2, a3
         
-	def get_data(self, id=0x01, mode='all'):
-		self._check_range(id, 1, 127, 'id')
+    def get_data(self, id=0x01, mode='all'):
+        self._check_range(id, 1, 127, 'id')
 
-		modes = ('all', 'angle', 'time', 'speed', 'load', 'tempreture', 'voltage', 'list')
-		if mode not in modes:
-			raise ValueError('mode is not defined, select from the list below\n'
-							 + str(modes))
+        modes = ('all', 'angle', 'time', 'speed', 'load', 'tempreture', 'voltage', 'list')
+        if mode not in modes:
+            raise ValueError('mode is not defined, select from the list below\n' + str(modes))
+        elif mode is 'list':
+            return modes
 
-		elif mode is 'list':
-			return modes
+        send = [0xFA, 0xAF, id, 0x09, 0x00, 0x00, 0x01]
+        send.append(self._calc_checksum(send))
+        self._write_serial(send, 26)
 
-		send = [0xFA, 0xAF, id, 0x09, 0x00, 0x00, 0x01]
-		send.append(self._calc_checksum(send))
+        receive = self.myserial.read(26)
+        receive = [chr(r) for r in receive]
+        print('receive', receive)
 
-		self._write_serial(send, 26)
+        # receive = hex(receive)
+        try:
+            angle = ((ord(receive[8]) << 8) & 0x0000FF00) | (ord(receive[7]) & 0x000000FF)
+            time = ((ord(receive[10]) << 8) & 0x0000FF00) | (ord(receive[9]) & 0x000000FF)
+            speed = ((ord(receive[12]) << 8) & 0x0000FF00) | (ord(receive[11]) & 0x000000FF)
+            load = ((ord(receive[14]) << 8) & 0x0000FF00) | (ord(receive[13]) & 0x000000FF)
+            tempreture = ((ord(receive[16]) << 8) & 0x0000FF00) | (ord(receive[15]) & 0x000000FF)
+            voltage = ((ord(receive[18]) << 8) & 0x0000FF00) | (ord(receive[17]) & 0x000000FF)
+        except IndexError:
+            print('Could not get the data.Check the cables, connectors, and a power supply.')
+            return -1
+        if angle > 1800:
+            angle = -((angle - 1) ^ 0xFFFF)
 
-		receive = self.myserial.read(26)
-		receive = [chr(r) for r in receive]
-		print('receive', receive)
+        if mode is 'all':
+            return id, angle, time, speed, load, tempreture, voltage
+        elif mode is 'angle':
+            return id, angle
+        elif mode is 'time':
+            return id, time
+        elif mode is 'speed':
+            return id, speed
+        elif mode is 'load':
+            return id, load
+        elif mode is 'tempreture':
+            return id, tempreture
+        elif mode is 'voltage':
+            return id, voltage
 
-		# receive = hex(receive)
+    def servo_reset(self, id=0x01):
+        self._check_range(id, 1, 127, 'id')
+        send = [0xFA, 0xAF, id, 0x20, 0xFF, 0x00, 0x00]
+        send.append(self._calc_checksum(send))
 
-		try:
-			angle = ((ord(receive[8]) << 8) & 0x0000FF00) | (ord(receive[7]) & 0x000000FF)
-			time = ((ord(receive[10]) << 8) & 0x0000FF00) | (ord(receive[9]) & 0x000000FF)
-			speed = ((ord(receive[12]) << 8) & 0x0000FF00) | (ord(receive[11]) & 0x000000FF)
-			load = ((ord(receive[14]) << 8) & 0x0000FF00) | (ord(receive[13]) & 0x000000FF)
-			tempreture = ((ord(receive[16]) << 8) & 0x0000FF00) | (ord(receive[15]) & 0x000000FF)
-			voltage = ((ord(receive[18]) << 8) & 0x0000FF00) | (ord(receive[17]) & 0x000000FF)
-		except IndexError:
-			print('Could not get the data.Check the cables, connectors, and a power supply.')
-
-		else:
-			if angle > 1800:
-				angle = -((angle - 1) ^ 0xFFFF)
-
-			if mode is 'all':
-				return id, angle, time, speed, load, tempreture, voltage
-			elif mode is 'angle':
-				return id, angle
-			elif mode is 'time':
-				return id, time
-			elif mode is 'speed':
-				return id, speed
-			elif mode is 'load':
-				return id, load
-			elif mode is 'tempreture':
-				return id, tempreture
-			elif mode is 'voltage':
-				return id, voltage
-
-	def servo_reset(self, id=0x01):
-		self._check_range(id, 1, 127, 'id')
-
-		send = [0xFA, 0xAF, id, 0x20, 0xFF, 0x00, 0x00]
-		send.append(self._calc_checksum(send))
-
-		self._write_serial(send, 0)
+        self._write_serial(send, 0)
 
     def memory_reset(self, sid=0x01):
         self.send_command_byte(id=sid, val=0, ram_cmd_reg=self.ADDR_RESET_MEMORY, return_packet=self.FLAG4_RESET_MEMORY_MAP, cnt=0)    
         
-	def set_torque_limit(self, id, limit=100):
-		self._check_range(id, 1, 127, 'id')
-		self._check_range(limit, 0, 100, 'limit')
+    def set_torque_limit(self, id, limit=100):
+        self._check_range(id, 1, 127, 'id')
+        self._check_range(limit, 0, 100, 'limit')
 
-		send = [0xFA, 0xAF, id, 0x01, 0x23, 0x01, 0x01, limit & 0x00FF]
-		send.append(self._calc_checksum(send))
+        send = [0xFA, 0xAF, id, 0x01, 0x23, 0x01, 0x01, limit & 0x00FF]
+        send.append(self._calc_checksum(send))
 
-		self._write_serial(send, 1)
+        self._write_serial(send, 1)
 
-		return self._check_ack(id)
+        return self._check_ack(id)
 
-	def set_damper(self, id, damper=16):
-		self._check_range(id, 1, 127, 'id')
-		self._check_range(damper, 0, 255, 'damper')
+    def set_damper(self, id, damper=16):
+        self._check_range(id, 1, 127, 'id')
+        self._check_range(damper, 0, 255, 'damper')
 
-		send = [0xFA, 0xAF, id, 0x01, 0x20, 0x01, 0x01, damper & 0x00FF]
-		send.append(self._calc_checksum(send))
+        send = [0xFA, 0xAF, id, 0x01, 0x20, 0x01, 0x01, damper & 0x00FF]
+        send.append(self._calc_checksum(send))
 
-		self._write_serial(send, 1)
+        self._write_serial(send, 1)
 
-		return self._check_ack(id)
+        return self._check_ack(id)
 
-	def set_compliance(self, id, cwcm=1, ccwcm=1, cwcs=4, ccwcs=4, punch=1300):
-		self._check_range(id, 1, 127, 'id')
-		self._check_range(cwcm, 0, 255, 'cwcm')
-		self._check_range(ccwcm, 0, 255, 'ccwcm')
-		self._check_range(cwcs, 0, 255, 'cwcs')
-		self._check_range(ccwcs, 0, 255, 'ccwcs')
-		self._check_range(punch, 0, 10000, 'punch')
+    def set_compliance(self, id, cwcm=1, ccwcm=1, cwcs=4, ccwcs=4, punch=1300):
+        self._check_range(id, 1, 127, 'id')
+        self._check_range(cwcm, 0, 255, 'cwcm')
+        self._check_range(ccwcm, 0, 255, 'ccwcm')
+        self._check_range(cwcs, 0, 255, 'cwcs')
+        self._check_range(ccwcs, 0, 255, 'ccwcs')
+        self._check_range(punch, 0, 10000, 'punch')
 
-		send = [0xFA, 0xAF, id, 0x01, 0x18, 0x06, 0x01, cwcm & 0x00FF, ccwcm & 0x00FF,
-				cwcs & 0x00FF, ccwcs & 0x00FF, punch & 0x00FF, (punch & 0xFF00) >> 8]
-		send.append(self._calc_checksum(send))
+        send = [0xFA, 0xAF, id, 0x01, 0x18, 0x06, 0x01, cwcm & 0x00FF, ccwcm & 0x00FF, cwcs & 0x00FF, ccwcs & 0x00FF, punch & 0x00FF, (punch & 0xFF00) >> 8]
+        send.append(self._calc_checksum(send))
 
-		self._write_serial(send, 1)
+        self._write_serial(send, 1)
 
-		return self._check_ack(id)
+        return self._check_ack(id)
 
-	def set_rpu(self):
-		self.mode = 'rpu'
+    def set_rpu(self):
+        self.mode = 'rpu'
 
-	def set_normal(self):
-		self.mode = 'normal'
+    def set_normal(self):
+        self.mode = 'normal'
 
-	# The following functions are provided for use in PRS class
-	def _calc_checksum(self, send):
-		checksum = send[2]
-		for i in range(3, len(send)):
-			checksum ^= send[i]
-		return checksum
+    # The following functions are provided for use in PRS class
+    def _calc_checksum(self, send):
+        checksum = send[2]
+        for i in range(3, len(send)):
+            checksum ^= send[i]
+        return checksum
 
-	def _check_range(self, value, lower_range, upper_range, name='value'):
-		if value < lower_range or value > upper_range:
-			raise ValueError(name + ' must be set in the range from '
-							 + str(lower_range) + ' to ' + str(upper_range))
+    def _check_range(self, value, lower_range, upper_range, name='value'):
+        if value < lower_range or value > upper_range:
+            raise ValueError(name + ' must be set in the range from ' + str(lower_range) + ' to ' + str(upper_range))
 
-	def _check_ack(self, id):
-		receive = self.myserial.read(1)
-		length = len(receive)
+    def _check_ack(self, id):
+        receive = self.myserial.read(1)
+        length = len(receive)
 
-		if length == 1:
-			ack = ord(receive)
-			if ack == 0x07:
-				return id, 'ACK'
-			elif ack == 0x08:
-				return id, 'NACK'
-			else:
-				return id, 'unKnown'
-		elif length != 1:
-			return id, 'unReadable'
+        if length == 1:
+            ack = ord(receive)
+            if ack == 0x07:
+                return id, 'ACK'
+            elif ack == 0x08:
+                return id, 'NACK'
+            else:
+                return id, 'unKnown'
+        elif length != 1:
+            return id, 'unReadable'
 
-	def _write_rpu(self, send, length):
-		if length == 0:
-			send_rpu = [0x53, len(send)]
-			send_rpu += send
-		else:
-			send_rpu = [0x54, len(send) + 1]
-			send_rpu += send
-			send_rpu.append(length)
+    def _write_rpu(self, send, length):
+        if length == 0:
+            send_rpu = [0x53, len(send)]
+            send_rpu += send
+        else:
+            send_rpu = [0x54, len(send) + 1]
+            send_rpu += send
+            send_rpu.append(length)
 
-		self.myserial.flushOutput()
-		self.myserial.flushInput()
-		self.myserial.write("".join(map(chr, send_rpu)).encode())
+        self.myserial.flushOutput()
+        self.myserial.flushInput()
+        self.myserial.write("".join(map(chr, send_rpu)).encode())
 
-	def _write_command(self, send):
-		self.myserial.flushOutput()
-		self.myserial.flushInput()
-		# print(bytearray(map(chr, send)))
-		# print("".join(map(chr, send)))
-		# print("".join(map(chr, send)).encode())
-		# self.myserial.write(bytearray(map(chr, send)))
-		# self.myserial.write(bytearray("".join(map(chr, send)).encode()))
-		# self.myserial.write("".join(map(chr, send)).encode())
-		self.myserial.write(bytearray(send))
+    def _write_command(self, send):
+        self.myserial.flushOutput()
+        self.myserial.flushInput()
+        # print(bytearray(map(chr, send)))
+        # print("".join(map(chr, send)))
+        # print("".join(map(chr, send)).encode())
+        # self.myserial.write(bytearray(map(chr, send)))
+        # self.myserial.write(bytearray("".join(map(chr, send)).encode()))
+        # self.myserial.write("".join(map(chr, send)).encode())
+        self.myserial.write(bytearray(send))
 
-	def _write_serial(self, send, length):
-		if self.mode == 'rpu':
-			self._write_rpu(send, length)
-		else:
-			self._write_command(send)
+    def _write_serial(self, send, length):
+        if self.mode == 'rpu':
+            self._write_rpu(send, length)
+        else:
+            self._write_command(send)
 
 # TEST :: set torque on drive and move angle/position then read back all data
 #
 def main():
     rpts = 0
+    frs_servo = FutabaRS_Servo()
+    frs_servo.open_port()
     while rpts < 2:
-        frs_servo = FutabaRS_Servo()
-        frs_servo.open_port()
         frs_servo.torque_on()
-	    frs_servo.servo_reset()
+        frs_servo.servo_reset()
         frs_servo.target_angle(140)	
-	    frs_servo.target_angle(-140)
-	    frs_servo.target_position(-1000,163)	
-	    frs_servo.target_position(1200,1630)	
+        frs_servo.target_angle(-140)
+        frs_servo.target_position(-1000,163)	
+        frs_servo.target_position(1200,1630)	
         angle, time, speed, load, temperature, voltage = frs_servo.get_data()
         print("angle ",angle," time ",time," speed ",speed," load ",load)
         print("temperature ",temperature," voltage ",voltage)
