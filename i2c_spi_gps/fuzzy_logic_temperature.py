@@ -531,14 +531,14 @@ def run():
             air_condition_monitor.get_sparkfun_combo_dat()
             if air_condition_monitor.update == 1:	
                 #print("ccs811 sensor: CO2= ",int( air_condition_monitor.co2)," TVOC= ",int( air_condition_monitor.TVOC )) 
-                self._logger.info("CO2: {0}ppm, TVOC: {1}".format(air_condition_monitor.co2, air_condition_monitor.TVOC))     
-                self._logger.info("T: {0}℃, H: {1} P:{2}".format(air_condition_monitor.temperature, air_condition_monitor.humidity, air_condition_monitor.pressure))
+                air_condition_monitor._logger.info("CO2: {0}ppm, TVOC: {1}".format(air_condition_monitor.co2, air_condition_monitor.TVOC))     
+                air_condition_monitor._logger.info("T: {0}℃, H: {1} P:{2}".format(air_condition_monitor.temperature, air_condition_monitor.humidity, air_condition_monitor.pressure))
                 fuzzy_input_temp = air_condition_monitor.temperature
             else:
                 fuzzy_input_temp = -100
         else:
             #print("bme200 sensor: T= ",int(bme280_2.temperature),"℃  H= ",int( bme280_2.relative_humidity),"%  P= ", int(bme280_2.pressure),"hPa")
-            self._logger.info("T: {0}℃, H: {1} P:{2}".format(bme280_2.temperature, bme280_2.relative_humidity, bme280_2.pressure)) 
+            air_condition_monitor._logger.info("T: {0}℃, H: {1} P:{2}".format(bme280_2.temperature, bme280_2.relative_humidity, bme280_2.pressure)) 
             fuzzy_input_temp = bme280_2.temperature
 
         if fuzzy_input_temp >= -10:        
@@ -546,22 +546,22 @@ def run():
             fuzzy_model.compute()
             temp = fuzzy_model.output[‘ac_temp’]	
             #print(" fuzzy model predicts temp set-point of ", temp, "℃  ", c_to_f(temp), "F")
-            self._logger.info("fuzzy model predicts temp set-point of {0}℃ , {1}F".format(temp, c_to_f(temp)))   
+            air_condition_monitor._logger.info("fuzzy model predicts temp set-point of {0}℃ , {1}F".format(temp, c_to_f(temp)))   
 
         co2_state = air_condition_monitor.status()
         #print("co2 status = ",co2_state)
-        self._logger.info("CO2 status : {0}".format(co2_state))
+        air_condition_monitor._logger.info("CO2 status : {0}".format(co2_state))
 
         hr=get_hour() 
         if hr >= 20 and hr <= 6:
             #print("night time")
             if not day == 1:
-                self._logger.info(" ----- night time -----")
+                air_condition_monitor._logger.info(" ----- night time -----")
                 day = 1
         else:
             #print("day time") 
             if not day == 2:
-                self._logger.info(" ----- day time ------")
+                air_condition_monitor._logger.info(" ----- day time ------")
                 day = 2
         time.sleep(LOOP_CYCLE)
 
