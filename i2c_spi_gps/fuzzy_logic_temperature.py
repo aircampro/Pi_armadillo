@@ -1,6 +1,8 @@
 # !/usr/bin python3
+#
 # fuzzy logic temperature controller 
 # using SparkFun CCS811/BME280 Combo Board on i2c to read data
+# can connect using sparkfun HAT on raspi
 #
 import os
 import smbus2 as smbus
@@ -8,16 +10,21 @@ from collections import OrderedDict
 from logging import basicConfig, getLogger, DEBUG, FileHandler, Formatter
 import sys
 import datetime
-
-# for bme280 temp, pressure, humidity 
-#
 import time
-import board
-from adafruit_bme280 import basic as adafruit_bme280
 
+ada_fruit = False                                  # set True to use adafruit lib for bme280 only otherwise sparkfun combo CCS811/BME280
+if ada_fruit == True:
+    # for bme280 temp, pressure, humidity 
+    #
+    import board
+    from adafruit_bme280 import basic as adafruit_bme280
+
+# combined sparkfun CCS811/BME280 Combo Board on i2c
+#
 # for ccs811 co2 monitor 
 #
 CCS811_ADDRESS  =  0x5B
+BME280_ADDRESS = 0x77                           # sometimes 0x76
 
 CCS811_STATUS = 0x00
 CCS811_MEAS_MODE = 0x01
@@ -30,23 +37,36 @@ CCS811_DRIVE_MODE_10SEC = 0x02
 CCS811_DRIVE_MODE_60SEC = 0x03
 CCS811_DRIVE_MODE_250MS = 0x04
 
+list_of_upd_cycles = [ 0, 1.0, 10.0, 60.0, 0.25 ]
+
 CCS811_BOOTLOADER_APP_START = 0xF4
 
 CCS811_HW_ID_CODE = 0x81
 
-class CCS811:
-    LOG_FILE = '{script_dir}/logs/ccs811.log'.format(
+# for bme280 temp press humid monitor
+#
+t_fine = 0.0
+digT = []
+digP = []
+digH = []
+
+class CCS811_BME280:
+    LOG_FILE = '{script_dir}/logs/ccs811_bme280.log'.format(
         script_dir = os.path.dirname(os.path.abspath(__file__))
     )
 
-    def __init__(self, mode = CCS811_DRIVE_MODE_1SEC, address = CCS811_ADDRESS):
+    def __init__(self, mode=CCS811_DRIVE_MODE_1SEC, address=CCS811_ADDRESS, i2cbme=BME280_ADDRESS, bus_no=1, extra_bus=None):
         self.init_logger()
 
         if mode not in [CCS811_DRIVE_MODE_IDLE, CCS811_DRIVE_MODE_1SEC, CCS811_DRIVE_MODE_10SEC, CCS811_DRIVE_MODE_60SEC, CCS811_DRIVE_MODE_250MS]:
             raise ValueError('Unexpected mode value {0}.  Set mode to one of CCS811_DRIVE_MODE_IDLE, CCS811_DRIVE_MODE_1SEC, CCS811_DRIVE_MODE_10SEC, CCS811_DRIVE_MODE_60SEC or CCS811_DRIVE_MODE_250MS'.format(mode))
 
         self._address = address
-        self._bus = smbus.SMBus(1)
+        self.bme280_i2c_address = i2cbme
+        self._bus = smbus.SMBus(bus_no)
+        self.extra_bus = extra_bus
+        if not self.extra_bus == None:
+            self._exbus = smbus.SMBus(self.extra_bus)
 
         self._status = Bitfield([('ERROR' , 1), ('unused', 2), ('DATA_READY' , 1), ('APP_VALID', 1), ('unused2' , 2), ('FW_MODE' , 1)])
 
@@ -56,6 +76,10 @@ class CCS811:
 
         self._TVOC = 0
         self._eCO2 = 0
+
+	self.temperature = 0
+	self.pressure = 0
+	self.humidity = 0
 
         if self.readU8(CCS811_HW_ID) != CCS811_HW_ID_CODE:
             raise Exception("Device ID returned is not correct! Please check your wiring.")
@@ -94,6 +118,148 @@ class CCS811:
             return False
         else:
             return True
+
+    def writeReg(self, reg_address, data):
+        if not self.extra_bus == None:
+            self._exbus.write_byte_data(self.bme280_i2c_address, reg_address, data)
+        else:
+            self._bus.write_byte_data(self.bme280_i2c_address, reg_address, data)
+
+    def setup(self):
+        osrs_t = 1			# Temperature oversampling x 1
+        osrs_p = 1			# Pressure oversampling x 1
+        osrs_h = 1			# Humidity oversampling x 1
+        mode   = 3			# Normal mode
+        t_sb   = 5			# Tstandby 1000ms
+        filter = 0			# Filter off
+        spi3w_en = 0			# 3-wire SPI Disable
+
+        ctrl_meas_reg = (osrs_t << 5) | (osrs_p << 2) | mode
+        config_reg    = (t_sb << 5) | (filter << 2) | spi3w_en
+        ctrl_hum_reg  = osrs_h
+
+        self.writeReg(0xF2, ctrl_hum_reg)
+        self.writeReg(0xF4, ctrl_meas_reg)
+        self.writeReg(0xF5, config_reg)
+
+    def get_calib_param(self):
+        global digT, digP, digH
+        calib = []
+
+        for i in range (0x88,0x88+24):
+            if not self.extra_bus == None:
+                calib.append(self._exbus.read_byte_data(self.bme280_i2c_address,i))
+            else:
+                calib.append(self._bus.read_byte_data(self.bme280_i2c_address,i))
+        if not self.extra_bus == None:
+            calib.append(self._exbus.read_byte_data(self.bme280_i2c_address,0xA1))
+        else:
+            calib.append(self._bus.read_byte_data(self.bme280_i2c_address,0xA1))
+        for i in range (0xE1,0xE1+7):
+            if not self.extra_bus == None:
+                calib.append(self._exbus.read_byte_data(self.bme280_i2c_address,i))
+            else:
+                calib.append(self._bus.read_byte_data(self.bme280_i2c_address,i))
+
+        digT.append((calib[1] << 8) | calib[0])
+        digT.append((calib[3] << 8) | calib[2])
+        digT.append((calib[5] << 8) | calib[4])
+        digP.append((calib[7] << 8) | calib[6])
+        digP.append((calib[9] << 8) | calib[8])
+        digP.append((calib[11]<< 8) | calib[10])
+        digP.append((calib[13]<< 8) | calib[12])
+        digP.append((calib[15]<< 8) | calib[14])
+        digP.append((calib[17]<< 8) | calib[16])
+        digP.append((calib[19]<< 8) | calib[18])
+        digP.append((calib[21]<< 8) | calib[20])
+        digP.append((calib[23]<< 8) | calib[22])
+        digH.append( calib[24] )
+        digH.append((calib[26]<< 8) | calib[25])
+        digH.append( calib[27] )
+        digH.append((calib[28]<< 4) | (0x0F & calib[29]))
+        digH.append((calib[30]<< 4) | ((calib[29] >> 4) & 0x0F))
+        digH.append( calib[31] )
+	
+        for i in range(1,2):
+            if digT[i] & 0x8000:
+                digT[i] = (-digT[i] ^ 0xFFFF) + 1
+
+        for i in range(1,8):
+            if digP[i] & 0x8000:
+                digP[i] = (-digP[i] ^ 0xFFFF) + 1
+
+        for i in range(0,6):
+            if digH[i] & 0x8000:
+                digH[i] = (-digH[i] ^ 0xFFFF) + 1  
+
+    def compensate_P(self, adc_P):
+        global  t_fine
+        pressure = 0.0
+	
+        v1 = (t_fine / 2.0) - 64000.0
+        v2 = (((v1 / 4.0) * (v1 / 4.0)) / 2048) * digP[5]
+        v2 = v2 + ((v1 * digP[4]) * 2.0)
+        v2 = (v2 / 4.0) + (digP[3] * 65536.0)
+        v1 = (((digP[2] * (((v1 / 4.0) * (v1 / 4.0)) / 8192)) / 8)  + ((digP[1] * v1) / 2.0)) / 262144
+        v1 = ((32768 + v1) * digP[0]) / 32768
+	
+        if v1 == 0:
+            return 0
+        pressure = ((1048576 - adc_P) - (v2 / 4096)) * 3125
+        if pressure < 0x80000000:
+            pressure = (pressure * 2.0) / v1
+        else:
+            pressure = (pressure / v1) * 2
+        v1 = (digP[8] * (((pressure / 8.0) * (pressure / 8.0)) / 8192.0)) / 4096
+        v2 = ((pressure / 4.0) * digP[7]) / 8192.0
+        pressure = pressure + ((v1 + v2 + digP[6]) / 16.0)  
+
+        #print "pressure : %7.2f hPa" % (pressure/100)
+        return "{:.2f}".format(pressure/100)
+
+    def compensate_T(self, adc_T):
+        global t_fine
+        v1 = (adc_T / 16384.0 - digT[0] / 1024.0) * digT[1]
+        v2 = (adc_T / 131072.0 - digT[0] / 8192.0) * (adc_T / 131072.0 - digT[0] / 8192.0) * digT[2]
+        t_fine = v1 + v2
+        temperature = t_fine / 5120.0
+        #print "temp : %-6.2f ℃" % (temperature) 
+        return "{:.2f}".format(temperature)
+
+    def compensate_H(self, adc_H):
+        global t_fine
+        var_h = t_fine - 76800.0
+        if var_h != 0:
+            var_h = (adc_H - (digH[3] * 64.0 + digH[4]/16384.0 * var_h)) * (digH[1] / 65536.0 * (1.0 + digH[5] / 67108864.0 * var_h * (1.0 + digH[2] / 67108864.0 * var_h)))
+        else:
+            return 0
+        var_h = var_h * (1.0 - digH[0] * var_h / 524288.0)
+        if var_h > 100.0:
+            var_h = 100.0
+        elif var_h < 0.0:
+            var_h = 0.0
+        #print "hum : %6.2f ％" % (var_h)
+        return "{:.2f}".format(var_h)
+
+    def readBME(self):
+        try:
+            data = []
+            for i in range (0xF7, 0xF7+8):
+                if not self.extra_bus == None:
+                    data.append(self._exbus.read_byte_data(self.bme280_i2c_address, i))
+                else:
+                    data.append(self._bus.read_byte_data(self.bme280_i2c_address, i))
+	    pres_raw = (data[0] << 12) | (data[1] << 4) | (data[2] >> 4)
+	    temp_raw = (data[3] << 12) | (data[4] << 4) | (data[5] >> 4)
+	    hum_raw  = (data[6] << 8)  |  data[7]
+	
+	    self.temperature = self.compensate_T(temp_raw)
+	    self.pressure = self.compensate_P(pres_raw)
+	    self.humidity = self.compensate_H(hum_raw)
+            error = 0
+        except::
+            error = -100
+        return dict(temperature=self.temperature, pressure=self.pressure, humidity=self.humidity, error=error)
 
     def readData(self):
         if not self.available():
@@ -176,13 +342,19 @@ class AirConditionMonitor:
         script_dir = os.path.dirname(os.path.abspath(__file__))
     )
 
-    def __init__(self):
-        self._ccs811 = CCS811()
+    def __init__(self, md=CCS811_DRIVE_MODE_1SEC, a=CCS811_ADDRESS, b=BME280_ADDRESS, bn=1, eb=None):               
+        self._ccs811 = CCS811_BME280(mode=md, address=a, i2cbme=b, bus_no=bn, extra_bus=eb)
         self.co2_status = self.CO2_STATUS_LOW
         self.init_logger()
         self.co2 = 0
         self.TVOC = 0
-        
+        self.temperature = 0
+        self.humidity = 0
+        self.pressure = 0
+        self.update = 0
+        self._ccs811.setup()                                       # bme280 set-up
+        self._ccs811.get_calib_param()  
+      
     def init_logger(self):
         self._logger = getLogger(__class__.__name__)
         file_handler = FileHandler(self.LOG_FILE)
@@ -232,12 +404,13 @@ class AirConditionMonitor:
 
             time.sleep(2)
 
-    def get_co2_dat(self, oneShot=True):
+    def get_sparkfun_combo_dat(self, oneShot=True):
         while not self._ccs811.available():
             pass
 
         run_loop = True
         while run_loop:
+            self.update = 0
             if not self._ccs811.available():
                 time.sleep(1)
                 continue
@@ -255,10 +428,21 @@ class AirConditionMonitor:
 
                     self.co2 = self._ccs811.geteCO2()
                     self.TVOC = self._ccs811.getTVOC()
+                    bme280_dat = self._ccs811.readBME()
+                    if bme280_dat['error'] == 0:
+                        self.temperature = bme280_dat['temperature']
+                        self.pressure = bme280_dat['pressure']
+                        self.humidity = bme280_dat['humidity']
+                    else:
+                        self.update = -300                     
                     if oneShot == True:
                         run_loop = False
+                    self.update = 1
+                else:
+                    self.update = -200
             except:
                 self._logger.error(sys.exc_info())
+                self.update = -100
 
 # fuzzy logic controller with temperature zones
 #
@@ -323,31 +507,46 @@ def c_to_f(temp)
 
 def get_hour():
     return int(str(datetime.datetime.now()).split(" ")[1].split(":")[0])
-                
-if __name__ == '__main__':
-    i2c = board.I2C()
-    bme280_2 = adafruit_bme280.Adafruit_BME280_I2C(i2c,0x77)
-	
-    air_condition_monitor = AirConditionMonitor()
-    air_condition_monitor.get_co2_dat()
-    print("ccs811 sensor:",int(air_condition_monitor.co2)," ",int(air_condition_monitor.TVOC))      
-    print("bme200 sensor:",int(bme280_2.temperature),"℃  ",int(bme280_2.relative_humidity),"%  ", int(bme280_2.pressure),"hPa")   
+             
+def run():
+    if ada_fruit == True:
+        i2c = board.I2C()
+        bme280_2 = adafruit_bme280.Adafruit_BME280_I2C(i2c,0x77)
+        print("bme200 sensor:",int(bme280_2.temperature),"℃  ",int(bme280_2.relative_humidity),"%  ", int(bme280_2.pressure),"hPa")
+        LOOP_CYCLE = 1.0
+    else:	
+        chosen_update_rate = CCS811_DRIVE_MODE_1SEC
+        air_condition_monitor = AirConditionMonitor(chosen_update_rate)
+        air_condition_monitor.get_sparkfun_combo_dat()
+        if air_condition_monitor.update == 1:
+            print("ccs811 sensor:",int(air_condition_monitor.co2)," ",int(air_condition_monitor.TVOC))      
+            print("bme200 sensor:",int(air_condition_monitor.temperature),"℃  ",int(air_condition_monitor.humidity),"%  ", int(air_condition_monitor.pressure),"hPa")  
+        LOOP_CYCLE = 1.0 * list_of_upd_cycles[int(str(chosen_update_rate),16)]
 
     fuzzy_model = fuzzy_controller()
-    day = 0    
-    LOOP_CYCLE = 2.0
-    while True:
-        air_condition_monitor.get_co2_dat()	
-        #print("ccs811 sensor: CO2= ",int( air_condition_monitor.co2)," TVOC= ",int( air_condition_monitor.TVOC )) 
-        self._logger.info("CO2: {0}ppm, TVOC: {1}".format(air_condition_monitor.co2, air_condition_monitor.TVOC))     
-        #print("bme200 sensor: T= ",int(bme280_2.temperature),"℃  H= ",int( bme280_2.relative_humidity),"%  P= ", int(bme280_2.pressure),"hPa") 
-        self._logger.info("T: {0}℃, H: {1} P:{2}".format(bme280_2.temperature, bme280_2.relative_humidity, bme280_2.pressure)) 
+    day = 0
         
-        fuzzy_model.input[‘temp’] = bme280_2.temperature
-        fuzzy_model.compute()
-        temp = fuzzy_model.output[‘ac_temp’]	
-        #print(" fuzzy model predicts temp set-point of ", temp, "℃  ", c_to_f(temp), "F")
-        self._logger.info("fuzzy model predicts temp set-point of {0}℃ , {1}F".format(temp, c_to_f(temp)))   
+    while True:
+        if ada_fruit == False:                                                            # we are using the sparkfun combo
+            air_condition_monitor.get_sparkfun_combo_dat()
+            if air_condition_monitor.update == 1:	
+                #print("ccs811 sensor: CO2= ",int( air_condition_monitor.co2)," TVOC= ",int( air_condition_monitor.TVOC )) 
+                self._logger.info("CO2: {0}ppm, TVOC: {1}".format(air_condition_monitor.co2, air_condition_monitor.TVOC))     
+                self._logger.info("T: {0}℃, H: {1} P:{2}".format(air_condition_monitor.temperature, air_condition_monitor.humidity, air_condition_monitor.pressure))
+                fuzzy_input_temp = air_condition_monitor.temperature
+            else:
+                fuzzy_input_temp = -100
+        else:
+            #print("bme200 sensor: T= ",int(bme280_2.temperature),"℃  H= ",int( bme280_2.relative_humidity),"%  P= ", int(bme280_2.pressure),"hPa")
+            self._logger.info("T: {0}℃, H: {1} P:{2}".format(bme280_2.temperature, bme280_2.relative_humidity, bme280_2.pressure)) 
+            fuzzy_input_temp = bme280_2.temperature
+
+        if fuzzy_input_temp >= -10:        
+            fuzzy_model.input[‘temp’] = fuzzy_input_temp
+            fuzzy_model.compute()
+            temp = fuzzy_model.output[‘ac_temp’]	
+            #print(" fuzzy model predicts temp set-point of ", temp, "℃  ", c_to_f(temp), "F")
+            self._logger.info("fuzzy model predicts temp set-point of {0}℃ , {1}F".format(temp, c_to_f(temp)))   
 
         co2_state = air_condition_monitor.status()
         #print("co2 status = ",co2_state)
@@ -365,3 +564,9 @@ if __name__ == '__main__':
                 self._logger.info(" ----- day time ------")
                 day = 2
         time.sleep(LOOP_CYCLE)
+
+if __name__ == '__main__':
+    try:
+        run()
+    except KeyboardInterrupt:
+        pass
