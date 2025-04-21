@@ -334,7 +334,8 @@ if __name__ == '__main__':
     print("bme200 sensor:",int(bme280_2.temperature),"℃  ",int(bme280_2.relative_humidity),"%  ", int(bme280_2.pressure),"hPa")   
 
     fuzzy_model = fuzzy_controller()
-    day = 0        
+    day = 0    
+    LOOP_CYCLE = 2.0
     while True:
         air_condition_monitor.get_co2_dat()	
         #print("ccs811 sensor: CO2= ",int( air_condition_monitor.co2)," TVOC= ",int( air_condition_monitor.TVOC )) 
@@ -363,3 +364,4 @@ if __name__ == '__main__':
             if not day == 2:
                 self._logger.info(" ----- day time ------")
                 day = 2
+        time.sleep(LOOP_CYCLE)
