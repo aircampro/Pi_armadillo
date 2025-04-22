@@ -19,12 +19,20 @@ if ada_fruit == True:
     import board
     from adafruit_bme280 import basic as adafruit_bme280
 
+# Temperature Sensor Module Board MADT7410-MOD
+# ADT7410 (manufactured by Analog Devices)
+# Chip: Analog Devices ADT7410
+#	http://www.analog.com/en/products/analog-to-digital-converters/integrated-special-purpose-converters/integrated-temperature-sensors/adt7410.html
+ADT7410 = False
+import ctypes
+
 # combined sparkfun CCS811/BME280 Combo Board on i2c
 #
 # for ccs811 co2 monitor 
 #
 CCS811_ADDRESS  =  0x5B
 BME280_ADDRESS = 0x77                           # sometimes 0x76
+ADT7410_ADDRESS = 0x48
 
 CCS811_STATUS = 0x00
 CCS811_MEAS_MODE = 0x01
@@ -49,6 +57,65 @@ t_fine = 0.0
 digT = []
 digP = []
 digH = []
+
+# convert bytes/words between signed and unsigned
+#
+def s_u8(byte, mode="U8"):
+    if mode == "S8":
+        return ctypes.c_int8(byte).value
+    elif mode == "U8":
+        return ctypes.c_uint8(byte).value
+
+def s_u16(byte, mode="U16"):
+    if mode == "S16":
+        return ctypes.c_int16(byte).value
+    elif mode == "U16":
+        return ctypes.c_uint16(byte).value
+
+def s_u32(byte, mode="U32"):
+    if mode == "S32":
+        return ctypes.c_int32(byte).value
+    elif mode == "U32":
+        return ctypes.c_uint32(byte).value
+
+class ADT7410_TEMP:
+    LOG_FILE = '{script_dir}/logs/adt7410.log'.format(
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+    )
+
+    def __init__(self, address=ADT7410_ADDRESS, bus_no=1):
+        self.init_logger()
+        self.adt7410_address = address
+        self._bus = smbus.SMBus(bus_no)
+	self.temperature = 0
+        self.error = 0
+        self.cmdbuff2 = 0
+        self.cmdbuff3 = 0 
+
+    def init_logger(self):
+        self._logger = getLogger(__class__.__name__)
+        file_handler = FileHandler(self.LOG_FILE)
+        formatter = Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        file_handler.setFormatter(formatter)
+        self._logger.addHandler(file_handler)
+        self._logger.setLevel(DEBUG)
+
+    def writeReg(self, reg_address=0, data=None):
+        if data==None:
+            data=(ctypes.c_uint8 * 1)()        
+        self._bus.write_byte_data(self.adt7410_address, reg_address, data)
+
+    def readReg(self):
+        try:
+            cmdbuff = self._bus.read_i2c_block_data(self.adt7410_address, 0x00, 12)
+            tmp = (((s_u(cmdbuff[0]) << 8) | s_u(cmdbuff[1])) >> 3)
+            if (tmp >= 4096):
+                tmp -= 8192
+            self.temperature = tmp / 16.0
+            self.cmdbuff2 = cmdbuff[2]
+            self.cmdbuff3 = cmdbuff[3] 
+        except::
+            self.error = -100
 
 class CCS811_BME280:
     LOG_FILE = '{script_dir}/logs/ccs811_bme280.log'.format(
@@ -513,7 +580,12 @@ def run():
         i2c = board.I2C()
         bme280_2 = adafruit_bme280.Adafruit_BME280_I2C(i2c,0x77)
         print("bme200 sensor:",int(bme280_2.temperature),"℃  ",int(bme280_2.relative_humidity),"%  ", int(bme280_2.pressure),"hPa")
+        air_condition_monitor = AirConditionMonitor()                                   # for logger only
         LOOP_CYCLE = 1.0
+    elif ADT7410 == True:
+        t_sensor = ADT7410_TEMP()
+        t_sensor.readReg()
+        print("adt7410 : ",t_sensor.temperature,"℃  ")
     else:	
         chosen_update_rate = CCS811_DRIVE_MODE_1SEC
         air_condition_monitor = AirConditionMonitor(chosen_update_rate)
@@ -536,12 +608,16 @@ def run():
                 fuzzy_input_temp = air_condition_monitor.temperature
             else:
                 fuzzy_input_temp = -100
+        elif ADT7410 == True:
+            t_sensor.readReg()
+            t_sensor._logger.info(("adt7410 : ",t_sensor.temperature,"℃  ")
+            fuzzy_input_temp = t_sensor.temperature
         else:
             #print("bme200 sensor: T= ",int(bme280_2.temperature),"℃  H= ",int( bme280_2.relative_humidity),"%  P= ", int(bme280_2.pressure),"hPa")
             air_condition_monitor._logger.info("T: {0}℃, H: {1} P:{2}".format(bme280_2.temperature, bme280_2.relative_humidity, bme280_2.pressure)) 
             fuzzy_input_temp = bme280_2.temperature
 
-        if fuzzy_input_temp >= -10:        
+        if fuzzy_input_temp >= -90:        
             fuzzy_model.input[‘temp’] = fuzzy_input_temp
             fuzzy_model.compute()
             temp = fuzzy_model.output[‘ac_temp’]	
