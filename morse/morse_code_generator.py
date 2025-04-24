@@ -175,11 +175,11 @@ MORSE_DICT_RU ={
     "Ы" : "-.--",
     "З" : "--..",
     "Ч" : "---.",	
-	"Ш" : "----",
-	"Ъ" : "--.--",
-	"Э" : "..-..",
-	"Ю" : "..--",
-	"Я" : ".-.-",	
+    "Ш" : "----",
+    "Ъ" : "--.--",
+    "Э" : "..-..",
+    "Ю" : "..--",
+    "Я" : ".-.-",	
     " " : "/",
     "1" : ".----",
     "2" : "..---",
@@ -289,8 +289,9 @@ def morse_sound(morse):
         else:
             sleep(0.075)
 
-def send_morse_sound(msg, morse_dict):
-    msg = dakuten_separator(hira2kata(msg))                 # kata = jaconv.hira2hkata(hira) for japanese
+def send_morse_sound(msg, morse_dict, jp=False):
+    if jp == True:
+        msg = dakuten_separator(hira2kata(msg))                 # kata = jaconv.hira2hkata(hira) for japanese
     encoded_msg = morse_encode(msg, morse_dict)
     print(encoded_msg)
     decoded_msg = morse_decode(encoded_msg, morse_dict)
@@ -308,9 +309,9 @@ if __name__ == '__main__':
         
     # test in japanese
     if argc >= 3:
-        send_morse_sound(sys.argv[2], MORSE_DICT_JP)
+        send_morse_sound(sys.argv[2], MORSE_DICT_JP, True)
     else:
-        send_morse_sound('よう！げんき？', MORSE_DICT_JP)
+        send_morse_sound('よう！げんき？', MORSE_DICT_JP, True)
         
     # test in russian
     if argc >= 4:
