@@ -101,7 +101,7 @@ def read_ir_sent(pi_handle, gpio_pin=19, action_pin=23):
     cmd_printed = cmdline(run_str).stdout.readline()
     print(cmd_printed)    
     ir_sent = create_hex_from_list(my_send, "ac:request")
-    for msgs_recorded in [ "ac:cool25", "ac:cool26", "ac:cool27", "open_door", "close_door", "tv" ]:     # msgs we sent and recorded
+    for msgs_recorded in [ "ac:cool25", "ac:cool26", "ac:cool27", "open_door", "close_door", "tv_button" ]:     # msgs we sent and recorded
         ir_sig = create_hex_from_list(codes, msgs_recorded)   
         if ir_sig == ir_sent:
             print("matches ",msgs_recorded)                                                        # if it matched any that were recorded it prints it
