@@ -841,8 +841,8 @@ class PanasonicFPX_Cmd(Enum):
     RemoteControl = "RM"
     Abort = "AB"
 
-def pana_fpx_connect(spt='/dev/ttyUSB0', baud_rt=9600, timout=0.1):
-    ser = serial.Serial(spt, baud_rt, timeout=timout)
+def pana_fpx_connect(spt='/dev/ttyUSB0', baud_rt=9600, timout=0.1, par=serial.PARITY_ODD, sb=serial.STOPBITS_ONE):
+    ser = serial.Serial(spt, baud_rt, timeout=timout, parity=par, stopbits=sb)
     return ser
 
 def pana_fpx_disconnect(ser)
