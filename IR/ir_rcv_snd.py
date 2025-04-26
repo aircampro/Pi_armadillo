@@ -39,7 +39,22 @@ import json
 import os
 import pigpio
 from subprocess import PIPE, Popen
+from enum import Enum
 
+list_of_manu = [ "RC5", "RC6", "NEC", "SONY", "PANASONIC", "JVC", "SAMSUNG", "WHYNTER", "AIWA_RC_T501", "LG", "BANDO",  "SANYO", "MITSI", "DISH", "SHARP", "DENON",  "PRONTO",  "LEGO_PF" ]
+
+class IR_Freq(Enum):   
+    BandO_KHZ      = 455                                                # some B&O are also 38 KHz (std)
+    SONY_KHZ       = 40
+    BOSEWAVE_KHZ   = 38
+    DENON_KHZ      = 38
+    JVC_KHZ        = 38
+    LG_KHZ         = 38
+    NEC_KHZ        = 38
+    SAMSUNG_KHZ    = 38
+    KASEIKYO_KHZ   = 37                                                 # panasonic
+    RC5_RC6_KHZ    = 36
+    
 # run cmdline task
 def cmdline(command):
     """
@@ -111,16 +126,6 @@ def read_ir_sent(pi_handle, gpio_pin=19, action_pin=23):
                 pi_handle.write(action_pin,0)     
             elif ir_sig == "tv_button":                                                            # tv button on control handheld
                 send_ir_file("tv_data", "tv_button_1")                                             # send an IR signal to the TV using its protocol e.g. panasonic
-                
-# send id if it has been already recorded into the file with pre-post-ambles as sepcified and frequency, short code length as specified  
-#                                    
-def send_ir_file_id(gpio_pin=18, send_fle, id0, pre=50, post=200, f=38, s=10):
-    """
-    sends the data recorded in the file as IR pulses
-    """
-    run_str = f'python3 irrp.py -r -g{gpio_pin} -f {send_fle} -pre {pre} -post {post} -freq {f} -short {s} --no-confirm --post 50 {id0}'   
-    cmd_printed = cmdline(run_str).stdout.readline()
-    print(cmd_printed)
 
 # control door lock from IR handheld controller
 #
@@ -135,3 +140,29 @@ def key_door():
         except Exception as e:
             print("Exception door lock control = ",e)
         
+# mitsubishi AC control (e.g. set home heating on and off)
+#  
+def make_mitsiAC_file(filenm):
+    # ON (22 ℃)
+    mitsiAC_on_22 = [ 3200,1600, 400,400, 400,1200, 400,350, 450,350, 450,1150, 450,350, 400,1200, 400,350, 450,350, 450,1150, 450,1150, 400,1200, 400,350, 450,1150, 450,350, 450,1150, 450,1150, 400,1150, 450,350, 450,350, 450,350, 450,350, 400,1200, 400,1150, 450,350, 450,1150, 450,1150, 400,400, 400,350, 450,1150, 450,350, 450,350, 450,1150, 400,350, 450,400, 400,1150, 450,1150, 450,350, 400,1200, 400,1150, 450,1150, 450,1150, 450,1100, 450,1150, 450,1150, 450,1150, 450,1100, 450,1150, 450,350, 450,350, 450,350, 450,300, 450,350, 450,350, 450,350, 450,350, 450,1150, 450,1150, 400,1200, 400,1200, 400,1150, 450,1150, 400,1150, 450,1150, 450,350, 450,350, 450,350, 400,400, 400,350, 450,350, 450,350, 450,350, 450,1150, 450,1150, 400,350, 450,400, 400,350, 450,1150, 450,300, 500,1150, 400,400, 400,350, 450,1150, 450,1150, 450,1100, 450,350, 450,1150, 450,350, 450] # F288C8C8
+    # OFF
+    mitsiAC_off = [ 3200,1650, 400,350, 450,1150, 450,350, 400,400, 400,1200, 400,350, 450,1150, 450,350, 400,400, 450,1150, 450,1100, 450,1150, 450,350, 450,1150, 400,400, 400,1150, 450,1150, 400,1200, 450,350, 400,350, 450,350, 450,350, 450,1150, 450,1100, 500,350, 400,1150, 450,1150, 450,350, 450,350, 450,1150, 400,400, 400,400, 400,1150, 450,350, 400,400, 450,1150, 400,1150, 450,350, 450,1150, 450,1150, 450,1100, 450,1150, 450,1150, 450,1100, 500,1100, 450,1150, 450,1150, 450,1150, 450,350, 400,350, 450,350, 450,350, 450,350, 450,350, 450,350, 450,350, 400,1150, 450,1150, 450,1150, 450,1100, 500,1150, 400,1150, 450,1150, 450,1150, 450,300, 450,350, 450,350, 450,350, 450,350, 400,400, 400,400, 450,350, 400,1200, 400,1150, 450,350, 400,1200, 400,400, 450,1100, 450,350, 450,1150, 450,350, 450,350, 400,1150, 450,350, 450,1150, 450,350, 400,1200, 400,400, 450]  # 51E87A6C
+    with open(filenm, "w") as f:
+        rec = { 'AC_22' : mitsiAC_on_22 }
+        records = json.dumps(rec)
+        f.write(records)
+        rec = { 'AC_OFF' : mitsiAC_off }
+        records = json.dumps(rec)
+        f.write(records)
+                        
+# send id if it has been already recorded into the file with pre-post-ambles as sepcified and frequency, short code length as specified  
+#                                    
+def send_ir_file_id(gpio_pin=18, send_fle, id0, pre=50, post=200, f=38, s=10):
+    """
+    sends the data recorded in the file as IR pulses
+    """
+    run_str = f'python3 irrp.py -r -g{gpio_pin} -f {send_fle} -pre {pre} -post {post} -freq {f} -short {s} --no-confirm --post 50 {id0}'   
+    cmd_printed = cmdline(run_str).stdout.readline()
+    print(cmd_printed)
+
+
