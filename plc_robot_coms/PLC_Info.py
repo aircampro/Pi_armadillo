@@ -801,6 +801,91 @@ def writeKVSeries(client):
         response=response.decode('utf-8')
     return response
 
+# ================= Panasonic FP-X MEWTOCOL-COM ===================== #
+from enum import Enum
+import ctypes 
+import serial
+
+# possible STX
+PanaFPX_STX1 = "%"                         # upto 118 chars
+PanaFPX_STX1 = "<"                         # upto 2048 chars
+
+# readnack data format
+class PanasonicReadBack:
+    stx = 0
+    stat_id = 0
+    command = "RC"
+    data = "0"    
+
+# possible commands to PLC
+class PanasonicFPX_Cmd(Enum):   
+    Read1      = "RDS"                                                
+    ReadMulti  = "RDP"
+    ReadRange  = "RCC"
+    Write1      = "WCS"                                                
+    WriteMulti  = "WCP"
+    WriteRange  = "WCC"
+    ReadData = "RD"
+    WriteData = "WD"
+    ReadAccSet = "RS"
+    WriteAcc = "WS"
+    ReadAccVal = "RK"
+    ReadAccVal = "WK"
+    ResetContacts = "MC"
+    ResetData = "MD"
+    StartMon = "MG"
+    Fill = "SD"
+    ReadSys = "RR"
+    WriteSys = "WR"
+    ReadStatus = "RT"
+    RemoteControl = "RM"
+    Abort = "AB"
+
+def pana_fpx_connect(spt='/dev/ttyUSB0', baud_rt=9600, timout=0.1):
+    ser = serial.Serial(spt, baud_rt, timeout=timout)
+    return ser
+
+def pana_fpx_disconnect(ser)
+    ser.close()
+
+def pana_fpx_read_write_request(ser,stx=PanaFPX_STX1,statno=1,cmd=PanasonicFPX_Cmd.Read1.value,reg="R0001",skipcc=False):
+    
+    statno %= 100                                                     # statno must be 01-99
+    strmsg = stx+str(statno)
+    if len(strstatno) == 2:
+        strmsg = "0"+strstatno+"#"+cmd+reg
+    else:
+        strmsg += "#"+cmd+reg
+    cc=(ctypes.c_uint8 * 3)()                                          # last 3 bytes are check code with CR
+    cc[0] = 0x2a                                                       # ** means ignore check code
+    cc[1] = 0x2a
+    if skipcc == False:
+        cccalc = 0
+        for s in strmsg:
+            cccalc ^= ord(s)
+        cc[0] = cccalc
+    cc[2] = 0x0d
+    enc_msg = strmsg.encode('utf-8') + bytearray(cc)
+    ser.send(enc_msg)                                                  # write request string
+    line = ser.readline()                                              # read response
+    io_str = line.decode('utf-8')
+    cc_chk = 0
+    if skipcc == False:
+        cccalc = 0
+        for s in io_str:
+            cccalc ^= ord(s)
+        cc[0] = cccalc
+        if cc[1] == io_str[-2] and cc[0] == io_str[-3]:                # 3rd and 2nd last are equal to check codes
+            cc_chk = 1
+    return io_str[:-3], cc_chk                                         # return without checksum and CR endbyte
+
+def pana_fpx_parse_read1(msg):
+    pr = PanasonicReadBack()
+    pr.stx = msg[0]                                                    # start transmission char
+    pr.stat_id = ord(msg[1:3])                                         # station number
+    pr.command = msg[5:7]                                              # command preceded by $
+    pr.data[7:]                                                        # rest of msg
+    return pr
 
 # ================= iQ-R TCP and UDP ===================== #
 dataIQR = [
