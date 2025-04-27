@@ -600,7 +600,7 @@ def readYoEaMs(tcp_udp_connect_obj, add='D00001', blen='04', sign="unsigned", bi
 # 
 KV_HOST, KV_PORT = '192.168.1.5', 8501
 
-def connectYoEaMs(host=KV_HOST, port=KV_PORT):
+def connectKV5000(host=KV_HOST, port=KV_PORT):
     return connectTCP(host, port)
 
 # example add=D0000.D 2 is 32 bit unsigned, 
@@ -1160,7 +1160,7 @@ def display_STRING_data(finsudp, reg='D1021', n=5):
     
 # ==========================================allen bradley==================================================================
 # ---- AB ------ controlLogix
-AB_IP='aaa.bbb.ccc.ddd'
+AB_IP='10.0.1.2'
 
 def connectAllebBradleyCL():
     from pylogix import PLC
