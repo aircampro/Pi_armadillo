@@ -1,8 +1,9 @@
 # !/usr/bin python3
 #
-# fuzzy logic temperature controller 
+# Fuzzy logic temperature controller 
 # using SparkFun CCS811/BME280 Combo Board on i2c to read data
 # can connect using sparkfun HAT on raspi
+# added IR control of Mitsubishi AC HVAC system 
 #
 import os
 import smbus2 as smbus
@@ -11,7 +12,10 @@ from logging import basicConfig, getLogger, DEBUG, FileHandler, Formatter
 import sys
 import datetime
 import time
+from hvac_ircontrol.ir_sender import LogLevel
+from hvac_ircontrol.mitsubishi import Mitsubishi, ClimateMode, FanMode, VanneVerticalMode, VanneHorizontalMode, ISeeMode, AreaMode, PowerfulMode
 
+mitsi_ir_gpio_pin = 23                             # pin connected for IR controller to AC system
 ada_fruit = False                                  # set True to use adafruit lib for bme280 only otherwise sparkfun combo CCS811/BME280
 if ada_fruit == True:
     # for bme280 temp, pressure, humidity 
@@ -114,6 +118,7 @@ class ADT7410_TEMP:
             self.temperature = tmp / 16.0
             self.cmdbuff2 = cmdbuff[2]
             self.cmdbuff3 = cmdbuff[3] 
+            self.error = 0
         except::
             self.error = -100
 
@@ -597,9 +602,10 @@ def run():
 
     fuzzy_model = fuzzy_controller()
     day = 0
-        
+    HVAC = Mitsubishi(mitsi_ir_gpio_pin, LogLevel.ErrorsOnly)            # define object for IR communication
+       
     while True:
-        if ada_fruit == False:                                                            # we are using the sparkfun combo
+        if ada_fruit == False:                                           # we are using the sparkfun combo
             air_condition_monitor.get_sparkfun_combo_dat()
             if air_condition_monitor.update == 1:	
                 #print("ccs811 sensor: CO2= ",int( air_condition_monitor.co2)," TVOC= ",int( air_condition_monitor.TVOC )) 
@@ -639,7 +645,20 @@ def run():
             if not day == 2:
                 air_condition_monitor._logger.info(" ----- day time ------")
                 day = 2
+
+        HVAC.send_command(
+            climate_mode=ClimateMode.Cold,
+            temperature=temp,
+            fan_mode=FanMode.Auto,
+            vanne_vertical_mode=VanneVerticalMode.Auto,
+            vanne_horizontal_mode=VanneHorizontalMode.Swing,
+            isee_mode=ISeeMode.ISeeOn,
+            area_mode=AreaMode.Full,
+            powerful=PowerfulMode.PowerfulOn
+            )
         time.sleep(LOOP_CYCLE)
+
+    HVAC.power_off()
 
 if __name__ == '__main__':
     try:
