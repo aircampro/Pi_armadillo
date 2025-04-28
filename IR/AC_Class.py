@@ -184,7 +184,9 @@ class AreaMode:
     Left = 0b01000000           # 0x40      0100 0000       64
     Right = 0b11000000          # 0xC0      1100 0000      192
     Full = 0b10000000           # 0x80      1000 0000      128
-    
+
+# send format is :- HdrMark, HdrSpace [ data...  BitMark, OneSpace == 1 or BitMark, ZeroSpace == 0  end of data...] RptMark   
+# 
 class Mitsi_Delay:
     """
     Mitsubishi AC Delay
@@ -300,6 +302,41 @@ class Constants:
     NbBytes = 18
     NbPackets = 2           # For Mitsubishi IR protocol we have to send two time the packet data
 
+# reverse the bits in a byte
+def reverse_bits( data_byte ):
+    data_byte_in = (ctypes.c_uint8 * 1)()                                  # force uint8 type so it works with -1 -ve numbers
+    data_byte_in[0] = data_byte
+    ss = str(bin(data_byte_in[0]))
+    ss = ss[2:]                                                            # cut pre-amble
+    leni = len(ss)
+    if leni == 7:
+        ss = "0"+ss
+    elif leni == 6:
+        ss = "00"+ss   
+    elif leni == 5:
+        ss = "000"+ss   
+    elif leni == 4:
+        ss = "0000"+ss  
+    elif leni == 3:
+        ss = "00000"+ss  
+    elif leni == 2:
+        ss = "000000"+ss    
+    elif leni == 1:
+        ss = "0000000"+ss  
+    elif leni == 0 or leni >= 9:
+        print("invalid length or object to reverse bits should be a byte")
+        return "-1", -1         
+    i = len(ss) - 1                                                               # index
+    aa = ''
+    val = 0
+    while i >= 0:
+        aa += ss[i]
+        if int(ss[i]) == 1:
+            val |= int(math.pow(2,i)) 
+        i -= 1
+    str_val = '0b' + aa
+    return str_val, val
+    
 class IR_AC:
     """
     Mitsubishi AC, Toshiba AC, Panasonic AC
@@ -535,11 +572,17 @@ class IR_AC:
         data[18] %= (Constants.MaxMask + 1)
         
         # frame 1 is dataconst not sent in reverse order (uncomment of you need this)  0x4004072000000060
-        # dataconst.reverse()
+        # dataconst.reverse()                           -- this is reverse byte order
+        for ii, d in enumerate(dataconst):
+            dataconst[ii] = reverse_bits(d)[1]          # -- this is reverse bit order
+            
         sender.send_data(dataconst, Constants.MaxMask, True, Constants.NbPackets)
 
         # frame 2 is data not sent in reverse order
-        # data.reverse()        
+        # data.reverse()                               -- this is reverse byte order
+        for ii, d in enumerate(data):
+            data[ii] = reverse_bits(d)[1]              # -- this is reverse bit order        
+
         sender.send_data(data, Constants.MaxMask, True, Constants.NbPackets)
 
     def send_command_mitsiw001cp(self, HVAC_Temp=20, state=1, mode=Mitsi_w001cp_Mode.AUTO.value, fan_mode=Mitsi_w001cp_Fan.SPEED_AUTO.value | Mitsi_w001cp_Fan.VANNE_AUTO.value  , typ=AC_Types.MITSUBISHI.value ):
