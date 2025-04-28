@@ -1,0 +1,18 @@
+# example.proto
+# python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. example.proto
+#
+syntax = "proto3";
+
+package example;
+
+service Greeter {
+  rpc gRPCCmdLine (gRPCRequest) returns (gRPCReply) {}
+}
+
+message gRPCRequest {
+  string command = 1;
+}
+
+message gRPCReply {
+  string message = 1;
+}
