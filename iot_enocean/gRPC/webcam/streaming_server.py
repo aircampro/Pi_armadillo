@@ -37,11 +37,11 @@ class WebcamStreamingService( webcam_streaming_pb2_grpc.WebcamStreamingServicer 
                 ret, frame = cap.read()
                 if ret:
                     if self.mode == 1:
-				        captureBuffer = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                        captureBuffer = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
                     elif self.mode == 2: 
-				        captureBuffer = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                        captureBuffer = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                     else:
-				        captureBuffer = frame
+                        captureBuffer = frame
                         
                     _, buf = cv2.imencode(".jpg", captureBuffer)
 
@@ -54,7 +54,7 @@ class WebcamStreamingService( webcam_streaming_pb2_grpc.WebcamStreamingServicer 
 
                     # f=30fps default
                     time.sleep(1 / self.f)
-		    except KeyboardInterrupt:
+            except KeyboardInterrupt:
                 actv = False
                 cap.release()
                 
@@ -72,6 +72,6 @@ class WebcamStreamingService( webcam_streaming_pb2_grpc.WebcamStreamingServicer 
                 data = capture_data_queue.get()
                 yield webcam_streaming_pb2.CaptureImage(imageBytes=data)
                 capture_data_queue.task_done()
-		    except KeyboardInterrupt:
+            except KeyboardInterrupt:
                 actv = False
                 print("keyboard interrupt!")
