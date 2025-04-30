@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+service WebcamStreaming {
+    rpc StartWebcamStreaming(ClientName) returns (stream CaptureImage) {}
+}
+
+message ClientName {
+    string clientName = 1;
+}
+
+message CaptureImage {
+    bytes imageBytes = 1;
+}
+
