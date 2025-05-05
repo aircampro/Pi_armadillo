@@ -67,14 +67,14 @@ def main():
                                 print('%d: %s' % (k, v))
                             print('')
                             tooltip="altitude "+my_gps.altitude
-							mymap = folium.Map(location=[my_gps.latitude[0],my_gps.longitude[0]], zoom_start=16, tiles="Stamen Terrain")
+                            mymap = folium.Map(location=[my_gps.latitude[0],my_gps.longitude[0]], zoom_start=16, tiles="Stamen Terrain")
                             folium.Marker(
                                 location=[my_gps.latitude[0],my_gps.longitude[0]],
                                 popup="<i>current position</i>",  
                                 tooltip=tooltip,  
                                 icon=folium.Icon(color="red", icon="tower")  
                             ).add_to(mymap)
-							mymap.save('current_location.html')
+                            mymap.save('current_location.html')
 
 if __name__ == "__main__":
     main()
