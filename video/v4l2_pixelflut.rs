@@ -56,8 +56,8 @@ fn main() -> std::io::Result<()> {
                 let b = imgpx.0[2];
 
                 // pixelflut command as described PX <x> <y> <rrggbb(aa)>: Draw a single pixel at position (x, y) 
-				// with the specified hex color code. If the color code contains an alpha channel value, 
-				// it is blended with the current color of the pixel.
+		// with the specified hex color code. If the color code contains an alpha channel value, 
+		// it is blended with the current color of the pixel.
 				
                 // write out each pixel to the projector
                 let pnpx = format!("PX {x} {y} {:x?}{:x?}{:x?}\n", r, g, b);
