@@ -29,14 +29,15 @@ fn main() -> std::io::Result<()> {
     }).unwrap();
 
     // read 2000 frames from the camera and send each pixel to the pixelflut server
-	for i in 0..2000 {
+    for i in 0..2000 {
         let img = camera.capture().unwrap();
         let img_width = img.resolution.0;
         tracing::info!("width: {img_width}");
         let img_height = img.resolution.1;
         tracing::info!("height: {img_height}");
 
-		//let mut file = fs::File::create(&format!("frame-{}.jpg", i)).unwrap();
+        // to write files if you want them (will be slow)
+	//let mut file = fs::File::create(&format!("frame-{}.jpg", i)).unwrap();
         //let mut file = fs::File::create("frame.jpg").unwrap();
         //file.write_all(&img[..]).unwrap();	
         //let img = ImageReader::open("frame.jpg")?.decode().unwrap();
