@@ -71,7 +71,7 @@ class ipTOS:
     immed = 0b010	# immediate
     breakin = 0b011	# Breaking
     prior = 0b100	# Priority Bulletin
-    import = 0b101	# important
+    important = 0b101	# important
     int_net = 0b110	# Internetwork Control
     net = 0b111	    # Network Control
 ipm = IP(dst="10.0.0.45")
@@ -87,7 +87,7 @@ class ipProto:
     UDP = 17
     ESP = 50
 ipm = IP(dst="10.0.0.45")
-ipm.tos = ipTOS.import
+ipm.tos = ipTOS.important
 ipm.proto = ipProto.ESP
 ans  = sr1(ipm)
 ans.show()
