@@ -48,7 +48,7 @@ class Button(tkinter.Button):
         text_message.set("started stand up operation please wait")
         thread = threading.Thread(target = action_but)
         thread.start()
-        thread.join()
+        #thread.join()
 
 class Button2(tkinter.Button):
     def __init__(self):
@@ -63,7 +63,7 @@ class Button2(tkinter.Button):
         text_message.set("started stand down operation please wait")
         thread = threading.Thread(target = action_but2)
         thread.start()
-        thread.join()
+        #thread.join()
 
 class Button3(tkinter.Button):
     def __init__(self):
@@ -79,7 +79,7 @@ class Button3(tkinter.Button):
         text_message.set("started X move operation please wait")
         thread = threading.Thread(target = action_but3)
         thread.start()
-        thread.join()
+        #thread.join()
 
 class Button4(tkinter.Button):
     def __init__(self):
@@ -95,7 +95,7 @@ class Button4(tkinter.Button):
         text_message.set("stopping moving operation please wait")
         thread = threading.Thread(target = action_but4)
         thread.start()
-        thread.join()
+        #thread.join()
 
 class Button5(tkinter.Button):
     def __init__(self):
@@ -111,7 +111,7 @@ class Button5(tkinter.Button):
         text_message.set("starting Y move operation please wait")
         thread = threading.Thread(target = action_but5)
         thread.start()
-        thread.join()
+        #thread.join()
 
 class Button6(tkinter.Button):
     def __init__(self):
@@ -127,7 +127,7 @@ class Button6(tkinter.Button):
         text_message.set("starting Z move operation please wait")
         thread = threading.Thread(target = action_but6)
         thread.start()
-        thread.join()
+        #thread.join()
 
 class Button7(tkinter.Button):
     def __init__(self):
@@ -142,7 +142,7 @@ class Button7(tkinter.Button):
         text_message.set("starting damp operation please wait")
         thread = threading.Thread(target = action_but7)
         thread.start()
-        thread.join()
+        #thread.join()
 
 class Button8(tkinter.Button):
     def __init__(self):
@@ -158,7 +158,7 @@ class Button8(tkinter.Button):
         text_message.set("starting sequence operations please wait")
         thread = threading.Thread(target = action_but8)
         thread.start()
-        thread.join()
+        #thread.join()
       
 def action_but():
     Button_act["state"] = tkinter.DISABLED
