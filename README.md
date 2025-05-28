@@ -106,7 +106,7 @@ io_link
 - io link examples
 
 iot_enocean
-- iot interfaces flask servers databases etc
+- iot interfaces flask servers databases etc to enocean radio, other interfaces OPC BacNet etc 
 
 knx
 - knx and lighting
