@@ -171,6 +171,9 @@ visual_odometry
 visualize
 - visual and lighting
 
+working usb
+- low level usb control
+  
 zigbee
 - comms example via usb port, send a picture over zigbee from drone
 
