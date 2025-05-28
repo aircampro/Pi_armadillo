@@ -88,12 +88,13 @@ germination
 - germination incubator using adafruit
 
 hardware
-
+- controlling direct GPIO inputs and outputs PWM
+  
 haskell
 Glasgow Haskell programming
 
 i2c_spi_gps
-i2c and spi examples
+- i2c and spi examples
 
 io_link
 - io link examples
