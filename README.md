@@ -16,3 +16,154 @@ visual odometry example allowing the feature detection algorithm to be changed.
 .................have fun it is still in development.....
 
 concept pics directory shows overview pictures of interfaces
+
+I will very briefly explain the directories 
+This shows the various areas covered for the libraires and API's in this repository
+Please investigate the directory program for further details I will try to document more detail in time
+
+GUI
+- examples fro trend or control HMI using tkinter
+
+ITL612 IR SENSOR
+- ITL612 IR camera API
+
+PCIe Hailo
+- PCIe interface for AI accelerator Hailo
+
+QR code ANPR stuff
+- read and write QR Codes and Number plates
+
+SonyAlpha
+- sony Alpha camera interface and to mavlink remote controls
+
+Toshiba Telli
+- toshiba telli 
+
+ada_spark
+- safe code can be written in ada spark
+
+ble
+- bluetooth low energy
+
+boost_other
+boost_prog
+- examples using boost API
+
+card reader
+- various card readers Pasori and PCSC etc
+
+cash
+- various cash and card readsers for vending chraging etc
+
+coAP
+- coAP server / client
+
+concept pics
+- an overview concept of the functionality and interfaces provided
+
+crow
+- crow api webserver
+
+data_manip
+- various data manipulation and big data stuff
+
+dicom
+- x ray reader dicom files
+
+drone
+- drone controls and apis
+
+echonet
+- echonet for power charges
+
+erlang
+- erl;ang and elixir program examples
+
+face_robot
+
+fqueue
+- queuing system with modbus slave/master
+
+germination
+- germination incubator using adafruit
+
+hardware
+
+haskell
+Glasgow Haskell programming
+
+i2c_spi_gps
+i2c and spi examples
+
+io_link
+- io link examples
+
+iot_enocean
+- iot interfaces flask servers databases etc
+
+knx
+- knx and lighting
+
+mimo
+- adaptive control using mimo api
+
+morse
+- morse code genertor 
+
+openCV
+- openCV examples 
+
+phoxi
+- phoxi pointcloud lidar scanner interface
+
+pi
+- cpu optimization for very fast actions 
+
+plc_robot_coms
+- interfaces to PLCs and Robots and remote I/O's 
+
+pluto
+- interface code for Analog devices pluto SDR software defined radio
+
+python mavlink
+- mavlink for robot and drone remote controls
+
+realsense
+- realsense camera interface
+
+resonon_pica_hyperspec_imager
+- interface to camera controls 
+
+rust_gripper
+- rust code for gripper controls
+
+rust_photon
+- photon library wrapper for video/photo api
+
+sonySRG300
+- camera interface REST using boost
+
+sound
+- sound manipulation
+
+tracker_LUT
+- video tracker and lut correction
+
+unitree_robos
+- unitree robot examples
+
+vending
+- vending machine examples
+
+video
+- video and camera stuff v4l and ros interfaces etc
+
+visual_odometry
+- e.g. velodyne
+
+visualize
+- visual and lighting
+
+zigbee
+- comms example via usb port, send a picture over zigbee from drone
+
