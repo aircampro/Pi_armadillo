@@ -37,7 +37,7 @@ SonyAlpha
 - sony Alpha camera interface and to mavlink remote controls
 
 Toshiba Telli
-- toshiba telli 
+- toshiba telli pekat
 
 ada_spark
 - safe code can be written in ada spark
