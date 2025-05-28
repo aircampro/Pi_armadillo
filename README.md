@@ -45,6 +45,12 @@ ada_spark
 ble
 - bluetooth low energy
 
+LoRa
+- LoRa radio link via usb port
+
+ML
+- Various machine learning techniques
+  
 boost_other
 boost_prog
 - examples using boost API
