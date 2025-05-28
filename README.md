@@ -27,6 +27,9 @@ GUI
 ITL612 IR SENSOR
 - ITL612 IR camera API
 
+IR
+- Infa Read controls to HVAC B&O etc
+  
 PCIe Hailo
 - PCIe interface for AI accelerator Hailo
 
