@@ -814,7 +814,11 @@ def Enocean2Telemetry(s_port, telem_opt):
         print("File {} uploaded to {}.".format(source_file_name, destination_blob_name))
 
     # GCS Spreadsheet
-    # get the worksheet from the cloud service
+    # get the worksheet from the cloud service to install use the following :-
+    # $ pip3 install oauth2client
+    # pip install --upgrade oauth2client
+    # sudo pip3 install gspread
+    #
     def get_gss_worksheet(gss_name, gss_sheet_name):
         # If you do not write two APIs, you must continue to issue refresh tokens every 3600 seconds
         #scope = ['https://spreadsheets.google.com/feeds','https://www.googleapis.com/auth/drive']
@@ -827,9 +831,10 @@ def Enocean2Telemetry(s_port, telem_opt):
         # set the auth key
         if gss_name == "Temp_Data":
             spreadsheet_key = GSS_TEMP_KEY
-
-        # open the worksheet and return its handle for further use
-        worksheet = gs.open_by_key(spreadsheet_key).worksheet(gss_sheet_name)
+            # open the worksheet and return its handle for further use
+            worksheet = gs.open_by_key(spreadsheet_key).worksheet(gss_sheet_name)
+        else:
+            worksheet = gs.open(gss_name).sheet1
 
         return worksheet
 
