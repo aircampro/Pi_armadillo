@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # angle measurement 
 # https://ams.com/ja/as5147padapterboard/#tab/description
 # AS5147 magnetic encoder
