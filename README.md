@@ -28,7 +28,7 @@ ITL612 IR SENSOR
 - ITL612 IR camera API
 
 IR
-- Infa Read controls to HVAC B&O etc
+- Infa Red controls to HVAC (toshiba panasonic mitsubishi) and audio (B&O) etc
   
 PCIe Hailo
 - PCIe interface for AI accelerator Hailo
@@ -37,7 +37,7 @@ QR code ANPR stuff
 - read and write QR Codes and Number plates
 
 SonyAlpha
-- sony Alpha camera interface and to mavlink remote controls
+- sony Alpha camera interface and to mavlink (qgroundcontrol) remote controls
 
 Toshiba Telli
 - toshiba telli pekat
