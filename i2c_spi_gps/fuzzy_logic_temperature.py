@@ -12,6 +12,7 @@ from logging import basicConfig, getLogger, DEBUG, FileHandler, Formatter
 import sys
 import datetime
 import time
+# https://github.com/r45635/HVAC-IR-Control/tree/master/python/hvac_ircontrol
 from hvac_ircontrol.ir_sender import LogLevel
 from hvac_ircontrol.mitsubishi import Mitsubishi, ClimateMode, FanMode, VanneVerticalMode, VanneHorizontalMode, ISeeMode, AreaMode, PowerfulMode
 
