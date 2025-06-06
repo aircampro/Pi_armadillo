@@ -213,9 +213,9 @@ def run_sr(robot_ear, robot_mouth, opt=0, lang=0, engine=0):
         if "..." in you:
             robot_brain = "I can't hear you, please say it again"
         elif "drone" in you:
-            robot_brain = "drone"
+            robot_brain = "you said drone"
         elif "robot" in you:
-            robot_brain = "robot"
+            robot_brain = "you said robot"
         elif "time" in you:
             robot_brain = datetime.datetime.now().strftime("%B %d, %Y")
         elif "color" in you:
