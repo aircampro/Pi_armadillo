@@ -28,10 +28,10 @@ class Controller(BaseController):
         self.out = self.clamp(self.p * error + self.i * self.error_integral + self.d * error_diff, maxv, minv)
         return self.out
 
-    def hold(self,):
+    def hold(self):
         return self.out
 
-    def reset(self,):
+    def reset(self):
         self.error_integral = 0
         self.prev_error = 0
         self.out = 0.0
