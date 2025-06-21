@@ -60,15 +60,15 @@ if __name__ == "__main__":
             tt101value = temp_humid.temperature
             at101value = temp_humid.humidity
         if GPIO.input(nml_gpio) == True:
-		    o = tic101.update(tic101spt, tt101value, 0, 100.0)     # update pid with data and set object output
+            o = tic101.update(tic101spt, tt101value, 0, 100.0)     # update pid with data and set object output
             with open(pickle_file, 'wb') as f:                     # save the integral in a pickle file
                 pickle.dump(tic101.error_integral, f)
         elif GPIO.input(hld_gpio) == True:
-		    o = tic101.hold()                                      # hold the pid 
+            o = tic101.hold()                                      # hold the pid 
         elif GPIO.input(rmpu_gpio) == True:
-		    o = tic101.ramp_up(rv, 100.0)                          # ramp-up 
+            o = tic101.ramp_up(rv, 100.0)                          # ramp-up 
         elif GPIO.input(rmpd_gpio) == True:
-		    o = tic101.ramp_down(rv, 100.0)                        # ramp-down
+            o = tic101.ramp_down(rv, 100.0)                        # ramp-down
         elif GPIO.input(ups_gpio) == True:                         # we got a power failure signal from the ups battery pack
             print("power failed")
             with open(pickle_file, 'wb') as f:                     # save the integral in a pickle file
