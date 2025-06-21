@@ -1,26 +1,10 @@
-#
-# standard PID controller 
-#
-
 import numpy as np
 
 class BaseController:
     def update(self, target_val, current_val, state, future_plan):
-    """
-    Args:
-      target_val: The target lateral acceleration.
-      current_val: The current lateral acceleration.
-      maxv: maximum output value
-      minv: minimum output value
-    Returns:
-      The control signal to be applied to the vehicle.
-    """
         raise NotImplementedError
 
 class Controller(BaseController):
-    """
-    A simple PID controller
-    """
     def __init__(self, p=0.3, i=0.05, d=-0.1, o=0.0):
         self.p = p 
         self.i = i
