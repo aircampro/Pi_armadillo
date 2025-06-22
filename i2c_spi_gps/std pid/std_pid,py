@@ -2,11 +2,7 @@
 #
 import numpy as np
 
-class BaseController:
-    def update(self, target_val, current_val, state, future_plan):
-        raise NotImplementedError
-
-class Controller(BaseController):
+class Controller():
     def __init__(self, p=0.3, i=0.05, d=-0.1, o=0.0):
         self.p = p 
         self.i = i
