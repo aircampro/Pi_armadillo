@@ -1,13 +1,19 @@
-# standard PID loop
 #
+# standard PID controller 
+#
+
 import numpy as np
 
 class Controller():
+    """
+    A simple PID controller
+    """
     def __init__(self, p=0.3, i=0.05, d=-0.1, o=0.0):
         self.p = p 
         self.i = i
         self.d = d 
         self.error_integral = 0
+        self.prev_e_cnt = 0
         self.prev_error = 0
         self.out = o
 
@@ -21,7 +27,11 @@ class Controller():
     def update(self, target_val, current_val, minv=0, maxv=4096):
         error = (target_val - current_val)
         self.error_integral += error
-        error_diff = error - self.prev_error
+        if self.prev_e_cnt == 0:
+            error_diff = 0
+            self.prev_e_cnt += 1
+        else:			
+            error_diff = error - self.prev_error
         self.prev_error = error
         self.out = self.clamp(self.p * error + self.i * self.error_integral + self.d * error_diff, maxv, minv)
         return self.out
