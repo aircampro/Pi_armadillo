@@ -56,3 +56,8 @@ class Controller():
         if self.out < minv:
             self.out = minv
         return self.out	
+
+    def manual(self,o):
+        self.out = o
+        self.error_integral = 0
+        self.prev_e_cnt = 0
