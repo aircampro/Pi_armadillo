@@ -214,5 +214,10 @@ On launching this python on main, get distance data and insert log.
 if __name__ == "__main__":
     db = USonicDB()
     usonic = USonic() 
-    distance = usonic.measure_distance()
-    db.insert_log(distance)
+    try:
+        while True:
+            distance = usonic.measure_distance()
+            db.insert_log(distance)
+    except( KeyboardInterrupt, SystemExit):
+        print("distance sensor measurement interrupted")
+    
