@@ -7,7 +7,7 @@ DHT_GPIO = 18
 sensor = Adafruit_DHT.DHT11
 MAX_TRIAL = 3
 for _ in range(self.MAX_TRIAL):
-  humidity, temperature =  Adafruit_DHT.read_retry(sensor, DHT_GPIO)
-  if humidity is None or temperature is None:
-    continue
-  return [humidity, temperature]
+    humidity, temperature =  Adafruit_DHT.read_retry(sensor, DHT_GPIO)
+    if humidity is None or temperature is None:
+        continue
+    return [humidity, temperature]
