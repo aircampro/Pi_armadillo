@@ -5,6 +5,7 @@ import Adafruit_DHT
 DHT_GPIO = 18
 # make DHT11 object
 sensor = Adafruit_DHT.DHT11
+# try 2 times as sometimes it doesnt get the readings
 MAX_TRIAL = 3
 for _ in range(self.MAX_TRIAL):
     humidity, temperature =  Adafruit_DHT.read_retry(sensor, DHT_GPIO)
