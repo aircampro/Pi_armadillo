@@ -12,11 +12,12 @@ if __name__ == '__main__':
     ch.setLevel(logging.DEBUG)
     LOG.addHandler(ch)
 
-    if len(sys.argv) < 3:
+    if len(sys.argv) < 4:
         quit()
 
     gateway = BeoPlay(sys.argv[1])
     opt = sys.argv[2]
+    id = sys.argv[3]
 	
     gateway.getDeviceInfo()
     print ("Serial Number: " , gateway.serialNumber)
@@ -56,17 +57,20 @@ if __name__ == '__main__':
     print ("On State: ", gateway.on)
 
     if opt == 0:
-        gateway.playQueueItem(True, {"playQueueItem": {"behaviour": "impulsive","track": {"deezer": { "id": 997764 }, "image" : []}}})
+        gateway.playQueueItem(True, {"playQueueItem": {"behaviour": "impulsive","track": {"deezer": { "id": id }, "image" : []}}})
     elif opt == 1:
-        gateway.playQueueItem(True, {"playQueueItem": {"behaviour": "planned","station": {"tuneIn": {"stationId": "s45455"}, "image" : []}}})
+        w="\""
+        ids = w + str(id) + w
+        gateway.playQueueItem(True, {"playQueueItem": {"behaviour": "planned","station": {"tuneIn": {"stationId": ids}, "image" : []}}})
     else:
+        ur = f"http://192.168.1.217:50002/v/NDLNA/{id}.mp4"
         gateway.playQueueItem(True,{
             "playQueueItem": 
                 {
                     "behaviour": "impulsive",
                     "track": {
                         "dlna": {
-                            "url": "http://192.168.1.217:50002/v/NDLNA/785.mp4"
+                            "url": ur
                         }}}}
         )
     
