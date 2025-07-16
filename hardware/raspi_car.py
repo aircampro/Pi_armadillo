@@ -35,13 +35,13 @@ class wheeled_traction():
         print('pulse width modulation {} Hz'.format(hz))
 
     def destroy(self):
-        """destroy
+        """ destroy
         """
         self.stop()
         GPIO.cleanup()
 
     def start(self, button_type, button_option):
-        """start
+        """ start
         """
         if self.on is True:
             print('skip button event')
@@ -60,7 +60,7 @@ class wheeled_traction():
             self.on = False
 
     def stop(self):
-        """stop
+        """ stop
         """
         GPIO.output(GPIO_BCM_L293D_EN1, GPIO.LOW)
         self.pwm_l293d_in1.ChangeDutyCycle(0)
@@ -68,7 +68,7 @@ class wheeled_traction():
         self.on = False
 
     def loop(self):
-        """loop
+        """ loop
         """
         while True:
             self.start('BUTTON_TYPE_UP', 50)
@@ -107,13 +107,13 @@ class steering():
         print('pulse width modulation {} Hz'.format(hz))
 
     def destroy(self):
-        """destroy
+        """ destroy
         """
         self.pwm_servo.stop()
         GPIO.cleanup()
 
     def angle(self, angle):
-        """angle
+        """ angle
         """
         duty = DC_MIN + (DC_MAX - DC_MIN) * (angle + 90) / 180
         self.pwm_servo.ChangeDutyCycle(duty)
