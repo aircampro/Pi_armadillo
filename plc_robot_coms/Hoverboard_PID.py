@@ -15,10 +15,10 @@ import time
 def PID(kp, ki, kd, err, error_sum, error_pre, dt, imin, imax):
     error = err
     error_sum += error 
-    error_sum = np.clip(delta, imin, imax)
+    error_sum = np.clip(error_sum, imin, imax)
     error_diff = error-error_pre 
     m = (kp * error) + (ki * error_sum) + (kd*error_diff)*dt 
-    return m, error_sum, error
+    return m, error_sum, error, error
 
 # class to operate the motion of the hoverboard_pid
 #
@@ -62,14 +62,12 @@ class hoverboard_pid():
         else:            
             self.error_ = self.theta_goal - self.theta_current;	
         # Reset the i_error in case the p_error and the setpoint is zero
-        # Otherwise there will always be a constant i_error_ that won't vanish
+        # Otherwise there will always be a constant error_ that won't vanish
         if (0.0 == self.theta_goal and 0.0 == error_) :
 	        # reset() will reset
-	        # p_error_last_ = 0.0;
-	        # p_error_ = 0.0;
-	        # i_error_ = 0.0;
-	        # d_error_ = 0.0;
-	        # cmd_ = 0.0;
+            # self.error_ = 0.0;
+            # self.error_sum = 0.0;
+            # self.error_pre = 0.0;
 	        self.reset();
         # Call PID Loop
         self.computeCommand(self.error_, dt);
@@ -87,7 +85,7 @@ class hoverboard_pid():
         return np.clip(value, lower_limit, upper_limit);    
         
     def computeCommand(self, e, dt):
-        self.output, self.error_sum, self.error = PID(self.p, self.i, self.d, self.error, self.error_sum, self.error_pre, dt, self.imin, self.imax )
+        self.output, self.error_sum, self.error_, self.error_pre = PID(self.p, self.i, self.d, e, self.error_sum, self.error_pre, dt, self.imin, self.imax)
       
     # Convert PID outputs in RAD/S to RPM
     def set_speed(self):
@@ -126,10 +124,15 @@ class Hover_Comms():
         self.pos_L = 0.0
         self.pos_R = 0.0
         self.MAX_STEER_DEG = msa
-
+        self.enc_state = 1                                                       # 2 = always reset when conditions are not met, 1 = reset on startup only, 0 = no reset
+        self.multL = 0
+        self.multR = 0
+        self.start_up_timer = 100                                                # reset time for doing multL,R reset at start-up
+        self.start_ref = time.time()
+        
     def __del__(self):
         self.close_comm()
-	    
+        
     # Calculate steering from difference of left and right wheel PID outputs
     def set_speed_steer(self, spd_lft, spd_rht):
         self.avspeed = (spd_lft + spd_rht)/2.0;
@@ -142,7 +145,7 @@ class Hover_Comms():
         self.upd = False   
         ord_data, char_data = self.hover.read_data()	
         print(char_data)
-        if not self.hover.parse_data(ord_data) == [-1]:
+        if not self.hover.parse_data(ord_data) == -1:
             self.r_speed = self.dir_correction * (abs(self.hover.speedR_meas) * 0.10472);
             self.l_speed = self.dir_correction * (abs(self.hover.speedL_meas) * 0.10472);
             self.b_volts = self.hover.batVoltage/100.0;
@@ -160,10 +163,18 @@ class Hover_Comms():
         posL = 0.0, posR = 0.0;
 
         # Calculate wheel position in ticks, factoring in encoder wraps
+        # i have put a timer around the start-up phase
+        #
         if (right < self.low_wrap) and (self.last_wheelcountR > self.high_wrap):
             self.multR =+ 1;
         elif (right > self.high_wrap) and (self.last_wheelcountR < self.low_wrap):
             self.multR =- 1;
+        else:
+            if self.enc_state >= 1:
+                self.multR = 0;
+                if self.enc_state == 1:
+                    if (time.time() - self.start_ref) > self.start_up_timer: 
+                        self.enc_state = 0;
         posR = right + self.multR*(self.ENCODER_MAX-self.ENCODER_MIN);
         self.last_wheelcountR = right;
 
@@ -171,6 +182,12 @@ class Hover_Comms():
             self.multL =+ 1;
         elif (left > self.high_wrap) and (self.last_wheelcountL < self.low_wrap):
             self.multL =- 1;
+        else:
+            if self.enc_state >= 1:
+                self.multL = 0;
+                if self.enc_state == 1:
+                    if (time.time() - self.start_ref) > self.start_up_timer: 
+                        self.enc_state = 0;
         posL = left + self.multL*(self.ENCODER_MAX-self.ENCODER_MIN);
         self.last_wheelcountL = left;
 
@@ -180,7 +197,7 @@ class Hover_Comms():
         self.lastPubPosL = 0.0, self.lastPubPosR = 0.0;
         self.nodeStartFlag = True;
     
-        # IF there has been a pause in receiving data AND the new number of ticks is close to zero, indicates a board restard
+        # IF there has been a pause in receiving data AND the new number of ticks is close to zero, indicates a board restart
         # (the board seems to often report 1-3 ticks on startup instead of zero)
         # reset the last read ticks to the startup values
         if((time.time() - self.last_read) > 0.2) and ((abs(posL) < 5) and (abs(posR) < 5)) :
@@ -206,26 +223,27 @@ class Hover_Comms():
         self.pos_R = 2.0*np.pi * self.lastPubPosR/self.TICKS_PER_ROTATION;
 
 # create a speed controller for each wheel and send to the hoverboard controller
+# passes feed_forward term and p.i.d parameters from function
 #
-def two_wheel_traction(wr, mv, target):
+def two_wheel_traction(wr, mv, target, fin = 1.0, pin = 0.0, iin = 0.0, din = 0.01, ima = 1.5, imi = -1.5):
     wheel_rad = wr;
     max_vel = mv;
     setp = target;
     # create PID controller for each wheel
     left_wheel = hoverboard_pid(wheel_rad, max_vel, setp)
     right_wheel = hoverboard_pid(wheel_rad, max_vel, setp)
-    f = 1.0
-    p = 0.0
-    i = 0.0
-    d = 0.01
-    i_max = 1.5
-    i_min = -1.5
+    f = fin
+    p = pin
+    i = iin
+    d = din
+    i_max = ima
+    i_min = imi
     left_wheel.init(self, f, p, i, d, i_max, i_min, antiwindup=False)   
     right_wheel.init(self, f, p, i, d, i_max, i_min, antiwindup=False)  
     # create object to send data to hoverboard 
     hb = Hover_Comms() 
     time_ref = time.time()
-    hb.set_speed_steer(0,0)  
+    hb.set_speed_steer(0, 0)  
     # now control using the 2 PID loops and feedback from the hoverboard
     while True:
         hb.get_data()    
