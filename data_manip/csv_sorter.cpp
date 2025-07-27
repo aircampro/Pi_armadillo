@@ -49,7 +49,7 @@ int main() {
   // read the data from the input file
   std::vector<std::string> ss = ReadToStrVec("input_data.csv");
   if (ss.size() == 0) {
-      return 2;
+      std::quick_exit(1);
   }
   // create a vector of test data (if youdont have the input file)
   //std::vector<std::string> ss = {"90,0.3,74,43","1,0.3,34,3","1,2.3,34,3","1,7.3,34,3","97,0.3,94,03","1,8.13,34,3","1,8.15,34,53","1,8.05,64,13","1,8.18,74,13","501,8.07,74,13","13,0.37,34,3"};
@@ -128,7 +128,7 @@ int main() {
   writing_file.open("test2out.csv");
   if (writing_file.fail()) {
      std::cout << "write file failed to open" << std::endl;
-     return 1;
+     std::quick_exit(2);
   }
   for (auto i : out) {
     std::cout << i << std::endl;
