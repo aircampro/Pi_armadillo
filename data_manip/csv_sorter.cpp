@@ -34,7 +34,7 @@ int main() {
   for ( auto line : ss ) {
     if (line_no == 1) {                                                   // first line
        out.push_back(line);
-	   ++line_no;
+	++line_no;
     } else if (line_no == 2) {                                            // second line
        std::vector<std::string> row_list = split(line,',');
        auto time_spec_line = std::stod(row_list.at(time_col));
@@ -46,12 +46,12 @@ int main() {
            auto it2 = out.begin(); 
            out.insert(it2, line);
        }
-	   ++line_no;
+	++line_no;
     } else {                                                               // next lines starting @ line 3
        std::vector<std::string> row_list = split(line,',');
-	auto time_spec_line = std::stod(row_list.at(time_col));
+       auto time_spec_line = std::stod(row_list.at(time_col));
        std::vector<std::string> out_list = split(out.at(0),',');
-	auto time_spec_out_front = std::stod(out_list.at(time_col));
+       auto time_spec_out_front = std::stod(out_list.at(time_col));
        out_list = split(out.at(out.size()-1),',');
 	auto time_spec_out_back = std::stod(out_list.at(time_col));
 	if ((time_spec_line > time_spec_out_front) && (time_spec_line < time_spec_out_back)) {
