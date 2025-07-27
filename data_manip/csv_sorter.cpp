@@ -37,10 +37,10 @@ int main() {
 	   ++line_no;
     } else if (line_no == 2) {                                            // second line
        std::vector<std::string> row_list = split(line,',');
-	   auto time_spec_line = std::stod(row_list.at(time_col));
+       auto time_spec_line = std::stod(row_list.at(time_col));
        std::vector<std::string> out_list = split(out.at(0),',');
-	   auto time_spec_out = std::stod(out_list.at(time_col));
-	   if (time_spec_line > time_spec_out) {
+       auto time_spec_out = std::stod(out_list.at(time_col));
+       if (time_spec_line > time_spec_out) {
            out.push_back(line);
        } else {
            auto it2 = out.begin(); 
@@ -49,12 +49,12 @@ int main() {
 	   ++line_no;
     } else {                                                               // next lines starting @ line 3
        std::vector<std::string> row_list = split(line,',');
-	   auto time_spec_line = std::stod(row_list.at(time_col));
+	auto time_spec_line = std::stod(row_list.at(time_col));
        std::vector<std::string> out_list = split(out.at(0),',');
-	   auto time_spec_out_front = std::stod(out_list.at(time_col));
+	auto time_spec_out_front = std::stod(out_list.at(time_col));
        out_list = split(out.at(out.size()-1),',');
-	   auto time_spec_out_back = std::stod(out_list.at(time_col));
-	   if ((time_spec_line > time_spec_out_front) && (time_spec_line < time_spec_out_back)) {
+	auto time_spec_out_back = std::stod(out_list.at(time_col));
+	if ((time_spec_line > time_spec_out_front) && (time_spec_line < time_spec_out_back)) {
            auto d1 = time_spec_line - time_spec_out_front;
            auto d2 = time_spec_out_back - time_spec_line;
            if (d1 < d2) {                                                     // closest to the front time
@@ -63,23 +63,23 @@ int main() {
                auto length = out.size();
                for (auto i = 1; i < static_cast<int>(length); ++i) {                            // advance forward through the output records
                    out_list = split(out.at(i),',');
-	               time_spec_out_front = std::stod(out_list.at(time_col));
+	           time_spec_out_front = std::stod(out_list.at(time_col));
                    if (time_spec_line < time_spec_out_front) {
-				       out.insert(it3, line);
-					   break;
+			out.insert(it3, line);
+			break;
                    }
                    ++it3;				   
                }		   
            } else {	                                                         // time read is closer to the back of the out list
                auto length = out.size();
                auto it4 = out.end();                                         // point to the end of the vector
-	           --it4;                                                        // advance 1 record back already done it
+	        --it4;                                                        // advance 1 record back already done it
                for (auto i = length-2; i > 0; --i) {                         // advance backward through the output records
                    out_list = split(out.at(i),',');
-	               time_spec_out_back = std::stod(out_list.at(time_col));
+	           time_spec_out_back = std::stod(out_list.at(time_col));
                    if (time_spec_line > time_spec_out_back) {
-				       out.insert(it4, line);
-					   break;
+			out.insert(it4, line);
+			break;
                    }
                    --it4;				   
                }
@@ -90,7 +90,7 @@ int main() {
        } else if (time_spec_line >= time_spec_out_back) {
            out.push_back(line);
        }
-	   ++line_no;	
+       ++line_no;	
     }
   }
 
