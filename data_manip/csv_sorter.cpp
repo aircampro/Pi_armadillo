@@ -40,7 +40,7 @@ std::vector<std::string> ReadToStrVec(std::string filename)
 	    contents.push_back(line);
 	    if (file.eof()) { std::cout << "completed file read okay" << std::endl; }
 	}
-
+        file.close();
 	return contents;
 }
 
@@ -134,6 +134,11 @@ int main() {
     std::cout << i << std::endl;
     writing_file << i;
     writing_file << std::endl;
+  }
+  writing_file.close();
+  if (writing_file.fail()) {
+      std::cerr << "write file failed to close" << "\n";
+      std::quick_exit(3);
   }
   return 0;	
 }
