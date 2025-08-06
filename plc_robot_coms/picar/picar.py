@@ -58,9 +58,9 @@ sts4=0
 sts5=0
 
 # move ultrasonic to various positions to look for obstacles
-servo_lft = 135                                                         # ultrasonic sensor facing 45 degree left
+servo_lft = 135                                                         # ultrasonic sensor facing value degree left
 servo_ctr = 90                                                          # ultrasonic sensor facing front
-servo_rgt = 45                                                          # ultrasonic sensor facing 135 degree right
+servo_rgt = 45                                                          # ultrasonic sensor facing value degree right
 
 # Set pins as output and input
 GPIO.setup(GPIO_TRIGGER,GPIO.OUT)                                       # Trigger
