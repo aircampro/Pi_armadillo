@@ -182,7 +182,7 @@ def nv_check_detection(img, detections, search_for=None, multiple=0):
 def main():
 
     global IS_JETSON
-    # cap = cv2.VideoCapture(1) - for usb camera
+    # cap = cv2.VideoCapture(1)                                                     # for usb camera
 
     if IS_JETSON == True:
         net = jetson.inference.detectNet("ssd-mobilenet-v2", threshold=0.5)
