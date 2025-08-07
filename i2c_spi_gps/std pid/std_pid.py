@@ -55,7 +55,7 @@ class Controller(BaseController):
         elif self.use_t == 1:
             cur_t = time.time()
             tdiff = cur_t - self.t_ref 
-            self.out = self.clamp(self.p * error + self.i * self.error_integral + ((self.d * error_diff)*tdiff), maxv, minv) 
+            self.out = self.clamp(self.p * error + self.i * self.error_integral + ((self.d * error_diff)/tdiff), maxv, minv) 
             self.t_ref = cur_t
         return self.out
 
