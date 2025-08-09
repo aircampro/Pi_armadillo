@@ -302,8 +302,8 @@ int main() {
   constexpr int num_data_items = 60;
   data_t myData[num_data_items];
   std::vector<data_t> ss;
-  double max_v;
-  double min_v;
+  double max_v = 0.0;
+  double min_v = 0.0;
     
   // populate the data structures with input data (random) and create the input list for sorting
   for (int ii = 0; ii < num_data_items; ++ii) {
@@ -395,4 +395,5 @@ int main() {
       
   return 0;    
  
+
 }
