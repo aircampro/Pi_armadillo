@@ -318,6 +318,13 @@ void bubbleSort(vector<int>::iterator first, vector<int>::iterator last, int sho
   }
 }
 
+auto total_col(vector<int>::iterator first, vector<int>::iterator last) {
+    auto a = std::accumulate(first, last, 0);
+    int rollo = 0;
+    if (a < 0) { ++rollo; }
+    return std::make_pair(static_cast<unsigned int>(a),rollo);;
+}
+
 void showArray(vector<int>::const_iterator first, vector<int>::const_iterator last) {
   for(auto e = first; e != last; ++e) {
     std::cout << *e << ' ';
@@ -453,6 +460,12 @@ int main() {
     std::cout << std::fixed << std::setprecision(1) << i.a_val << " " << std::fixed << std::setprecision(3) << i.b_val << " " << i.c_val << " " << std::scientific << std::setprecision(13) << i.t_val << std::endl;
   }
 
+  // calculate column total
+  std::cout << "total : ";
+  auto p = total_col(time_list.begin(), time_list.end());
+  std::cout << p.first << " " << p.second;
+  std::cout << std::endl;
+      
   // just some more vector stuff for use
   std::vector<int> v = {3, 90, 4, 5, 2};
   std::vector<int> vs = {3, 90, 4, 5, 12};
