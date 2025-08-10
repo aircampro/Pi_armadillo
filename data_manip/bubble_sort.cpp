@@ -12,6 +12,11 @@
 # include <random>
 #include <iomanip>
 
+#include <algorithm>
+#include <exception>
+#include <iterator>
+#include <typeinfo>
+
 using namespace std;
 
 // this is a structure containing your data
@@ -296,7 +301,29 @@ double get_value(data_t& tv, unsigned int choice) {
    return ret;
 }
 
-// bubble sort
+// bubble sort adapted for double fields
+void doubleBubbleSort(vector<double>::iterator first, vector<double>::iterator last, int show_res) {
+  //int count = 0;
+  for(auto e = first; e != last; ++e) {
+    for(auto i = last - 1; i != e; --i) {
+      auto j = i;
+      advance(j, -1);
+      if(*i < *j) {
+        iter_swap(i, j);
+      }
+    }
+    //std::cout << "(" << count + 1 << "count " << ")" << std::endl;
+    //++count;
+  }
+  if (show_res == 1) {
+    for(auto e = first; e != last; ++e) {
+      std::cout << std::fixed << std::setprecision(8) << *e << ' ';
+    }
+    std::cout << std::endl;
+  }
+}
+
+// bubble sort for integer
 void bubbleSort(vector<int>::iterator first, vector<int>::iterator last, int show_res) {
   //int count = 0;
   for(auto e = first; e != last; ++e) {
@@ -345,7 +372,7 @@ int main() {
   constexpr int num_data_items = 60;
   data_t myData[num_data_items];
   std::vector<data_t> ss;
-  std::vector<int> time_list;
+  std::vector<int> time_list;                                         // makes time list for use wih bubble sort
   double max_v;
   double min_v;
     
@@ -362,7 +389,7 @@ int main() {
   std::vector<data_t> out = {};                                           // create a vector of data objects in sorted order
   ss.reserve(20000);                                                      // reserver the memory for speed
   out.reserve(20000); 
-
+   
   // --------- now sort the data generated in the column specified  --------------------
   std::cout << "[COLUMN SORT]" << std::endl;
   unsigned int line_no = 1;
@@ -465,6 +492,14 @@ int main() {
   auto p = total_col(time_list.begin(), time_list.end());
   std::cout << p.first << " " << p.second;
   std::cout << std::endl;
+
+  // this is just showing an example you can also bubble sort a list of double values 
+  std::vector<double> arr;
+  for (auto j : ss) {
+      arr.push_back(static_cast<double>(j.t_val)); 
+  }
+  std::cout << "double sort" << std::endl;
+  doubleBubbleSort(arr.begin(), arr.end(), 1);
       
   // just some more vector stuff for use
   std::vector<int> v = {3, 90, 4, 5, 2};
@@ -488,3 +523,4 @@ int main() {
   return 0;    
  
 }
+
