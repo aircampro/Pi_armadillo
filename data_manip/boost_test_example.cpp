@@ -20,6 +20,8 @@
 #include <iterator>
 #include <typeinfo>
 
+#include <set>
+
 #define BOOST_TEST_MAIN
 #include <boost/test/included/unit_test.hpp>
 
@@ -574,6 +576,114 @@ unsigned int solve_bubble_sort(unsigned int choice_col) {
  
 }
 
+unsigned int solve_sort_by_set(unsigned int choice_col) {
+  constexpr int num_data_items = 60;
+  data_t myData[num_data_items];
+  std::vector<data_t> ss;
+  std::vector<int> time_list;
+  std::vector<double> dval_list;
+  double max_v;
+  double min_v;
+  unsigned int test_result = 1;
+  
+  // populate the data structures with input data (random) and create the input list for sorting
+  for (int ii = 0; ii < num_data_items; ++ii) {
+	  myData[ii].a_val = static_cast<double>(rand_gen_num(0,100,(ii%10),((ii*2)%2)));
+	  myData[ii].b_val = static_cast<double>(rand_gen_num(0,100,((ii*3)%10),((ii*3)%2)));
+	  myData[ii].c_val = rand_gen_num(-10.0,10.0,1,1);	
+      myData[ii].t_val = static_cast<int>((time(NULL)- rand_gen_num(-3,3,0,0)));
+      ss.push_back(myData[ii]);	 
+      switch (choice_col) {
+        case 0:
+        dval_list.push_back(myData[ii].a_val);
+		break;		
+        case 1:
+        dval_list.push_back(myData[ii].b_val);
+		break;
+        case 2:
+        dval_list.push_back(myData[ii].c_val);
+		break;
+        case 3:	  
+        time_list.push_back(myData[ii].t_val);
+		break;
+      } 
+
+      std::cout << myData[ii].t_val << std::endl;
+  }	
+  std::vector<data_t> out = {};                                           // create a vector of data objects in sorted order
+  ss.reserve(20000);                                                      // reserver the memory for speed
+  out.reserve(20000); 
+      
+  // ------------- bubble sort the times in the time_list vector and create the sorted output list -----------------
+  std::cout << "[BUBBLE SORT]" << std::endl;
+  std::set<int> time_set = {};
+  std::set<double> d_set = {};
+  switch (choice_col) {
+        // when you put in the set it is sorted
+        case 0:
+        for ( auto u : time_list ) {
+           d_set.insert(u);     
+        }
+		break;		
+        case 1:
+        for ( auto u : time_list ) {
+           d_set.insert(u);     
+        }
+		break;
+        case 2:
+        for ( auto u : time_list ) {
+           d_set.insert(u);     
+        }
+		break;
+        case 3:	  
+        for ( auto u : time_list ) {
+           time_set.insert(u);     
+        }
+		break;
+  } 
+  
+  int cur_v = -9000;
+  std::vector<data_t> tt;
+  if (choice_col == 3) {
+    for (auto tim_v : time_set) {
+      if (tim_v != cur_v) {
+        for (auto line : ss) {
+            auto time_spec_line = get_value(line,choice_col);
+            if ( tim_v == time_spec_line) {
+                tt.push_back(line);     
+            }  
+        }
+      }
+      cur_v = tim_v;
+    }
+  } else {
+    for (auto tim_v : d_set) {
+      if (tim_v != cur_v) {
+        for (auto line : ss) {
+            auto time_spec_line = get_value(line,choice_col);
+            if ( tim_v == time_spec_line) {
+                tt.push_back(line);     
+            }  
+        }
+      }
+      cur_v = tim_v;
+    }	  
+  }
+
+  double prev_val = -200000;                                                                                                    // the most negative depth that can be seen  
+  for (auto i : tt) {
+    std::cout << std::fixed << std::setprecision(1) << i.a_val << " " << std::fixed << std::setprecision(3) << i.b_val << " " << i.c_val << " " << std::scientific << std::setprecision(13) << i.t_val << std::endl;
+    auto cv = get_value(i,choice_col);
+    if (cv < prev_val) {                                                                                                        // fail test
+        test_result = 0;
+		break;
+    }
+	prev_val = cv;
+  } 
+  return test_result;     
+ 
+}
+
 auto total_col(vector<int>::iterator first, vector<int>::iterator last) {
     auto a = std::accumulate(first, last, 0);
     int msb = 0;
@@ -713,4 +823,21 @@ BOOST_AUTO_TEST_CASE( solve_test11 ){
 
 BOOST_AUTO_TEST_CASE( solve_test12 ){
     BOOST_CHECK_EQUAL(solve_sum_col(3), true);
+}
+
+
+BOOST_AUTO_TEST_CASE( solve_test13 ){
+    BOOST_CHECK_EQUAL(solve_sort_by_set(0), true);
+}
+
+BOOST_AUTO_TEST_CASE( solve_test14 ){
+    BOOST_CHECK_EQUAL(solve_sort_by_set(1), true);
+}
+
+BOOST_AUTO_TEST_CASE( solve_test15 ){
+    BOOST_CHECK_EQUAL(solve_sort_by_set(2), true);
+}
+
+BOOST_AUTO_TEST_CASE( solve_test16 ){
+    BOOST_CHECK_EQUAL(solve_sort_by_set(3), true);
 }
