@@ -22,7 +22,7 @@ import pytz
 MY_TZ='Europe/Moscow'
 
 # ------------ here list the choices and options for iOt or monitoring -----------------      
-TELEM_CHOICES=[ "soracom", "beebotte", "mosquito", "ubidots", "machinist", "aws", "azure", "yandex", "twillio", "smtp_email", "ssl_tls_server", "ssl_23_server", "cloud_mqtt", "gcs_blob", "splunk", "gcs_spread", "ambient", "influxdb", "redis", "mongo", "mysql", "sybase", "oracle", "sqllite", "pg", "fluvio", "scyllia", "rocks", "ali", "taiga", "msaccess", "riak", "elas", "neo4j", "cumulocity", "sftp", "coAp", "sms_gsm_modem", "ibmdb" ]
+TELEM_CHOICES=[ "soracom", "beebotte", "mosquito", "ubidots", "machinist", "aws", "azure", "yandex", "twillio", "smtp_email", "ssl_tls_server", "ssl_23_server", "cloud_mqtt", "gcs_blob", "splunk", "gcs_spread", "ambient", "influxdb", "redis", "mongo", "mysql", "sybase", "oracle", "sqllite", "pg", "fluvio", "scyllia", "rocks", "ali", "taiga", "msaccess", "riak", "elas", "neo4j", "cumulocity", "sftp", "coAp", "sms_gsm_modem", "ibmdb", "couchbase", "ignition" ]
 SORACOM=0
 BEEBOTTE=1
 MOSQUITO=2
@@ -62,7 +62,8 @@ SFTP=35
 COAP=36
 SMS_GSM_MODEM=37
 IBMDB=38
-
+COUCHBASE=39
+IGNITION=40
 # ============= make your choice of cloud service here from list above ================== 
 MY_CURRENT_TELEM=TELEM_CHOICES[SORACOM]
 
@@ -380,7 +381,76 @@ elif MY_CURRENT_TELEM == "ibmdb":
     DSN = settings.DSN
     USN = settings.USN
     PWD = settings.PWD
-    
+
+# =============================================  use couchbase cloud  ============================================================
+#
+elif MY_CURRENT_TELEM == "couchbase":
+    # needed for any cluster connection
+    from datetime import timedelta
+    from couchbase.auth import PasswordAuthenticator
+    from couchbase.cluster import Cluster
+    # needed for options -- cluster, timeout, SQL++ (N1QL) query, etc.
+    from couchbase.options import (ClusterOptions, ClusterTimeoutOptions, QueryOptions)
+    import pickle
+    # Update this to your cluster
+    endpoint = "--your-instance--.dp.cloud.couchbase.com"
+    username = "username"
+    password = "Password!123"
+    bucket_name = "travel-sample"
+    # User Input ends here.
+
+    # Connect options - authentication
+    auth = PasswordAuthenticator(username, password)
+    # get a reference to our cluster
+    options = ClusterOptions(auth)
+    # Sets a pre-configured profile called "wan_development" to help avoid latency issues
+    # when accessing Capella from a different Wide Area Network
+    # or Availability Zone(e.g. your laptop).
+    options.apply_profile('wan_development')
+    cluster = Cluster('couchbases://{}'.format(endpoint), options)
+    # Wait until the cluster is ready for use.
+    cluster.wait_until_ready(timedelta(seconds=5))
+    # get a reference to our bucket and create globals with the handles
+    CB = cluster.bucket(bucket_name)
+    CB_COLL = CB.scope("inventory").collection("e_type")
+    try:
+        with open('couchbase.pickle', 'rb') as f:
+            CID = pickle.load(f)
+    except:
+        CID = 0
+# ignition
+#
+elif MY_CURRENT_TELEM == "ignition":
+    # ignition api rollout https://rollout.com/integration-guides/ignition/sdk/step-by-step-guide-to-building-a-ignition-api-integration-in-python
+    # pip install ignition-api
+    #
+    from ignition_api import IgnitionAPI
+    import time
+    CLIENT=""
+    IG_CON=0
+    # ignition server
+    # connect to ignition server	
+    def connect_ignition():
+        global CLIENT, IG_CON
+        # Your credentials here
+        username = 'your_username'
+        password = 'your_password'
+        url = 'https://your-ignition-server.com'
+        # create ignition CLIENT
+        try:
+            CLIENT = IgnitionAPI(url, username, password)
+        except Exception as e:
+            print(f"Oops! Something went wrong: {str(e)}")
+	
+        # Let's make sure we're connected
+        if CLIENT.ping():
+            print("IGnition API connection ok!")
+            IG_CON_OK=1
+        else:
+            print("IGnition API connection problem.")
+            IG_CON_OK=0
+    connect_ignition()
+
 # This function reads 1 byte of data from the serial port and parses the EnOcean telegram. After analyzing 
 # Telegram, data is sent to the chosen iOt (telemetry/database) system
 def Enocean2Telemetry(s_port, telem_opt):
@@ -786,6 +856,88 @@ def Enocean2Telemetry(s_port, telem_opt):
 
         conn.commit()
 
+    # COUCHBASE 
+    def couchbase_upsert_document((descrip1,temp_data1,descrip2,temp_data2):
+        e_type = {
+            "type": "e_type",
+            "id": CID,
+            "probe_number": "1",
+            "temerature": temp_data1,
+            "name": descrip1,
+        }
+
+        print("\nUpsert CAS: ")
+        try:
+            # key will equal: "e_type_1"
+            key = e_type["type"] + "_" + str(e_type["probe_number"])
+            result = CB_COLL.upsert(key, e_type)
+            print(result.cas)
+        except Exception as e:
+            print(e)
+        CID +=1
+        e_type2 = {
+            "type": "e_type",
+            "id": CID,
+            "probe_number": "2",
+            "temerature": temp_data2,
+            "name": descrip2,
+        }
+        try:
+            # key will equal: "e_type_2"
+            key = e_type2["type"] + "_" + str(e_type2["probe_number"])
+            result = CB_COLL.upsert(key, e_type2)
+            print(result.cas)
+        except Exception as e:
+            print(e)
+        CID +=1
+        with open('couchbase.pickle', 'wb') as f:
+            pickle.dump(CID, f)
+        
+    # get document function e.g.
+    # get_probe_by_key("e_type_1")
+    # get_probe_by_key("e_type_2")
+    def get_probe_by_key(key):
+        print("\nGet Result: ")
+        try:
+            result = CB_COLL.get(key)
+            print(result.content_as[str])
+        except Exception as e:
+            print(e)
+
+    # query for new document by callsign
+    def lookup_by_probeno(cs):
+       print("\nLookup Result: ")
+       try:
+            inventory_scope = CB.scope('inventory')
+            sql_query = 'SELECT VALUE name FROM e_type WHERE probe_number = $1'
+            row_iter = inventory_scope.query(sql_query, QueryOptions(positional_parameters=[cs]))
+            for row in row_iter:
+                print(row)
+            except Exception as e:
+                print(e)
+
+    def lookup_by_gt_temp(cs):
+        print("\nLookup Result: ")
+        try:
+            inventory_scope = CB.scope('inventory')
+            sql_query = 'SELECT VALUE name FROM e_type WHERE temperature >= $1'
+            row_iter = inventory_scope.query(sql_query, QueryOptions(positional_parameters=[cs]))
+            for row in row_iter:
+                print(row)
+        except Exception as e:
+            print(e)
+
+    def lookup_by_lt_temp(cs):
+        print("\nLookup Result: ")
+        try:
+            inventory_scope = CB.scope('inventory')
+            sql_query = 'SELECT VALUE name FROM e_type WHERE temperature <= $1'
+            row_iter = inventory_scope.query(sql_query, QueryOptions(positional_parameters=[cs]))
+            for row in row_iter:
+                print(row)
+        except Exception as e:
+            print(e)
+            
     # GCS BLOB UPLOAD
     def uploadBlobGcs(descrip1,temp_data1,descrip2,temp_data2):
         """Writes json to file then uploads csv to the bucket on GCS """
@@ -866,7 +1018,6 @@ def Enocean2Telemetry(s_port, telem_opt):
         wks.update_acell("D2", "sensor 2 temp DegC")   
         wks.update_acell("E2", "timestamp") 
 
-    
     def put_data_on_gcs_worksheet(desc1,v1,desc2,v2):
         # get the worksheet from google cloud service
         worksheet = get_gss_worksheet(gss_name='Temp_Data', gss_sheet_name='sheet_1')
@@ -1826,7 +1977,7 @@ def Enocean2Telemetry(s_port, telem_opt):
     
         with driver.session() as session:
             # Search for data
- r          result = session.read_transaction(search_all)
+            result = session.read_transaction(search_all)
             # Check results
             for res in result:
                 print(res)
@@ -1976,7 +2127,54 @@ def Enocean2Telemetry(s_port, telem_opt):
         SMS_DATA_SEND_STATE = 1
         SMS_BODY_DATA.replace("£",str(desc1)).replace("!",str(temp1)).replace("$",str(desc2)).replace("%",str(temp2))
         SMS_DATA_SEND_STATE = 0
-        
+
+    # IGNITION 
+    # sends values to ignition server
+    def send_data_ignition(string1, temp_data1, string2, temp_data2):
+        global IG_CON_OK
+        while not IG_CON_OK == 1:
+            connect_ignition()	
+            time.sleep(1)
+        try:
+            CLIENT.write_tag(string1, temp_data1)
+            CLIENT.write_tag(string2, temp_data2)
+        except Exception as e:
+            print(f"Oops! Something went wrong: {str(e)}")
+
+    # gets value from ignition server
+    def get_ignition_val(tag_path='YourTagPath'):
+        try:	
+            tag_value = CLIENT.read_tag(tag_path)
+            print(f"The value is: {tag_value}")
+        except Exception as e:
+            print(f"Oops! Something went wrong: {str(e)}")
+	
+    # get table from ignition server	
+    def get_ignition_table(tab='YourTable', lines=10):
+        try:	
+            query = f"SELECT * FROM {tab} LIMIT {lines}"
+            results = CLIENT.execute_query(query)
+            print(results)
+        except Exception as e:
+            print(f"Oops! Something went wrong: {str(e)}")
+			
+    # get history from ignition server
+    def get_hist_data(start_date, end_date):
+        try:	
+            historical_data = CLIENT.get_historical_data('YourTagPath', start_date, end_date)
+            print(historical_data)
+        except Exception as e:
+            print(f"Oops! Something went wrong: {str(e)}")
+
+    def tag_changed(tag_path, value):
+        print(f"Tag {tag_path} changed to {value}")
+
+    def subscribe_to_tag(tag_path='YourTagPath'):
+        try:	
+            CLIENT.subscribe_tag(tag_path, tag_changed)
+        except Exception as e:
+            print(f"Oops! Something went wrong: {str(e)}")
+            
     # Choose the iOt you want to use according to the define in top section        
     if telem_opt == "soracom":
         sendData=sendDataSoraCom
@@ -2037,6 +2235,8 @@ def Enocean2Telemetry(s_port, telem_opt):
         sendData=sendDataAzure  
     elif telem_opt == "twillio":
         sendData=sendTwilioSMS
+    elif telem_opt == "ignition":
+        sendData=send_data_ignition
     elif telem_opt == "smtp_email":
         sendData=sendSMTPemail
     elif telem_opt == "ssl_tls_server":
@@ -2125,6 +2325,8 @@ def Enocean2Telemetry(s_port, telem_opt):
         sendData=write_to_sms_message            
     elif telem_opt == "ibmdb":
         sendData=sendDataIBMDB
+    elif telem_opt == "couchbase":
+        sendData=couchbase_upsert_document
     else:                                                    # we asume its for mosquito broker internally running on host e.g. raspberry pi 4
         client = mqtt.Client()
         client.on_connect = on_connect
