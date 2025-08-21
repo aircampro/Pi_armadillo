@@ -15,6 +15,7 @@ import serial
 import time
 from sys import exit
 from datetime import datetime
+import pickle
 
 # time please set your timezone here
 import datetime
@@ -22,7 +23,7 @@ import pytz
 MY_TZ='Europe/Moscow'
 
 # ------------ here list the choices and options for iOt or monitoring -----------------      
-TELEM_CHOICES=[ "soracom", "beebotte", "mosquito", "ubidots", "machinist", "aws", "azure", "yandex", "twillio", "smtp_email", "ssl_tls_server", "ssl_23_server", "cloud_mqtt", "gcs_blob", "splunk", "gcs_spread", "ambient", "influxdb", "redis", "mongo", "mysql", "sybase", "oracle", "sqllite", "pg", "fluvio", "scyllia", "rocks", "ali", "taiga", "msaccess", "riak", "elas", "neo4j", "cumulocity", "sftp", "coAp", "sms_gsm_modem", "ibmdb", "couchbase", "ignition" ]
+TELEM_CHOICES=[ "soracom", "beebotte", "mosquito", "ubidots", "machinist", "aws", "azure", "yandex", "twillio", "smtp_email", "ssl_tls_server", "ssl_23_server", "cloud_mqtt", "gcs_blob", "splunk", "gcs_spread", "ambient", "influxdb", "redis", "mongo", "mysql", "sybase", "oracle", "sqllite", "pg", "fluvio", "scyllia", "rocks", "ali", "taiga", "msaccess", "riak", "elas", "neo4j", "cumulocity", "sftp", "coAp", "sms_gsm_modem", "ibmdb", "couchbase", "ignition", "denzow" ]
 SORACOM=0
 BEEBOTTE=1
 MOSQUITO=2
@@ -64,6 +65,7 @@ SMS_GSM_MODEM=37
 IBMDB=38
 COUCHBASE=39
 IGNITION=40
+DENZOW=41
 # ============= make your choice of cloud service here from list above ================== 
 MY_CURRENT_TELEM=TELEM_CHOICES[SORACOM]
 
@@ -100,7 +102,7 @@ def on_disconnect(client, userdata, rc):
 # publish processes when publish done
 def on_publish(client, userdata, mid):
     print("publish Done")
-    
+
 # beebotte
 if MY_CURRENT_TELEM == "beebotte":
     TOKEN = "[BeebotteTKName]"
@@ -114,6 +116,18 @@ if MY_CURRENT_TELEM == "beebotte":
 # sudo apt-get install python-setuptools
 elif MY_CURRENT_TELEM == "ubidots":
     UBI_URL=https://industrial.api.ubidots.com/api/v1.6
+
+elif MY_CURRENT_TELEM == "taiga":
+    # taiga kanban board
+    TAIGA_USER="my_tiger"
+    TAIGA_PW="tim"
+    X1 = 12.5          # temperature trigger below this will enter the job on the board unassigned
+    TAIGA_STATE=0
+    try:
+        with open('taiga.pickle', 'rb') as f:
+            TAIGA_STATE = pickle.load(f)
+    except:
+        TAIGA_STATE = 0
 
 # machinist
 elif MY_CURRENT_TELEM == "machinist":
@@ -391,7 +405,6 @@ elif MY_CURRENT_TELEM == "couchbase":
     from couchbase.cluster import Cluster
     # needed for options -- cluster, timeout, SQL++ (N1QL) query, etc.
     from couchbase.options import (ClusterOptions, ClusterTimeoutOptions, QueryOptions)
-    import pickle
     # Update this to your cluster
     endpoint = "--your-instance--.dp.cloud.couchbase.com"
     username = "username"
@@ -410,9 +423,10 @@ elif MY_CURRENT_TELEM == "couchbase":
     cluster = Cluster('couchbases://{}'.format(endpoint), options)
     # Wait until the cluster is ready for use.
     cluster.wait_until_ready(timedelta(seconds=5))
-    # get a reference to our bucket and create globals with the handles
+    # get a reference to our bucket and create globals with the handles scope is inventory type e_type
     CB = cluster.bucket(bucket_name)
     CB_COLL = CB.scope("inventory").collection("e_type")
+    CID = 0
     try:
         with open('couchbase.pickle', 'rb') as f:
             CID = pickle.load(f)
@@ -451,6 +465,22 @@ elif MY_CURRENT_TELEM == "ignition":
             IG_CON_OK=0
     connect_ignition()
 
+# =================  use denzow kanban https://github.com/denzow/channel-kanban/tree/master/application/modules/kanban  =================
+#   looks like :- https://qiita-user-contents.imgix.net/https%3A%2F%2Fqiita-image-store.s3.amazonaws.com%2F0%2F44722%2Fcd51f56d-ae00-e3d0-29d3-b76d65a7d663.png?ixlib=rb-4.0.0&auto=format&gif-q=60&q=75&s=07cee66cf94f2dc0f596c788bcc1a091
+#   the kanban consumer is duplicated here as the file denzow_kanban and uses the above library files to connect to the server also included in that repository
+#
+elif MY_CURRENT_TELEM == "denzow":
+    from denzow_kanban import KanbanConsumer
+    KAN_CONS = KanbanConsumer()                                                        # kanban server consumer class instance
+    KAN_CONS.connect()                                                                 # connect to server
+    payload_pipe = { 'kanban_id' : 1,  'title' : "enocean sensors", 'order' : 1, }
+    KAN_CONS._add_pipeline(payload_pipe)                                               # create the pipeline to display the cards added 
+    CARD_SENT = 0
+    try:
+        with open('denzow.pickle', 'rb') as f:                                         # recall last state before re-start
+            CARD_SENT = pickle.load(f) 
+    except:
+        CARD_SENT = 0    
 # This function reads 1 byte of data from the serial port and parses the EnOcean telegram. After analyzing 
 # Telegram, data is sent to the chosen iOt (telemetry/database) system
 def Enocean2Telemetry(s_port, telem_opt):
@@ -858,15 +888,18 @@ def Enocean2Telemetry(s_port, telem_opt):
 
     # COUCHBASE 
     def couchbase_upsert_document((descrip1,temp_data1,descrip2,temp_data2):
+        timestamp = datetime.datetime.now(pytz.timezone(MY_TZ)).timestamp()             # set the timezone as you wish for your location
+        event_ts=round(timestamp)
         e_type = {
             "type": "e_type",
             "id": CID,
             "probe_number": "1",
             "temerature": temp_data1,
             "name": descrip1,
+            "timestamp": event_ts
         }
 
-        print("\nUpsert CAS: ")
+        print("\nUpserting CAS to couchbase: ")
         try:
             # key will equal: "e_type_1"
             key = e_type["type"] + "_" + str(e_type["probe_number"])
@@ -881,6 +914,7 @@ def Enocean2Telemetry(s_port, telem_opt):
             "probe_number": "2",
             "temerature": temp_data2,
             "name": descrip2,
+            "timestamp": event_ts
         }
         try:
             # key will equal: "e_type_2"
@@ -1776,7 +1810,6 @@ def Enocean2Telemetry(s_port, telem_opt):
         result = clt.do_action_with_exception(request)
         print('result : ' + result)
 
-
     # ElasticSearch
     #
     N_IDX=0
@@ -1982,32 +2015,46 @@ def Enocean2Telemetry(s_port, telem_opt):
             for res in result:
                 print(res)
 
-    # taiga kanban board
-    TAIGA_USER="my_tiger"
-    TAIGA_PW="tim"
-    X1 = 12.5          # temperature trigger below this will enter the job on the board unassigned
-	
     # Send to Taiga Kanban to project 1 user story 17 if temperature is below the specified low limits
     #
     def sendDataTaigaKanban(descrip1, temp_data1, descrip2, temp_data2):
-	
-        if (temp_data1 < X1) and (temp_data2 < X1):
+        global TAIGA_STATE 	
+        DEBOUNCE_TM = 60                                                                   # time which signal must persist for before the trigger
+        if (temp_data1 < X1) and (temp_data2 < X1) and not (TAIGA_STATE == 3):
             descrip_temp = descrip1 + " " + descrip2
             temp_val = (float(temp_data1) + float(temp_data2))/2.0
-        elif (temp_data1 < X1):
-            descrip_temp = descrip1
-            temp_val = float(temp_data2) 
-        elif (temp_data2 < X1):
-            descrip_temp = descrip2
-            temp_val = float(temp_data2)
+            TAIGA_STATE = 3
+        elif (temp_data1 < X1) and not (TAIGA_STATE == 2):
+            if not (TAIGA_STATE == 5):
+                start_time = time.time()
+                TAIGA_STATE = 5
+                return
+            if (time.time() - start_time) > DEBOUNCE_TM:
+                descrip_temp = descrip1
+                temp_val = float(temp_data2) 
+                TAIGA_STATE = 2
+            else:
+                return
+        elif (temp_data2 < X1) and not (TAIGA_STATE == 1):
+            if not (TAIGA_STATE == 6):
+                start_time = time.time()
+                TAIGA_STATE = 6
+                return
+            if (time.time() - start_time) > DEBOUNCE_TM:        
+                descrip_temp = descrip2
+                temp_val = float(temp_data2)
+                TAIGA_STATE = 1
+            else:
+                return
         else:
+            TAIGA_STATE = 0
             return	
             
         # get the authorization then create the task for it			
         #msg = json.loads(payload_json)
         #msg_str = json.dumps(msg)
         msg_str = temp_data1
-        timestamp = datetime.datetime.now(pytz.timezone(MY_TZ)).timestamp()  # set the timezone as you wish for your location
+        timestamp = datetime.datetime.now(pytz.timezone(MY_TZ)).timestamp()             # set the timezone as you wish for your location
         event_ts=round(timestamp)
 	
         data = {
@@ -2076,7 +2123,9 @@ def Enocean2Telemetry(s_port, telem_opt):
             print ("Timeout Error:",errt)
         except requests.exceptions.RequestException as err:
             print ("OOps: Something Else",err)
-
+        with open('taiga.pickle', 'wb') as f:
+            pickle.dump(TAIGA_STATE, f)  
+            
     # cumulocity iot board https://www.softwareag.cloud/site/product/cumulocity-iot.html#
     #
     X2 = 12.5                                                     # low alarm threshold  
@@ -2174,8 +2223,41 @@ def Enocean2Telemetry(s_port, telem_opt):
             CLIENT.subscribe_tag(tag_path, tag_changed)
         except Exception as e:
             print(f"Oops! Something went wrong: {str(e)}")
+
+    # denzow kanban
+    def add_to_denzow( desc1, temp1, desc2, temp2 ):
+        global CARD_SENT
+        HIGH_TEMP_SPT = 50.3
+        LOW_TEMP_SPT = -2.6
+        T_DB = 5.0
+        json_body1 = { 'title': desc1, 'order': "temperature 1 overtemperature"  }
+        json_body2 = { 'title': desc2, 'order': "temperature 2 overtemperature"  }
+        json_body3 = { 'title': desc1, 'order': "temperature 1 undertemperature"  }
+        json_body4 = { 'title': desc2, 'order': "temperature 2 undertemperature"  }
+        if (temp1 > HIGH_TEMP_SPT) and not (CARD_SENT & 1):
+            KAN_CONS._add_card(json_body1)
+            CARD_SENT |= 1
+        elif (temp1 < (HIGH_TEMP_SPT-T_DB)) and (CARD_SENT & 1):
+            CARD_SENT ^= 1        
+        if (temp2 > HIGH_TEMP_SPT) and not (CARD_SENT & 2):
+            KAN_CONS._add_card(json_body2)
+            CARD_SENT |= 2
+        elif (temp2 < (HIGH_TEMP_SPT-T_DB)) and (CARD_SENT & 2):
+            CARD_SENT ^= 2 
+        if (temp1 < LOW_TEMP_SPT) and not (CARD_SENT & 4):
+            KAN_CONS._add_card(json_body3)
+            CARD_SENT |= 4
+        elif (temp1 > (LOW_TEMP_SPT+T_DB)) and (CARD_SENT & 4):
+            CARD_SENT ^= 4        
+        if (temp2 < LOW_TEMP_SPT) and not (CARD_SENT & 8):
+            KAN_CONS._add_card(json_body4)
+            CARD_SENT |= 8
+        elif (temp2 > (LOW_TEMP_SPT+T_DB)) and (CARD_SENT & 8):
+            CARD_SENT ^= 8 
+        with open('denzow.pickle', 'wb') as f:
+            pickle.dump(CARD_SENT, f)    
             
-    # Choose the iOt you want to use according to the define in top section        
+    # ==== Choose the iOt you want to use according to the define in top section ====        
     if telem_opt == "soracom":
         sendData=sendDataSoraCom
     elif telem_opt == "beebotte":
@@ -2245,6 +2327,8 @@ def Enocean2Telemetry(s_port, telem_opt):
         sendData=sendSSL23Client
     elif telem_opt == "gcs_blob":
         sendData=uploadBlobGcs
+    elif telem_opt == "denzow":
+        sendData=add_to_denzow
     elif telem_opt == "mongo":
         mongo_obj = Mongo_Database_Class(DB_NAME, COLLECTION_NAME, "online")     # make database class instance in this example it is online
         sendData=addMongoRecord
