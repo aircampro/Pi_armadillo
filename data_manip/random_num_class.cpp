@@ -1,18 +1,7 @@
-#include <vector>
 #include <iostream>
-#include <string>
-#include <fstream>
-#include <sstream>
-#include <string>
-
-#include <cstdlib>
-#include <ctime>
-
-# include <utility>
-# include <random>
+#include <utility>
+#include <random>
 #include <iomanip>
-
-
 #include <mutex>
 
 // --------------- template STL to generate random number of the type specified ------------
@@ -71,4 +60,5 @@ int main() {
         std::cout << b << std::endl;
   return 0;    
  
+
 }
