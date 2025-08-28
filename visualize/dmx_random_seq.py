@@ -247,7 +247,7 @@ if __name__ == '__main__':
         
     # single functor choice
     q=np.random.rand(1)
-    dmx_our_choice = round(q[0]*NUMBER_OF_DMX_FUNCS)-1
+    dmx_our_choice = round(q[0]%NUMBER_OF_DMX_FUNCS)-1
     choice_dmx_functor = dmx_func_list[dmx_our_choice]
     if choice_dmx_functor == "funcA":
         call_dmx_functor = funcA
@@ -274,7 +274,7 @@ if __name__ == '__main__':
     call_dmx_functors = []
     for i in range(0,DMX_SEQ_LEN-1):
         q=np.random.rand(1)
-        choice_dmx_functors.append(dmx_func_list[round(q[0]*NUMBER_OF_DMX_FUNCS)-1])       
+        choice_dmx_functors.append(dmx_func_list[round(q[0]%NUMBER_OF_DMX_FUNCS)-1])       
         if choice_dmx_functors[i] == "funcA":
             call_dmx_functors.append(funcA)
         elif choice_dmx_functors[i] == "funcB":
