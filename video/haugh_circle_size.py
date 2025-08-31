@@ -58,7 +58,7 @@ def empty(x):
 
 # callback function for recaslling the original camera settings by pressing mouse center button
 #
-def set_original_value(event, vs):
+def set_original_value(event, x, y, flags, vs):
     if event == cv2.EVENT_MBUTTONDOWN:
         for ii, line in enumerate(CAM_PARAM):                                                                                                     
             cv2.setTrackbarPos(line[1], "Parameters", vs[ii]) 
