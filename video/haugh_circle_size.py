@@ -57,12 +57,22 @@ def empty(x):
     pass
 
 # callback function for recaslling the original camera settings by pressing mouse center button
+# or left mouse button to set default params for the hough transdorm
 #
 def set_original_value(event, x, y, flags, vs):
     if event == cv2.EVENT_MBUTTONDOWN:
         for ii, line in enumerate(CAM_PARAM):                                                                                                     
             cv2.setTrackbarPos(line[1], "Parameters", vs[ii]) 
-
+    if event == cv2.EVENT_LBUTTONDOWN:
+        cv2.setTrackbarPos('k_size_set', 'Parameters', 3)                         
+        cv2.setTrackbarPos('canny_1st', 'Parameters', 80)                       
+        cv2.setTrackbarPos('canny_2nd', 'Parameters', 120)                       
+        cv2.setTrackbarPos('minDist_set', 'Parameters', 150)
+        cv2.setTrackbarPos('param1_set', 'Parameters', 100)                    
+        cv2.setTrackbarPos('param2_set', 'Parameters', 30)                   
+        cv2.setTrackbarPos('minRadius_set', 'Parameters', 250)                 
+        cv2.setTrackbarPos('maxRadius_set', 'Parameters', 500)      
+        
 if __name__ == "__main__":
 
     # allow passing of file name as the first arguemnt to the program
