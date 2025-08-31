@@ -7,6 +7,7 @@ import numpy as np
 import sys
 import subprocess
 import sys
+import copy
 
 RESIZE = False                                     # set True if you want to re-size the input frame to the below settings
 frameWidth = 640
@@ -50,8 +51,17 @@ def parse_v4l2_param(res, lookfor="brightness"):
             fnd = True
     return min_value, max_value
 
+# dummy callback function for the trackbar
+#
 def empty(x):
     pass
+
+# callback function for recaslling the original camera settings by pressing mouse center button
+#
+def set_original_value(event, vs):
+    if event == cv2.EVENT_MBUTTONDOWN:
+        for ii, line in enumerate(CAM_PARAM):                                                                                                     
+            cv2.setTrackbarPos(line[1], "Parameters", vs[ii]) 
 
 if __name__ == "__main__":
 
@@ -78,8 +88,7 @@ if __name__ == "__main__":
     cv2.createTrackbar('param1_set', 'Parameters', 100, 300, empty)                      #100
     cv2.createTrackbar('param2_set', 'Parameters', 30, 300, empty)                       #30
     cv2.createTrackbar('minRadius_set', 'Parameters',510, 1000, empty)                   #250
-    cv2.createTrackbar('maxRadius_set', 'Parameters', 0, 1000, empty )                   #500                                                        #use video for linux to get the camera parameters
-
+    cv2.createTrackbar('maxRadius_set', 'Parameters', 0, 1000, empty )                   #500                                                  
     #inner (minR, maxR) = (172,278)
     #outer (minR, maxR) = (490,570)
     if not FRAME_IN == "video_feed":
@@ -96,6 +105,8 @@ if __name__ == "__main__":
             cv2.createTrackbar(line[1], 'Parameters', minv, maxv, empty)                 # create a trackbar for each one  
             cv2.setTrackbarPos(line[1], "Parameters", act_val)                           # set trackbar to current for bumpless operation        
             lastvals.append(act_val)                                                     # initialize list with each current value
+    saved_start = copy.deepcopy(lastvals)                                                # save set-up for re-call
+    cv2.setMouseCallback('Parameters', set_original_value, saved_start)                  # set callback for center mouse press to rest the camera to original
     # Circle Detection Process
     # 1. Color -> GrayScale
     # 2. Gaussian Blur :: parameter -> kernel
