@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Example : hough circles to estimate circle radius
+# Example : hough circles to estimate circle radius from video or still frame
 #
 import cv2
 import numpy as np
@@ -8,7 +8,7 @@ import sys
 import subprocess
 import sys
 
-RESIZE = False                                     # set True if you want to re-size the input frame
+RESIZE = False                                     # set True if you want to re-size the input frame to the below settings
 frameWidth = 640
 frameHeight = 480
 
@@ -50,9 +50,6 @@ def parse_v4l2_param(res, lookfor="brightness"):
             fnd = True
     return min_value, max_value
 
-def set_cam_param(cap, valu, prop=cv2.CAP_PROP_CONTRAST):
-    cap.set(prop, valu)
-
 def empty(x):
     pass
 
@@ -70,7 +67,7 @@ if __name__ == "__main__":
             PRT = 0        
     else:
         FRAME_IN="./my_picture_name.png"
-	
+
     # create a window to allow change of parameters so you cab get the best result
     cv2.namedWindow('Parameters')
     cv2.resizeWindow('Parameters', width=1000, height=400)
@@ -82,7 +79,7 @@ if __name__ == "__main__":
     cv2.createTrackbar('param2_set', 'Parameters', 30, 300, empty)                       #30
     cv2.createTrackbar('minRadius_set', 'Parameters',510, 1000, empty)                   #250
     cv2.createTrackbar('maxRadius_set', 'Parameters', 0, 1000, empty )                   #500                                                        #use video for linux to get the camera parameters
-    
+
     #inner (minR, maxR) = (172,278)
     #outer (minR, maxR) = (490,570)
     if not FRAME_IN == "video_feed":
@@ -113,7 +110,7 @@ if __name__ == "__main__":
                 valu = cv2.getTrackbarPos(line[1], "Parameters")
                 if not (lastvals[i] == valu):                                            # look for change of slider
                     cap.set(line[0], valu)                                               # change made then set camera   
-                    lastvals.append(valu)                                                # store changed value
+                    lastvals[i] = valu                                                   # store changed value
 
         if not (FRAME_IN == "video_feed") or ret:
             if RESIZE == True:
@@ -144,22 +141,25 @@ if __name__ == "__main__":
                                        minRadius=cv2.getTrackbarPos('minRadius_set', 'Parameters'),
                                        maxRadius=cv2.getTrackbarPos('maxRadius_set', 'Parameters'),
                                        )
-    
+   
             try:
                 circles = np.uint16(np.around(circles))
                 arr = []
                 for circle in circles[0, :]:
                     # print the circle radius
-                    cv2.circle(img_dst, (circle[0], circle[1]), circle[2], (0, 165, 255), 5)
-                    print('radius')
+                    cv2.circle(img_dst, (circle[0], circle[1]), circle[2], (0, 105, 205), 5)
+                    print(' radius ')
                     print(circle[2])
-                    arr.append(float(circle[2]))			
+                    arr.append(float(circle[2]))                       
                     # print the circle center
                     cv2.circle(img_dst, (circle[0], circle[1]), 2, (0, 0, 255), 3)
-                    print('center')
-                    print(circle[0], circle[1])  
+                    print(' center ')
+                    print(circle[0], circle[1]) 
+                print("\033[32m ---------------------------------- \033[0m")                    
                 print("avg radius ",sum(arr)/len(arr))
-                print("std dev ",np.std(arr))			
+                print("std dev ",np.std(arr))	
+                print("max radius ",np.max(arr))
+                print("min radius  ",np.min(arr))	                
                 # 4. Plotting
                 cv2.imshow('result', img_dst)
             except:
