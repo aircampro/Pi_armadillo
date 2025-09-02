@@ -382,7 +382,7 @@ def usage():
     print ""
 
 def serout(finalMessage):
-   # set up serial port
+    # set up serial port
     if (_stdout == 1):
 		print finalMessage
 		return
@@ -406,4 +406,5 @@ def serout(finalMessage):
     ser.close 
 
 if __name__ == "__main__":
+
     main(sys.argv[1:])
