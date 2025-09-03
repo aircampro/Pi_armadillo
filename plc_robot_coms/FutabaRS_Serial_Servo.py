@@ -139,7 +139,7 @@ class FutabaRS_Servo(object):
 
     # Moving the servo to the target position (RAM=1EH)
     #
-    def target_position(self, id-0x01, position, time, return_packet=0x01):
+    def target_position(self, id=0x01, position, time, return_packet=0x01):
         self._check_range(id, 1, 127, 'id')
         self._check_range(position, -1500, 1500, 'position')
         self._check_range(time, 0, 16383, 'time')
@@ -579,11 +579,11 @@ def main():
     frs_servo.open_port()
     while rpts < 2:
         frs_servo.torque_on()
-        frs_servo.servo_reset()
+	    frs_servo.servo_reset()
         frs_servo.target_angle(140)	
-        frs_servo.target_angle(-140)
-        frs_servo.target_position(-1000,163)	
-        frs_servo.target_position(1200,1630)	
+	    frs_servo.target_angle(-140)
+	    frs_servo.target_position(-1000,163)	
+	    frs_servo.target_position(1200,1630)	
         angle, time, speed, load, temperature, voltage = frs_servo.get_data()
         print("angle ",angle," time ",time," speed ",speed," load ",load)
         print("temperature ",temperature," voltage ",voltage)

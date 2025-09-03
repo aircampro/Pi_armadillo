@@ -8,7 +8,6 @@
 #Example
 #The highest level API is defined in the Moto class.
 #
-
 from moto import Moto
 # Connect to the robot controller with the defined ip address <robot_ip> and define the R1 control group with six degrees of freedom.
 
@@ -149,22 +148,21 @@ def yaskawa_io_write_byte(m,write_addr,val):
 
 # A python library to control KUKA iiwa robots, the 7R800 and the 14R820, from an external computer
 # -*- coding: utf-8 -*-
-
+#
 from iiwaPy import iiwaPy
 import math
 import time
-from datetime import datetime
 
-start_time = datetime.now()
+ST = time.time()
 # returns the elapsed seconds since the start of the program
 def getSecs():
-   dt = datetime.now() - start_time
-   ms = (dt.days * 24 * 60 * 60 + dt.seconds)  + dt.microseconds / 1000000.0
+   dt = time.time() - ST
+   ms = dt * 1000.0
    return ms
    
 kuka_ip='172.31.1.147'
 #ip='localhost'
-def connectKuka():
+def connectKuka(ip=kuka_ip):
     iiwa=iiwaPy(ip)   
     iiwa.setBlueOn()
     time.sleep(2)
@@ -180,6 +178,13 @@ def moveInitPosKuka(iiwa_handle):
         initPos=[0,0,0,-math.pi/2,0,math.pi/2,0];
         initVel=[0.1]
         iiwa_handle.movePTPJointSpace(initPos,initVel)
+    except:
+        print('coulnt communicate with kuka robot')
+
+def movePosKuka(iiwa_handle, pose, initVel=[0.1]):
+    try:
+        # Move to an initial position           
+        iiwa_handle.movePTPJointSpace(pose,initVel)
     except:
         print('coulnt communicate with kuka robot')
 
