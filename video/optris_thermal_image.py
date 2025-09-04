@@ -69,15 +69,16 @@ if __name__ == "__main__":
         cv2.imshow("IR streaming", frame)
         if cv2.waitKey(1) & 0xFF == ord("q"):
             break
-        elif cv2.waitKey(1( & 0xFF == ord("f"):
+        elif cv2.waitKey(1) & 0xFF == ord("f"):
             f = optris.get_focus_motor_position()
             f += 0.1
             if not optris.set_focus_motor_position(f) == 0:
                 print("error setting focus")
-        elif cv2.waitKey(1( & 0xFF == ord("b"):
+        elif cv2.waitKey(1) & 0xFF == ord("b"):
             f = optris.get_focus_motor_position()
             f -= 0.1
             if not optris.set_focus_motor_position(f) == 0:
                 print("error setting focus")
     optris.terminate()
     cv2.destroyAllWindows()
+
