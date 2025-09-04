@@ -20,6 +20,19 @@ else:
 TMIN = 300
 TMAX = 900
 
+# video thermal text properties
+PRINT_THERMAL = 1              # set to 1 to print the thermal result in the video else show without it.
+# font
+font = cv2.FONT_HERSHEY_SIMPLEX
+# org
+org = (10, 10)
+# fontScale
+fontScale = 1
+# Blue color in BGR
+color = (255, 0, 0)
+# Line thickness of 2 px
+thickness = 2
+
 if __name__ == "__main__":
 
     # load library
@@ -46,12 +59,13 @@ if __name__ == "__main__":
     processed_thermal_frame = (thermal_frame - 1000.0) / 10.0 
     print("processed frame : ", processed_thermal_frame)
 
-    optris.set_palette(9)
-    w, h = optris.get_palette_image_size()
-    print("{} x {}".format(w, h))
     while True:
         # Get the palette image (RGB image) and display it
         frame = optris.get_palette_image(w, h)
+        if PRINT_THERMAL == 1:
+            thermal_frame = optris.get_thermal_image(w, h)
+            processed_thermal_frame = (thermal_frame - 1000.0) / 10.0 
+            frame = cv2.putText(frame, str(processed_thermal_frame), org, font, fontScale, color, thickness, cv2.LINE_AA)
         cv2.imshow("IR streaming", frame)
         if cv2.waitKey(1) & 0xFF == ord("q"):
             break
