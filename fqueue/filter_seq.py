@@ -15,6 +15,7 @@ import pickle
 import argparse
 
 import configparser
+import signal
 
 # for interfacing with gpio in raspberry pi
 import pigpio
