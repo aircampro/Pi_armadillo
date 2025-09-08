@@ -1212,11 +1212,13 @@ def Enocean2Telemetry(s_port, telem_opt):
     # ------------- Ciphers / Cryptography -----------------
     # AES_GCM
     def aes_gcm_encrypt(key,iv,text):
+        from Crypto.Cipher import AES
         cipher = AES.new(key, AES.MODE_GCM, nonce=iv)
         ciphertext, mac = cipher.encrypt_and_digest(text)
         return ciphertext, mac
         
     def aes_gcm_decrypt(key,iv,ciphertext,mac):
+        from Crypto.Cipher import AES
         plaintext = 0
         cipher = AES.new(key, AES.MODE_GCM, nonce=iv)
         try:
