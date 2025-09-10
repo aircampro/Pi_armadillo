@@ -65,6 +65,13 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     try:
+        # asyncio.run() is used when running this example with Python 3.7 and higher.
         asyncio.run(main(args))
+    except AttributeError:
+        # For Python 3.6 a bit more code is required to run the main() task on
+        # an event loop.
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(main(args))
+        loop.close()
     except KeyboardInterrupt:
         print()
