@@ -23,7 +23,7 @@ import pytz
 MY_TZ='Europe/Moscow'
 
 # ------------ here list the choices and options for iOt or monitoring -----------------      
-TELEM_CHOICES=[ "soracom", "beebotte", "mosquito", "ubidots", "machinist", "aws", "azure", "yandex", "twillio", "smtp_email", "ssl_tls_server", "ssl_23_server", "cloud_mqtt", "gcs_blob", "splunk", "gcs_spread", "ambient", "influxdb", "redis", "mongo", "mysql", "sybase", "oracle", "sqllite", "pg", "fluvio", "scyllia", "rocks", "ali", "taiga", "msaccess", "riak", "elas", "neo4j", "cumulocity", "sftp", "coAp", "sms_gsm_modem", "ibmdb", "couchbase", "ignition", "denzow" ]
+TELEM_CHOICES=[ "soracom", "beebotte", "mosquito", "ubidots", "machinist", "aws", "azure", "yandex", "twillio", "smtp_email", "ssl_tls_server", "ssl_23_server", "cloud_mqtt", "gcs_blob", "splunk", "gcs_spread", "ambient", "influxdb", "redis", "mongo", "mysql", "sybase", "oracle", "sqllite", "pg", "fluvio", "scyllia", "rocks", "ali", "taiga", "msaccess", "riak", "elas", "neo4j", "cumulocity", "sftp", "coAp", "sms_gsm_modem", "ibmdb", "couchbase", "ignition", "denzow", "azure_iot" ]
 SORACOM=0
 BEEBOTTE=1
 MOSQUITO=2
@@ -66,6 +66,7 @@ IBMDB=38
 COUCHBASE=39
 IGNITION=40
 DENZOW=41
+AZURE_IOT=42
 # ============= make your choice of cloud service here from list above ================== 
 MY_CURRENT_TELEM=TELEM_CHOICES[SORACOM]
 
@@ -85,6 +86,12 @@ if MY_CURRENT_TELEM == "mosquito":
     MTOPIC = "topic/B/"
     MQTT_PORT = 1883
     KEEP_ALIVE = 60
+
+# mosquito
+if MY_CURRENT_TELEM == "azure_iot":
+    from azure.iot.device import IoTHubDeviceClient, Message
+    CONNECTION_STRING ="<primary_key>"
+    aiot_client = IoTHubDeviceClient.create_from_connection_string(CONNECTION_STRING, websockets=True)
 
 #define a global MQTT Topic which will be set upon choices
 GTOPIC=" "
@@ -570,7 +577,14 @@ def Enocean2Telemetry(s_port, telem_opt):
             print ("Timeout Error:",errt)
         except requests.exceptions.RequestException as err:
             print ("OOps: Something Else",err)
-    
+
+    # AZURE IOT
+    def sendAzureIoT(descrip1,temp_data1,descrip2,temp_data2):
+        mylist = [descrip1,temp_data1,descrip2,temp_data2]
+        mystr = '{' + ','.join(map(str,mylist))+'}'
+        message = Message(mystr)
+        aiot_client.send_message(message)
+     
     # MOSQUITO
     def sendDataMosquito(string1, enO_temp_value1, string2, enO_temp_value2):
         msg = string1 + enO_temp_value1
@@ -578,7 +592,7 @@ def Enocean2Telemetry(s_port, telem_opt):
         msg = string2 + enO_temp_value2
         client.publish(MTOPIC,msg)
         client.disconnect()
-        
+ 
     # BEEBOTTE
     def sendDataBeebotte(string1, enO_temp_value1, string2, enO_temp_value2):
         msg = string1 + enO_temp_value1
@@ -599,13 +613,13 @@ def Enocean2Telemetry(s_port, telem_opt):
     def addMongoRecord(string1, enO_temp_value1, string2, enO_temp_value2):
         rest = mongo_obj.add_record(string1, enO_temp_value1, string2, enO_temp_value2)
         print(rest)
-    
+        
     # AMBIENT
     def sendDataAmbient(string1, enO_temp_value1, string2, enO_temp_value2):
         t=datetime.datetime.now(pytz.timezone(MY_TZ))
         ret = am.send({'created': str(t), string1: enO_temp_value1, string2: enO_temp_value2})
         # not sure if we have it ?? am.disconnect()
-        
+ 
     # AWS
     def sendDataAws(string1, enO_temp_value1, string2, enO_temp_value2):
         data = {
@@ -618,7 +632,7 @@ def Enocean2Telemetry(s_port, telem_opt):
         print(f"sending to aws -> {sys.getsizeof(json_data)} bytes") 
         client = boto3.client(AWS_CLIENT)
         client.publish(topic=AWS_TOPIC_NAME, payload=json_data) 
-        
+
     # UBIDOTS
     def sendDataUbiDots(string1, temp_data1, string2, temp_data2): 
        try:
@@ -659,7 +673,7 @@ def Enocean2Telemetry(s_port, telem_opt):
         device_client.send_message(msg1)
         device_client.disconnect()
         device_client.shutdown()
-        
+
     # sub functions to store certs in azure key vaalts and may be useful for management of certs
     #
     def createCertAzure():
@@ -745,7 +759,7 @@ def Enocean2Telemetry(s_port, telem_opt):
 
     def upload_coAp(descrip1,temp_data1,descrip2,temp_data2):
         asyncio.run(upload_coAp_main(descrip1,temp_data1,descrip2,temp_data2))
-  
+
     # YANDEX
     def makeYandexTable(table_name):
 
@@ -926,7 +940,7 @@ def Enocean2Telemetry(s_port, telem_opt):
         CID +=1
         with open('couchbase.pickle', 'wb') as f:
             pickle.dump(CID, f)
-        
+   
     # get document function e.g.
     # get_probe_by_key("e_type_1")
     # get_probe_by_key("e_type_2")
@@ -971,7 +985,7 @@ def Enocean2Telemetry(s_port, telem_opt):
                 print(row)
         except Exception as e:
             print(e)
-            
+  
     # GCS BLOB UPLOAD
     def uploadBlobGcs(descrip1,temp_data1,descrip2,temp_data2):
         """Writes json to file then uploads csv to the bucket on GCS """
@@ -1100,7 +1114,7 @@ def Enocean2Telemetry(s_port, telem_opt):
 
     def get_data_redis(hashkey='enOcean Temperatures'):
         return redis_client.hgetall(hashkey) 
-        
+
     # MACHINIST
     def sendDataMachinist(descrip1,temp_data1,descrip2,temp_data2):
         data = {
@@ -1216,7 +1230,7 @@ def Enocean2Telemetry(s_port, telem_opt):
         cipher = AES.new(key, AES.MODE_GCM, nonce=iv)
         ciphertext, mac = cipher.encrypt_and_digest(text)
         return ciphertext, mac
-        
+
     def aes_gcm_decrypt(key,iv,ciphertext,mac):
         from Crypto.Cipher import AES
         plaintext = 0
@@ -1246,7 +1260,7 @@ def Enocean2Telemetry(s_port, telem_opt):
         except:
             print("The message couldn't be verified")  
         return decrypt_data       
-        
+
     # RSA_cryptography (Rivest-Shamir-Adleman)
     def RSA_encrypt(message, ):
         from Crypto.Cipher import PKCS1_OAEP
@@ -1276,7 +1290,7 @@ def Enocean2Telemetry(s_port, telem_opt):
         cipher_text = cipher.encrypt(message.encode('UTF-8'))
         print(cipher_text)
         return cipher_text
-        
+
     def RSA_decrypt(cipher_text,pr_key):
         from Crypto.Cipher import PKCS1_OAEP
         #Instantiating PKCS1_OAEP object with the private key for decryption
@@ -1285,7 +1299,7 @@ def Enocean2Telemetry(s_port, telem_opt):
         decrypted_message = decrypt.decrypt(cipher_text)
         print(decrypted_message) 
         return decrypted_message
-        
+
     # common packers
     #
     # messagepack
@@ -1324,7 +1338,7 @@ def Enocean2Telemetry(s_port, telem_opt):
             print msg 
             msgs.append(msg)
         return msgs 
-        
+
     # SSL TLS Client connection to your own SSL server which echos the response back in reply 
     def sendTLSClient(descrip1,temp_data1,descrip2,temp_data2):
         import socket, ssl
@@ -1638,7 +1652,7 @@ def Enocean2Telemetry(s_port, telem_opt):
         )
         conn = pyodbc.connect(conn_str)
         cursor = conn.cursor()
-        
+
     def putValueMsAccess(desc1, temper1, desc2, temper2):	
         sql_insert_data = (
             "INSERT INTO enotemp (name1, value, name2, value, time_stamp)"
@@ -1664,7 +1678,7 @@ def Enocean2Telemetry(s_port, telem_opt):
             port=pt,
         )
         #bucket = client.bucket('mybucket')
-		
+
     def add_data_riak(d1, t1, d2, t2):
         if (BUK_ID < 1000) and (MAKE_NEW_BUCKET == 1) :
             BUK_ID=BUK_ID+1
@@ -1683,7 +1697,7 @@ def Enocean2Telemetry(s_port, telem_opt):
         query.map("function(v) { var data = JSON.parse(v.values[0].data); if(data."+str(data_desc)+") { return [[v.key, data]]; } return []; }")
         for spam in query.run():
             print("%s - %s" % (spam[0], spam[1]))	
-            
+   
     # rocks DB
     #
     # sudo apt install python3-dev librocksdb-dev
@@ -1694,7 +1708,7 @@ def Enocean2Telemetry(s_port, telem_opt):
     def connectRocks(dbnm="my_enOcean-db"):
         import rocksdb
         db = rocksdb.DB(dbnm, rocksdb.Options(create_if_missing=True))    
-        
+
     def putToRocks(d1, t1, d2, t2):
         batch = rocksdb.WriteBatch()
         key=d1.encode('utf-8')
@@ -1704,7 +1718,7 @@ def Enocean2Telemetry(s_port, telem_opt):
         value=str(t2).encode('utf-8')
         batch.put(key, value)
         db.write(batch)
-        
+
     def getFromRocks(d1, d2):
         k1 = d1.encode('utf-8')
         k2 = d2.encode('utf-8')
@@ -1719,7 +1733,7 @@ def Enocean2Telemetry(s_port, telem_opt):
         from fluvio import Fluvio, Offset, ConsumerCoonfig
         # Connect to cluster
         fluvio = Fluvio.connect()
-        
+
     def sendSmartFluvio(d1,t1,d2,t2):
         # Produce to topic
         producer = fluvio.topic_producer(F_TOPIC_NAME)
@@ -1759,7 +1773,7 @@ def Enocean2Telemetry(s_port, telem_opt):
                 time TEXT
             )
         """)
-        
+
     def send2Scyllia(d1,t1,d2,t2):
         session = cluster.connect('mykeyspace')
         # Insert 2 rows into the eno_temps_table
@@ -1850,7 +1864,7 @@ def Enocean2Telemetry(s_port, telem_opt):
             }
         }
         es.indices.create(index="temperatures", body=mapping)
-    
+
     def initElasticSearch():
         try:
             with open('elastic_idx.txt', 'r') as ss:
@@ -1914,7 +1928,7 @@ def Enocean2Telemetry(s_port, telem_opt):
         with open('elastic_idx.txt', 'w') as ss:
             ss.write(str(N_IDX))
         es.close()
-        
+
     # example of how to display all temperatures greeater than a value    
     def displayGtElastic(greater_than=20.0):
         es = Elasticsearch(
@@ -1970,7 +1984,7 @@ def Enocean2Telemetry(s_port, telem_opt):
         with driver.session() as session:
             # Clear database
             session.write_transaction(clear_db)
-   
+
     def recordAdd2Neo4j(d1, t1, d2, t2):
 
         # ====== Get neo4j settings
@@ -1979,7 +1993,7 @@ def Enocean2Telemetry(s_port, telem_opt):
         uri = config['NEO4J']['uri']
         user = config['NEO4J']['user']
         password = config['NEO4J']['password']
-    
+
         # Creating the neo4j driver
         driver = GraphDatabase.driver(uri, auth=(user, password))
     
@@ -1997,7 +2011,7 @@ def Enocean2Telemetry(s_port, telem_opt):
                 session.write_transaction(add_friend_relationship_t2, T2_LAST, recd2)        
             T1_LAST=recd1
             T2_LAST=recd2
-               
+ 
     def recordsShowNeo4j():
 
         # ====== Get neo4j settings
@@ -2051,14 +2065,14 @@ def Enocean2Telemetry(s_port, telem_opt):
         else:
             TAIGA_STATE = 0
             return	
-            
+
         # get the authorization then create the task for it			
         #msg = json.loads(payload_json)
         #msg_str = json.dumps(msg)
         msg_str = temp_data1
         timestamp = datetime.datetime.now(pytz.timezone(MY_TZ)).timestamp()             # set the timezone as you wish for your location
         event_ts=round(timestamp)
-	
+
         data = {
             'username': TAIGA_USER,
             'password': TAIGA_PW,
@@ -2106,13 +2120,13 @@ def Enocean2Telemetry(s_port, telem_opt):
             "user_story": 17,
             "watchers": []
         }
-		
+
         headers = {
             "Content-Type": "application/json",
             "Authorization": f"Bearer {taiga_auth_token}",
             "User-Agent": "Python3"
         }
- 
+
         senddatajson = json.dumps(data).encode("ascii")
         try:
             req = requests.post("http://localhost:8000/api/v1/tasks", data=senddatajson, headers=headers)
@@ -2127,7 +2141,7 @@ def Enocean2Telemetry(s_port, telem_opt):
             print ("OOps: Something Else",err)
         with open('taiga.pickle', 'wb') as f:
             pickle.dump(TAIGA_STATE, f)  
-            
+
     # cumulocity iot board https://www.softwareag.cloud/site/product/cumulocity-iot.html#
     #
     X2 = 12.5                                                     # low alarm threshold  
@@ -2135,7 +2149,7 @@ def Enocean2Telemetry(s_port, telem_opt):
     def setAlarmInCumulocity(dt, tv):
         alarm_time = datetime.now(timezone.utc)
         alarm_text = dt+"{"+alarm_time+"}"
-        
+
         # clear any alarms first
         no_alarm = 0
         for a in c8y.alarms.select(source=DEV_ID, status=Alarm.Status.ACTIVE):
@@ -2154,9 +2168,9 @@ def Enocean2Telemetry(s_port, telem_opt):
                                    severity=Alarm.Severity.WARNING)
             cx_CustomData={'temp': tv }
             c8y.alarms.create(eno_temp_alarm)
-    
+
     def sendDataCumulocity(descrip1, temp_data1, descrip2, temp_data2):
-	
+
         if (temp_data1 < X2) and (temp_data2 < X2):
             descrip_temp = descrip1 + " " + descrip2
             temp_val = (float(temp_data1) + float(temp_data2))/2.0
@@ -2199,7 +2213,7 @@ def Enocean2Telemetry(s_port, telem_opt):
             print(f"The value is: {tag_value}")
         except Exception as e:
             print(f"Oops! Something went wrong: {str(e)}")
-	
+
     # get table from ignition server	
     def get_ignition_table(tab='YourTable', lines=10):
         try:	
@@ -2208,7 +2222,7 @@ def Enocean2Telemetry(s_port, telem_opt):
             print(results)
         except Exception as e:
             print(f"Oops! Something went wrong: {str(e)}")
-			
+
     # get history from ignition server
     def get_hist_data(start_date, end_date):
         try:	
@@ -2258,7 +2272,7 @@ def Enocean2Telemetry(s_port, telem_opt):
             CARD_SENT ^= 8 
         with open('denzow.pickle', 'wb') as f:
             pickle.dump(CARD_SENT, f)    
-            
+
     # ==== Choose the iOt you want to use according to the define in top section ====        
     if telem_opt == "soracom":
         sendData=sendDataSoraCom
@@ -2327,6 +2341,8 @@ def Enocean2Telemetry(s_port, telem_opt):
         sendData=sendTLSClient
     elif telem_opt == "ssl_23_server":
         sendData=sendSSL23Client
+    elif telem_opt == "azure_iot":
+        sendData=sendAzureIoT
     elif telem_opt == "gcs_blob":
         sendData=uploadBlobGcs
     elif telem_opt == "denzow":
@@ -2421,7 +2437,7 @@ def Enocean2Telemetry(s_port, telem_opt):
         client.connect("localhost", MQTT_PORT, KEEP_ALIVE)    
         sendData=sendDataMosquito
         GTOPIC=MTOPIC
-        
+ 
     # read the enOcean sensor         
     sensor1_rdy = False
     sensor2_rdy = False
@@ -2430,7 +2446,7 @@ def Enocean2Telemetry(s_port, telem_opt):
     optLen = 0
     telegraph,headList,dataList,optList = [],[],[],[]
     ready = True
-    
+
     # look for the sensors then break out and send to the telemetry    
     while True:
         if sensor1_rdy and sensor2_rdy:
@@ -2507,7 +2523,7 @@ if __name__ == '__main__':
     except:
         print("cannot open serial port: %s" % PORT)
         exit(1)
-                
+        
     t1,t2 = Enocean2Telemetry(s_port, MY_CURRENT_TELEM)
     print("sensorID..." % SENSORID1)
     print("temperature" % t1)
