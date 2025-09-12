@@ -36,7 +36,7 @@ if __name__ == "__main__":
     # open socket
     s = socket.socket(socket.AF_SIGFOX, socket.SOCK_RAW)
     s.setblocking(True)
-    sendmsg = data_omron_cj_msg.encode('utf-8')
+    sendmsg = bytearray(data_omron_cj)
 
     while True:
         s.send(sendmsg)
