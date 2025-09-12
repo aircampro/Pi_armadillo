@@ -10,11 +10,12 @@ elif (sys.version_info.major == 2):
     MY_PY = 2
 else:
     print("unknown python version detected ", sys.version_info.major)
-    
+import struct
+
 # ========================================= tools for showing and packing data ===================================================
 
 import numpy as np
-    
+
 # make a numpy array byte by byte 
 # this can be useful if you need to patch a particular part of the message 
 # i.e use the i number which is the position of the byte in the string 
@@ -62,7 +63,7 @@ def decode_bcd(data):
     binArray[1::2] = binArrayL
 
     return binArray
-	
+
 def encode_bcd(data):
     """
     Encode 4bit BCD array
@@ -97,7 +98,7 @@ def unpack_bits(data):
     
     # put it back like array([0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 1, 1, 0, 1, 0, 1, 0], dtype=uint8)
     return byteArray2D_bin[:, ::-1].flatten()
-	
+
 def pack_bits(data):
     """
     Pack an array of bit data into bytes stored in order from LSB
@@ -128,7 +129,7 @@ def twosComplement_hex(hexval):
     if val & (1 << (bits-1)):
         val -= 1 << bits
     return val
-    
+
 # ============================================================== modbus ===========================================================================
 #
 # pip install pymodbus
@@ -164,7 +165,7 @@ def connectModbusSerial(pt=USB_SER_MOD,meth="rtu",bd=MOD_BAUD,to=0.1):
     client = ModbusSerialClient(port=pt, method=meth, baudrate=bd, timeout=to)
     client.connect()
     return client
-	
+
 def readCoilModbus(client,addr=1,num=1):
     # rr = client.read_coils(1, 1) - would read first coil and return it
     try:
@@ -180,7 +181,7 @@ def readDiscreteInputModbus(client,addr=1,num=1):
     except Exception as e:
         print("Exception in read_discrete_inputs = ",e)  
 	return rr.bits[0]
-	
+
 def readCoilsModbus(client,addr,number):
     # rr = client.read_coils(3, 9) - would read 3rd coil and next 9 bits return it   
     try:
@@ -188,7 +189,7 @@ def readCoilsModbus(client,addr,number):
     except Exception as e:
         print("Exception in read_coils = ",e)  
 	return rr.bits
-	
+
 def readDiscreteInputsModbus(client,addr,number):
     # rr = client.read_discrete_inputs(3, 9) - would read 3rd coil and next 9 bits return it    
     try:
@@ -203,7 +204,7 @@ def readHoldingRegistersModbus(client,addr,number):
     except Exception as e:
         print("Exception in read_holding_registers = ",e) 
 	return rr.registers	
-
+   
 def writeCoilModbus(client,addr,boolValue):
     try:
         rr = client.write_coil(addr, boolValue)          # example True or False
@@ -217,14 +218,36 @@ def writeCoilsModbus(client,addr,boolValueList):
     except Exception as e:
         print("Exception in write_coil = ",e)  
     return readCoilsModbus(addr,len(boolValueList))	
-    
+
 def writeHoldingRegisterModbus(client,addr,value): 
     try:
         rr = client.write_register(addr, value)
     except Exception as e:
         print("Exception in write_holding_register = ",e)  
-    return readHoldingRegistersModbus(addr,1)	
+    return readHoldingRegistersModbus(addr,1)
 
+# https://fararopaya.com/product/کارت-آنالوگ-ورودی-با-خروجی-مدباس-mac-a4/
+# 24 bit analog input
+# MAC A4
+# to swap endian use struct
+# <little-endian
+# >big-endian
+#
+def get_macA4_1(client, addr=1100, number=2):
+    response = readHoldingRegistersModbus(client, addr=1100, number=2)
+    f = struct.unpack_from('<f', response, 0)[0] 
+    return response, f
+
+def get_macA4_2(client, addr=1100, number=2):
+    response = readHoldingRegistersModbus(client, addr=1100, number=2)
+    f = struct.unpack_from('<f', response, 0)[0]
+    return response, f
+	
+def set_macA4_gain(client,addr=21,value=128):
+    writeHoldingRegisterModbus(client,addr,value)
+    response = readHoldingRegistersModbus(client, addr, number=1)
+    return response
+    
 def writeHoldingRegistersModbus(client,addr,valuesList):
     try:
         rr = client.write_registers(addr, valuesList)          # example set starting at 9 values = [ 1, 3, 5, 8 ]
@@ -258,16 +281,16 @@ def readHRegs2JsonList(self, addr, count, unit=1):
     l['VX'] = twosComplement_hex('{:x}'.format(regs[1]))
     l['ex'] = regs[0]
     l['vx'] = regs[1]
-    
+
     return l
-    
+
 def readInputRegistersModbus(client,addr,number):   
     try:
         rr = client.read_input_registers(addr, number)
     except Exception as e:
         print("Exception in read_input_registers = ",e)  
 	return rr.registers	
-	
+
 def disconnectModbusTCP(client):
     client.close()
 
@@ -312,7 +335,7 @@ def writeS7Real(client, s7db=2,s7offset=10, s7real=4, val=98.7):
 
 def closeS7Conn(client):
     client.disconnect()  
- 
+
 #
 #                          Network communication using UDP TCP Socket - use these for mitsubishi and omron communication
 #
@@ -331,7 +354,7 @@ def connectTCP(host, port):
     except socket.error:
         TCP_client.close()
         return -1
-    
+
 def connectUDP(host, port):
     import socket
     UDP_client = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)   
@@ -342,7 +365,7 @@ def connectUDP(host, port):
     except socket.error:
         UDP_client.close()
         return -1
-    
+
 SCTP_PORT=36413
 def connectSCTP(host, port):
     import socket
@@ -354,19 +377,19 @@ def connectSCTP(host, port):
     except socket.error:
         sk.close()
         return -1
-    
+
 def diconnectTCP(TCP_client):
     TCP_client.close()
 
 def diconnectUDP(UDP_client):
     UDP_client.close()
-    
+
 def disconnectSCTP(sk):
     sk.close()
-    
+
 def closeIPHandle(ip_handle):
     ip_handle.close()
-   
+
 # OMRON CJ Series - this is the data message that defines what you are reading/writing from the omron PLC 
 #
 # you set this message up to read or write what you need 
@@ -475,10 +498,7 @@ def omronCJReadTCP(TCP_client,data_cj_readprotocol):                            
         # FINS node address  0x00 = auto recieve
         0x00, 0x00, 0x00, 0x00,
     ]
-    if (MY_PY == 2):
-        sendmsg = bytes(shakehand_protocol)
-    elif (MY_PY == 3):
-        sendmsg = shakehand_protocol.encode('utf-8')
+    sendmsg = bytes(shakehand_protocol)
     TCP_client.send(sendmsg)
     try:
         TCP_client.send(sendmsg)
@@ -505,15 +525,9 @@ def omronCJReadTCP(TCP_client,data_cj_readprotocol):                            
         0x00, 0x00, 0x00, 0x00,  # Error Code
     ]
     # standby
-    if (MY_PY == 2):
-        sendmsg = bytes(standby_protocol)
-    elif (MY_PY == 3):
-        sendmsg = standby_protocol.encode('utf-8')
+    sendmsg = bytes(standby_protocol)
     TCP_client.send(sendmsg)
-    if (MY_PY == 2):
-        sendmsg = bytes(data_cj_readprotocol)
-    elif (MY_PY == 3):
-        sendmsg = data_cj_readprotocol.encode('utf-8')
+    sendmsg = bytes(data_cj_readprotocol)
     TCP_client.send(bytes(sendmsg))
     # wait and read reply
     response = TCP_client.recv(1024)
@@ -543,15 +557,12 @@ def connectYoEaMs(host=YO_HOST, port=YO_PORT):
 def getStartAddressYoEaMs(add='D00001'):
     start_addr=int(add[5])+(10*int(add[4]))+(100*int(add[3]))+(1000*int(add[2])) 
     return start_addr
-    
+
 def readYoEaMs(tcp_udp_connect_obj, add='D00001', blen='04', sign="unsigned", bit=16):										
     cmd='01WRD'	
     abval=add + "," + blen 
     msg=cmd+abval+'\r\n'  
-    if (MY_PY == 2):
-        sendmsg = bytes(msg)
-    elif (MY_PY == 3):
-        sendmsg = msg.encode('utf-8')
+    sendmsg = bytes(msg)
     try:    
         tcp_udp_connect_obj.send(sendmsg)	
     except Exception as e:
@@ -663,7 +674,7 @@ def readKV5000(tcp_udp_connect_obj, add="DM00000.S 4", sign="unsigned", bit=16):
                 datanum.append(data)
                 print(data)	
     return datanum            
-    
+
 # ================= mitsi ===================================
 mitsi_host, mitsi_port = "192.168.1.2", 1026
 
@@ -682,15 +693,12 @@ dataQ = [
     0xB0,           # Device code (ZR register =0xB0, D register =0xa8)
     0x07,0x00       # Device number ZR150 to ZR156
 ] 
-   
+
 # mitsubishi Q Series
 def readQSeries(tcp_udp_connect_obj,dataQmsg):
     dataQmsg[7] = len(dataQmsg[9:]) & 0xFF
     dataQmsg[8] = (len(dataQmsg[9:]) >> 16) & 0xFF
-    if (MY_PY == 2):
-        sendmsg = bytes(dataQmsg)
-    elif (MY_PY == 3):
-        sendmsg = dataQmsg.encode('utf-8')
+    sendmsg = bytes(dataQmsg)
     try:
         tcp_udp_connect_obj.send(sendmsg)
     except Exception as e:
@@ -712,7 +720,7 @@ def readQSeries(tcp_udp_connect_obj,dataQmsg):
     #In Mitsubishi, the device will be a little endian,
     #so inverting is required, as in return_data[0].
     return convert_data
-    
+
 # ================= FX3Series TCP and UDP ===================== #
 dataFX = [
     0x01,0xFF,            # sub-header
@@ -723,10 +731,7 @@ dataFX = [
 ]
 # mitsubishi FX Series
 def readFXSeries(tcp_udp_connect_obj,dataFXmsg=dataFX):
-    if (MY_PY == 2):
-        sendmsg = bytes(dataFXmsg)
-    elif (MY_PY == 3):
-        sendmsg = dataFXmsg.encode('utf-8')
+    sendmsg = bytes(dataFXmsg)
     try:
         tcp_udp_connect_obj.send(sendmsg)
     except Exception as e:
@@ -783,7 +788,7 @@ def readKVSeries(client):
         temp = chr(int(format(dt, "02X"), 16))
         data_sum = data_sum + temp 
     return_data = int(data_sum)
-    
+
 def writeKVSeries(client):
     kvCommand = b"WRS\x20DM008000.U\x200002\x20AA\x20BB\x0D"
     if (MY_PY == 2):
@@ -906,10 +911,7 @@ dataIQR = [
 def readIQRSeries(tcp_udp_connect_obj, dataIQRmsg):
     dataIQRmsg[7] = len(dataIQRmsg[9:]) & 0xFF
     dataIQRmsg[8] = (len(dataIQRmsg[9:]) >> 16) & 0xFF
-    if (MY_PY == 2):
-        sendmsg = bytes(dataIQRmsg)
-    elif (MY_PY == 3):
-        sendmsg = dataIQRmsg.encode('utf-8')    
+    sendmsg = bytes(dataIQRmsg)    
     try:
         tcp_udp_connect_obj.send(sendmsg))
     except Exception as e:
@@ -940,7 +942,7 @@ data1 = [
     0xA8,           # Device code D
     0x03,0x00       # Device count (number of points)
 ]
-   
+
 data2 = [
     0x50,0x00,      # sub-header
     0x00,           # Requesting network number
@@ -966,15 +968,12 @@ def connectMitsiTCP(MIT_HOST = '192.168.1.1', MIT_PORT = 1026):
     sock.connect((MIT_HOST, MIT_PORT))
     sock.settimeout(3)
     return sock
-    
+
 def sendDataSlmpMitsi(tcp_udp_connect_obj,data,BUFSIZE=4096):
     # set the data lenght in the message
     data[7] = len(data[9:]) & 0xFF
     data[8] = (len(data[9:]) >> 16) & 0xFF
-    if (MY_PY == 2):
-        sendmsg = bytes(data)
-    elif (MY_PY == 3):
-        sendmsg = data.encode('utf-8')
+    sendmsg = bytes(data)
     try:
         tcp_udp_connect_obj.send(sendmsg))
     except Exception as e:
@@ -989,7 +988,7 @@ def sendDataSlmpMitsi(tcp_udp_connect_obj,data,BUFSIZE=4096):
 
 def disconnectMitsiTCP(tcp_udp_connect_obj):
     tcp_udp_connect_obj.close()
-    
+
 # =================================== SIEMENS S7-1500 ================================================================
 # Siemens requires work to be done in PLC as per web link, to set-up communication block in S7
 #
@@ -1004,7 +1003,7 @@ def connectSiemensS7_1500():
     sock.bind(('192.168.0.229', SOURCE_PORT))
     sock.connect((DESTINATION_ADDR, DESTINATION_PORT))
     return sock
-    
+
 def readSiemensS7_1500(sock):   
     try:
         sock.send(b'\x11\x00\x19\x29\x30\x30\x30\x30\x21\x28')
@@ -1017,10 +1016,86 @@ def readSiemensS7_1500(sock):
         data=data.decode('utf-8') 
     print(data)
     return data
-    
+
 def disconnectSiemensS7_1500(sock):    
     return sock.close()    
 
+# https://github.com/FiloCara/pyS7
+#
+from pyS7 import S7Client
+
+# Define area tags to read
+tags = [ "DB1,X0.0",     # Read BIT 0 (first bit) of DB1
+         "DB1,X0.6",     # Read BIT 7 (7th bit) of DB1
+         "DB1,I30",      # Read INT at address 30 of DB1
+         "M54.4",        # Read BIT 4 (fifth bit) in the merker (memento) area
+         "IW22",         # Read WORD at address 22 in input area
+         "QR24",         # Read REAL at address 24 in output area
+         "DB1,S10.5"     # Read sequence of CHAR of length 5 starting at address 10 of DB1
+]
+
+def get_s7_data(tags):
+
+    # Create a new 'S7Client' object to connect to S7-300/400/1200/1500 PLC.
+    # Provide the PLC's IP address and slot/rack information
+    client = S7Client(address="192.168.5.100", rack=0, slot=1)
+
+    # Establish connection with the PLC
+    client.connect()
+
+    # Read the data from the PLC using the specified tag list
+    data = client.read(tags=tags)
+
+    return data  # [True, False, 123, True, 10, -2.54943805634653e-12, 'Hello']
+
+from pyS7 import S7Client, DataType, S7Tag, MemoryArea
+
+# Define area tags to write
+tags = [
+        "DB1,X0.0",     # => S7Tag(MemoryArea.DB, 1, DataType.BIT, 0, 0, 1) - BIT 0 (first bit) of DB1
+        "DB1,X0.6",     # => S7Tag(MemoryArea.DB, 1, DataType.BIT, 0, 6, 1) - BIT 7 (7th bit) of DB1
+        "DB1,I30",      # => S7Tag(MemoryArea.DB, 1, DataType.INT, 30, 0, 1) - INT at address 30 of DB1
+        "M54.4",        # => S7Tag(MemoryArea.MERKER, 0, DataType.BIT, 4, 4, 1) - BIT 4 (fifth bit) in the merker (memento) area
+        "IW22",         # => S7Tag(MemoryArea.INPUT, 0, DataType.WORD, 22, 0, 1) - WORD at address 22 in input area
+        "QR24",         # => S7Tag(MemoryArea.OUTPUT, 0, DataType.REAL, 24, 0, 1) - REAL at address 24 in output area
+        "DB1,S10.5",    # => S7Tag(MemoryArea.DB, 1, DataType.CHAR, 10, 0, 5) - Sequence of CHAR (string) of length 5 starting at address 10 of DB1
+        S7Tag(memory_area=MemoryArea.DB, db_number=5, data_type=DataType.REAL, start=50, bit_offset=0, length=3) # => Sequence of REAL of length 3 starting at address 50 of DB5 
+]
+# Defines values to write
+values = [
+        False,
+        True,
+        25000,
+        True,
+        120,
+        1.2345,
+        "Hello",
+        (3.14, 6.28, 9.42)
+]
+
+def write_s7(tags, values):
+
+    # Create a new 'S7Client' object to connect to S7-300/400/1200/1500 PLC.
+    # Provide the PLC's IP address and slot/rack information
+    client = S7Client(address="192.168.5.100", rack=0, slot=1)
+
+    # Establish connection with the PLC
+    client.connect()
+
+    # Defines values to write
+    values = [
+        False,
+        True,
+        25000,
+        True,
+        120,
+        1.2345,
+        "Hello",
+        (3.14, 6.28, 9.42)
+    ]
+
+    # Write data to the PLC using tags and values
+    client.write(tags=tags, values=tags)    
 # =================================== OMRON CJ FINS commands ==============================================================
 # https://github.com/OkitaSystemDesign/FinsCommand/blob/main/finsudp.py
 #
@@ -1033,7 +1108,7 @@ def omron_fins_connect(ip='192.168.250.1',plc_ad='0.1.0',pc_ad='0.10.0'):
     import finsudp
     finsudp = fins(ip, plc_ad, pc_ad) # ip addr plc addr pc addr
     return finsudp
-    
+
 # read E0_30000 10 bytes default 
 def read_fins_data_reg(finsudp, reg='E0_30000', byt=10):
     data = finsudp.read(reg, byt)
@@ -1043,12 +1118,12 @@ def read_fins_data_reg(finsudp, reg='E0_30000', byt=10):
 def write_fins_data_reg(finsudp, reg='E0_0', data1):    
     rcv = finsudp.write(reg, data1)
     return rcv
-    
+
 # D110 10 bytes (D110-119)
 def fill_fins_data_reg(finsudp, reg='D110', byts=10, data1=55):   
     rcv = finsudp.fill(reg, byts, data1)
     return rcv
-    
+
 # set mode (0x02=Monitor 0x04=Run)
 def set_plc_mode(finsudp, mod=0x04):
     rcv = finsudp.run(mod)
@@ -1080,7 +1155,7 @@ def read_plc_clock(finsudp):
 def set_plc_clock_mytime(finsudp):
     rcv = finsudp.SetClock(datetime.now())
     return rcv
-    
+
 # clear the plc error
 def clear_plc_error(finsudp):
     rcv = finsudp.ErrorClear()
@@ -1157,7 +1232,7 @@ def display_DOUBLE_data(finsudp, reg='D1017'):
 def display_STRING_data(finsudp, reg='D1021', n=5):
     data = finsudp.read(reg, n)
     print(finsudp.toString(data))                # out> ABCD2
-    
+
 # ==========================================allen bradley==================================================================
 # ---- AB ------ controlLogix
 AB_IP='10.0.1.2'
@@ -1167,15 +1242,15 @@ def connectAllebBradleyCL():
     ab = PLC()
     ab.IPAddress = AB_IP
     return ab
-    
+
 def connectAllebBradleyCL(ab):
     t = ab.Read('TAG_NAME[1].PARTCOUNT')                           # this is the tagname in the allen bradley PLC
     print('Tag Name: ', t.TagName, '\nTag Value: ', t.Value)
     return t.TagName,t.Value
-    
+
 def closeAllenBradleyCL(ab):
     ab.Close()
-    
+ 
 # DF1 protocol
 #
 AB_DF1_TABLE=43
