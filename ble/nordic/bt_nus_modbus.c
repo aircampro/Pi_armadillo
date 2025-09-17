@@ -200,7 +200,7 @@ static void uart_cb(const struct device *dev, struct uart_event *evt, void *user
         }
         k_mutex_unlock(&my_mutex);
        } else {
-           printk("error in receiving data\n")
+           printk("error in receiving data wrong function code or crc\n")
        }		
     }
 #elif defined(_SCALED)
@@ -222,12 +222,12 @@ static void uart_cb(const struct device *dev, struct uart_event *evt, void *user
 	       printk("Scaled Value %f\n", floatAsUnion.danielsFloat);
 		   tx_recv = URECVED;
         } else {
-           printk("Cannot lock mitex\n");
+           printk("Cannot lock mutex\n");
         }
         k_mutex_unlock(&my_mutex);
 
        } else {
-           printk("error in receiving data\n")
+           printk("error in receiving data wrong function code or crc\n")
        }		
     }
 #endif
@@ -429,4 +429,5 @@ void main(void)
 		}
     }
 }
+
 
