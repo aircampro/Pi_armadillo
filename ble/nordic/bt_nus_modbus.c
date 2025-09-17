@@ -285,6 +285,7 @@ void main(void)
    // for bleData
    uint8_t bleData[15];
    uint16_t bleLen = 10;
+   strcpy(bleData, "Data : NaN \n");	                           // initialise to no data message
 	
     // set-up UART
     const struct device *uart= DEVICE_DT_GET(DT_NODELABEL(UART_ID));
@@ -429,5 +430,6 @@ void main(void)
 		}
     }
 }
+
 
 
