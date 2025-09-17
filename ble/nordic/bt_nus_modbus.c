@@ -200,7 +200,7 @@ static void uart_cb(const struct device *dev, struct uart_event *evt, void *user
         }
         k_mutex_unlock(&my_mutex);
        } else {
-           printk("error in receiving data wrong function code or crc\n")
+           printk("error in receiving data\n")
        }		
     }
 #elif defined(_SCALED)
@@ -222,12 +222,12 @@ static void uart_cb(const struct device *dev, struct uart_event *evt, void *user
 	       printk("Scaled Value %f\n", floatAsUnion.danielsFloat);
 		   tx_recv = URECVED;
         } else {
-           printk("Cannot lock mutex\n");
+           printk("Cannot lock mitex\n");
         }
         k_mutex_unlock(&my_mutex);
 
        } else {
-           printk("error in receiving data wrong function code or crc\n")
+           printk("error in receiving data\n")
        }		
     }
 #endif
@@ -285,8 +285,8 @@ void main(void)
    // for bleData
    uint8_t bleData[15];
    uint16_t bleLen = 10;
-   strcpy(bleData, "Data : NaN \n");	                           // initialise to no data message
-	
+   strcpy(bleData, "Data : NaN \n");	
+   
     // set-up UART
     const struct device *uart= DEVICE_DT_GET(DT_NODELABEL(UART_ID));
     if (!device_is_ready(uart)){
@@ -353,10 +353,15 @@ void main(void)
 		tx_recv = USENDING;
     }
     // receive back call back
-	if (uart_rx_enable(uart ,rx_buf,sizeof rx_buf,RECEIVE_TIMEOUT) != 0) {
+#if defined(_RAW)        // response bytes for integer raw
+	if (uart_rx_enable(uart ,mbusRcvMsg, sizeof mbusRcvMsg, RECEIVE_TIMEOUT) != 0) {
 		return 1;
 	}
-	
+#elif defined(_SCALE)
+	if (uart_rx_enable(uart ,mbusFloatRcvMsg, sizeof mbusFloatRcvMsg, RECEIVE_TIMEOUT) != 0) {
+		return 1;
+	}
+#endif	
     // send using nordic NUS protocol BLE
     int err = 0;
 
@@ -430,6 +435,4 @@ void main(void)
 		}
     }
 }
-
-
 
