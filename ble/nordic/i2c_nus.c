@@ -57,15 +57,13 @@ int main(void)
 	char buff1[] = {BH1749_MODE_CONTROL1, BH1749_MODE_CONTROL1_DEFAULTS};
 	ret = i2c_write_dt(&dev_i2c, buff1, sizeof(buff1));
 	if (ret != 0) {
-		printk("Failed to write to I2C device address 0x%c at Reg. 0x%c\n", dev_i2c.addr,
-		       BH1749_MODE_CONTROL1);
+		printk("Failed to write to I2C device address 0x%c at Reg. 0x%c\n", dev_i2c.addr, BH1749_MODE_CONTROL1);
 	}
 	/* STEP 10 - Enable measurement by writing 1 to bit 4 of the MODE_CONTROL2 register */
 	char buff2[] = {BH1749_MODE_CONTROL2, BH1749_MODE_CONTROL2_RGB_EN_ENABLE};
 	ret = i2c_write_dt(&dev_i2c, buff2, sizeof(buff2));
 	if (ret != 0) {
-		printk("Failed to write to I2C device address 0x%c at Reg. 0x%c\n", dev_i2c.addr,
-		       BH1749_MODE_CONTROL2);
+		printk("Failed to write to I2C device address 0x%c at Reg. 0x%c\n", dev_i2c.addr, BH1749_MODE_CONTROL2);
 	}
 
 	while (1) {
@@ -75,8 +73,7 @@ int main(void)
 		ret = i2c_burst_read_dt(&dev_i2c, BH1749_RED_DATA_LSB, rgb_value,
 					sizeof(rgb_value));
 		if (ret != 0) {
-			printk("Failed to read to I2C device address 0x%c at Reg. 0x%c\n",
-			       dev_i2c.addr, BH1749_RED_DATA_LSB);
+			printk("Failed to read to I2C device address 0x%c at Reg. 0x%c\n", dev_i2c.addr, BH1749_RED_DATA_LSB);
 		}
 		// Print reading to console
 		printk("_______________________________\n");

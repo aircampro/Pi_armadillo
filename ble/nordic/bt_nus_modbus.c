@@ -21,12 +21,14 @@
   CONFIG_CAF_POWER_MANAGER=y
   # enable printk
   CONFIG_PRINTK=y
+  # Enable floating point format specifiers
+  CONFIG_CBPRINTF_FP_SUPPORT=y
 
   deviceTree either 0 or 20 depends on model
 &uart20 {
     status = "okay";
     compatible = "nordic,nrf-uarte";
-    current-speed = <115200>;
+    current-speed = <9600>;
     parity = <UART_CFG_PARITY_EVEN>;  
     stop-bits = <UART_CFG_STOP_BITS_1>;  
     data-bits = <UART_CFG_DATA_BITS_8>;  
@@ -85,11 +87,6 @@
 #define MSGINT_TO_SEND(X,a)  do{ sprintf(X, "Data : %d", a); } while(0)
 #define MSGFLT_TO_SEND(X,a)  do{ sprintf(X, "Data : %f", a); } while(0)
 
-// states for receiving and sending on the uart port, and re-transmitting through BLE NUS protocol
-#define USENDING 1
-#define URECVED 2
-#define SENTBLE 3
-	
 static uint8_t tx_buf[TRANS_BUFF_SIZE] = {0};
 static uint8_t rx_buf[RECEIVE_BUFF_SIZE] = {0};
 // define variable for modbus data
@@ -105,7 +102,7 @@ static ModbusReadHoldingRegsReq_t mhReq;                               // struct
 static ModbusReadHoldingRegsResp_t mhRsp;                              // struct for holding HReg Read Response 
 #define RECEIVE_TIMEOUT 100
 #define SLEEP_TIME_MS 1000
-volatile uint8_t tx_recv = 0;
+volatile uint16_t tx_recv = 0;
 
 #if defined(CONFIG_BOARD_NRF7002DK_NRF5340_CPUAPP) || defined(CONFIG_BOARD_NRF7002DK_NRF5340_CPUAPP_NS)
 static const struct gpio_dt_spec led0 = GPIO_DT_SPEC_GET(DT_ALIAS(led0), gpios);
@@ -117,6 +114,78 @@ static const struct gpio_dt_spec led2 = GPIO_DT_SPEC_GET(DT_ALIAS(led2), gpios);
 #endif
 
 K_MUTEX_DEFINE(my_mutex);                                                 // define mutex between BLE and UART
+K_MUTEX_DEFINE(my_state);                                                 // define mutex for the state volatile
+// states for receiving and sending on the uart port, and re-transmitting through BLE NUS protocol
+#define USENDING 1
+#define URECVED 2
+#define SENTBLE 3
+
+// a function to get and set the state engine variable
+void get_set_state( uint16_t req_state ) {
+	uint16_t my_state_flag = 0;
+	while ( my_state_flag == 0 ) {
+        if (k_mutex_lock(&my_state, K_MSEC(100)) == 0) {
+            tx_recv = req_state;
+			my_state_flag = 1;
+			k_mutex_unlock(&my_state);
+        } else {
+            printk("cant unlock state mutex\n");
+			k_msleep(100);
+        }
+	}
+}
+
+// function to correlate modbus time-out with baud rate	
+static uint16_t get_packet_timeout( uint16_t baud_rt ) {
+	switch(baud_rt) {
+		case 1200:
+		{
+		  return PACKET_TIMEOUT_1200;
+		}
+		break;
+		case 2400:
+		{
+		  return PACKET_TIMEOUT_2400;
+		}
+		break;
+		case 4800:
+		{
+		  return PACKET_TIMEOUT_4800;
+		}
+		break;
+		case 9600:
+		{
+		  return PACKET_TIMEOUT_9600;
+		}
+		break;
+		case 19200:
+		{
+		  return PACKET_TIMEOUT_19200;
+		}
+		break;
+		case 38400:
+		{
+		  return PACKET_TIMEOUT_38400;
+		}
+		break;
+		case 57600:
+		{
+		  return PACKET_TIMEOUT_57600;
+		}
+		break;
+		case 115200:
+		{
+		  return PACKET_TIMEOUT_115200;
+		}
+		break;
+		default:
+		{
+          printk("unsupported baud given ... defaulted 1200\n");
+		  return PACKET_TIMEOUT_1200;
+		}
+		break;
+	}
+}
 
 static void uart_cb(const struct device *dev, struct uart_event *evt, void *user_data)
 {
@@ -194,7 +263,7 @@ static void uart_cb(const struct device *dev, struct uart_event *evt, void *user
         if (k_mutex_lock(&my_mutex, K_MSEC(100)) == 0) {
 	       HReg1Val = regValue[0];
            printk("Holding Reg Raw %d\n", HReg1Val);
-		   tx_recv = URECVED;
+		   get_set_state(URECVED);
         } else {
            printk("Cannot lock mutex\n");
         }
@@ -220,7 +289,7 @@ static void uart_cb(const struct device *dev, struct uart_event *evt, void *user
 	       floatAsUnion.holdingReg = SWAP_UINT32(floatAsUnion.holdingReg);
 #endif
 	       printk("Scaled Value %f\n", floatAsUnion.danielsFloat);
-		   tx_recv = URECVED;
+		   get_set_state(URECVED);
         } else {
            printk("Cannot lock mitex\n");
         }
@@ -274,7 +343,7 @@ static struct bt_conn_cb conn_callbacks = {
     .connected    = connected,
     .disconnected = disconnected,
 };
-
+		  
 void main(void)
 {
                    
@@ -350,7 +419,7 @@ void main(void)
 		ptintk("error tx of message through uart\n");
 		return 1;                                                                        // exit if we cant send first message
 	} else {
-		tx_recv = USENDING;
+		tx_recv = USENDING;                                                              // no need for mutes as we havent enabled rx yet
     }
     // receive back call back
 #if defined(_RAW)        // response bytes for integer raw
@@ -385,12 +454,45 @@ void main(void)
         printk("Advertising failed to start (err %d)\n", err);
         return;
     }
+    uint16_t no_reply_resend = 0;                                          // counts up when we have not got a rx for the tx (after period resend active tx)
+	uint16_t baud_rt = 9600;                                               // TBD read this from the device tree
+    uint16_t mbPacketTimeOut = get_packet_timeout(baud_rt);
 
     while (1)
     {
-		if (tx_recv == USENDING) {                                             // wait for a new message to be received
-            k_msleep(100);		
+      if (k_mutex_lock(&my_state, K_MSEC(100)) == 0) {
+        if ((tx_recv == SENTBLE) || (no_reply_resend >= mbPacketTimeOut)) {
+            k_mutex_unlock(&my_state);				
+            // transmit the message (NO TIMEOUT)
+	        if (uart_tx(uart, tx_buf, sizeof(tx_buf), SYS_FOREVER_US) != 0) {
+		       printk("error in tx\n");
+			   // re-enable UART incase it was locked from the state engine
+               uart_rx_enable(uart);
+#if defined(_RAW)        // response bytes for integer raw
+	           if (uart_rx_enable(uart ,mbusRcvMsg, sizeof mbusRcvMsg, RECEIVE_TIMEOUT) != 0) {
+                  printk("failed to attach buffer to receive\n");
+		          return 1;
+	           }
+#elif defined(_SCALE)
+	           if (uart_rx_enable(uart ,mbusFloatRcvMsg, sizeof mbusFloatRcvMsg, RECEIVE_TIMEOUT) != 0) {
+                  printk("failed to attach buffer to receive\n");
+		          return 1;
+	           }
+#endif
+               pm_device_action_run(uart, PM_DEVICE_ACTION_RESUME);
+               k_msleep(100);
+               pm_device_action_run(uart, PM_DEVICE_ACTION_SUSPEND);
+               k_msleep(100);
+               pm_device_action_run(uart, PM_DEVICE_ACTION_RESUME);
+	        } else {
+              get_set_state(USENDING);
+			  no_reply_resend = 0;
+            }
+		} else if (tx_recv == USENDING) {                                             // wait for a new message to be received
+           k_mutex_unlock(&my_state);
+           no_reply_resend++;		   
 		} else if (tx_recv == URECVED) {
+            k_mutex_unlock(&my_state);	
 		    // we got new data so disable UART to save power ? (bug suggests do twice)
 		    uart_rx_disable(uart);
             pm_device_action_run(uart, PM_DEVICE_ACTION_SUSPEND);
@@ -415,24 +517,29 @@ void main(void)
                 printk("Failed to send data over BLE connection\n");
             }
             k_msleep(1000);
-			tx_recv = SENTBLE;
+            get_set_state(SENTBLE);	
 			
 			// re-enable UART for next message (bug suggests do twice)
             uart_rx_enable(uart);
+#if defined(_RAW)        // response bytes for integer raw
+	        if (uart_rx_enable(uart ,mbusRcvMsg, sizeof mbusRcvMsg, RECEIVE_TIMEOUT) != 0) {
+               printk("failed to attach buffer to receive\n");
+		       return 1;
+	        }
+#elif defined(_SCALE)
+	        if (uart_rx_enable(uart ,mbusFloatRcvMsg, sizeof mbusFloatRcvMsg, RECEIVE_TIMEOUT) != 0) {
+               printk("failed to attach buffer to receive\n");
+		       return 1;
+	        }
+#endif
             pm_device_action_run(uart, PM_DEVICE_ACTION_RESUME);
             k_msleep(100);
             pm_device_action_run(uart, PM_DEVICE_ACTION_SUSPEND);
             k_msleep(100);
             pm_device_action_run(uart, PM_DEVICE_ACTION_RESUME);
-		} else if (tx_recv == SENTBLE) {		
-            // transmit the message (NO TIMEOUT)
-	        if (uart_tx(uart, tx_buf, sizeof(tx_buf), SYS_FOREVER_US) != 0) {
-		       printk("error tx\n");
-	        } else {
-               tx_recv = USENDING;
-            }
-            k_msleep(1000);
-		}
+		}  
+	  }
+      k_msleep(1000);
     }
 }
 
