@@ -118,13 +118,14 @@ fn main() {
         }
     }
     // Use the READ instruction to select memory address 0, specified as a 24-bit
-    // value, and then read 5 bytes.
-    let mut buffer = [0u8; 5];
+    // value, and then read 10 bytes. i16 f32 f32
+    let mut buffer = [0u8; 10];
     spi.transfer_segments(&[
         Segment::with_write(&[READ, 0, 0, 0]),
         Segment::with_read(&mut buffer),
     ])?;
     println!("Bytes read: {:?}", buffer);
     Ok(())
+
 
 }
