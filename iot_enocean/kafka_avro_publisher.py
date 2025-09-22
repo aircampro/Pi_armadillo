@@ -11,8 +11,8 @@ KATOPIC='avro_topic'
 
 # usage : <this_prog> config_file.avsc data_file.csv
 if len(sys.argv) >= 2:
-    av_con_fl=str(argv[1])
-    data_fl=str(argv[2])
+    av_con_fl=str(sys.argv[1])
+    data_fl=str(sys.argv[2])
 else:
     print("usage : <this_prog> config_file.avsc data_file.csv im using the default files")
     av_con_fl='/home/work/src/avroproducer/arlncsvsource.avsc'
