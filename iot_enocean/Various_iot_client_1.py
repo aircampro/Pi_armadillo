@@ -16,6 +16,7 @@ import time
 from sys import exit
 from datetime import datetime
 import pickle
+import sys
 
 # time please set your timezone here
 import datetime
@@ -23,7 +24,10 @@ import pytz
 MY_TZ='Europe/Moscow'
 
 # ------------ here list the choices and options for iOt or monitoring -----------------      
-TELEM_CHOICES=[ "soracom", "beebotte", "mosquito", "ubidots", "machinist", "aws", "azure", "yandex", "twillio", "smtp_email", "ssl_tls_server", "ssl_23_server", "cloud_mqtt", "gcs_blob", "splunk", "gcs_spread", "ambient", "influxdb", "redis", "mongo", "mysql", "sybase", "oracle", "sqllite", "pg", "fluvio", "scyllia", "rocks", "ali", "taiga", "msaccess", "riak", "elas", "neo4j", "cumulocity", "sftp", "coAp", "sms_gsm_modem", "ibmdb", "couchbase", "ignition", "denzow", "azure_iot" ]
+TELEM_CHOICES=[ "soracom", "beebotte", "mosquito", "ubidots", "machinist", "aws", "azure", "yandex", "twillio", "smtp_email", "ssl_tls_server", \
+    "ssl_23_server", "cloud_mqtt", "gcs_blob", "splunk", "gcs_spread", "ambient", "influxdb", "redis", "mongo", "mysql", "sybase", "oracle", "sqllite", "pg", \ 
+    "fluvio", "scyllia", "rocks", "ali", "taiga", "msaccess", "riak", "elas", "neo4j", "cumulocity", "sftp", "coAp", "sms_gsm_modem", "ibmdb", "couchbase", "ignition", \ 
+    "denzow", "azure_iot", "sim8001_modem_sms", "sim8001_modem_gprs" ]
 SORACOM=0
 BEEBOTTE=1
 MOSQUITO=2
@@ -67,6 +71,8 @@ COUCHBASE=39
 IGNITION=40
 DENZOW=41
 AZURE_IOT=42
+SIM8001_SMS=43
+SIM8001_GPRS=44
 # ============= make your choice of cloud service here from list above ================== 
 MY_CURRENT_TELEM=TELEM_CHOICES[SORACOM]
 
@@ -240,6 +246,38 @@ elif MY_CURRENT_TELEM == "sms_gsm_modem":
             modem.rxThread.join(2**31)                                  # Specify a (huge) timeout so that it essentially blocks indefinitely, but still receives CTRL+C interrupt signal
         finally:
             modem.close()
+
+# GSM/GPRS modem using Hat connection https://github.com/Ircama/sim800l-gsm-module/tree/master
+# ref:- https://habr.com/ru/articles/777582/
+#
+elif MY_CURRENT_TELEM == "sim8001_modem_sms" || MY_CURRENT_TELEM == "sim8001_modem_gprs":
+    from sim800l import SIM800L
+    MSISDN = "+...your number..."
+    APN= "...your APN..."
+
+    sim800l=SIM800L()
+    ret = sim800l.setup()
+    if not ret:
+        print("could not communicate with sim8001 modem...")
+        sys.exit(-1)
+    print("get_netlight", sim800l.get_netlight())
+    print("check_sim", sim800l.check_sim())
+    print("get_date", sim800l.get_date())
+    print("is_registered", sim800l.is_registered())
+    print("get_operator", sim800l.get_operator())
+    print("get_operator_list", sim800l.get_operator_list())
+    print("get_service_provider", sim800l.get_service_provider())
+    print("get_battery_voltage", sim800l.get_battery_voltage())
+    print("get_msisdn", sim800l.get_msisdn())
+    print("get_signal_strength", sim800l.get_signal_strength())
+    print("get_unit_name", sim800l.get_unit_name())
+    print("get_hw_revision", sim800l.get_hw_revision())
+    print("get_serial_number", sim800l.get_serial_number())
+    print("get_ccid", sim800l.get_ccid())
+    print("get_imsi", sim800l.get_imsi())
+    print("get_temperature", sim800l.get_temperature())
+    print("get_flash_id", sim800l.get_flash_id())
+    print("get_ip", sim800l.get_ip())
     
 # sftp
 #
@@ -2193,6 +2231,14 @@ def Enocean2Telemetry(s_port, telem_opt):
         SMS_BODY_DATA.replace("£",str(desc1)).replace("!",str(temp1)).replace("$",str(desc2)).replace("%",str(temp2))
         SMS_DATA_SEND_STATE = 0
 
+    def write_sms_message_sim8001( desc1, temp1, desc2, temp2 ):
+        rec = sim800l.send_sms(MSISDN, f"{desc1} {temp1} {desc2} {temp2}")
+        print("Result of sent short SMS:", repr(rec))
+
+    def write_http_post_sim8001( desc1, temp1, desc2, temp2 ):
+        rec = sim800l.http("www.yoururl.com/your_postlink", data='{desc1,temp1,desc2,temp2}'.encode(), method="POST", apn=APN)
+        print("HTTP", repr(rec))
+        
     # IGNITION 
     # sends values to ignition server
     def send_data_ignition(string1, temp_data1, string2, temp_data2):
@@ -2424,7 +2470,11 @@ def Enocean2Telemetry(s_port, telem_opt):
         sendData=recordAdd2Neo4j     
     elif telem_opt == "sms_gsm_modem":
         start_sms_daemon()
-        sendData=write_to_sms_message            
+        sendData=write_to_sms_message    
+    elif telem_opt == "sim8001_modem_gprs":
+        sendData=write_http_post_sim8001 
+    elif telem_opt == "sim8001_modem_sms":
+        sendData=write_sms_message_sim8001        
     elif telem_opt == "ibmdb":
         sendData=sendDataIBMDB
     elif telem_opt == "couchbase":
