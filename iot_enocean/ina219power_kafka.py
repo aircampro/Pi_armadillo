@@ -9,7 +9,20 @@
 # edit get_default_bus() for your bus number. you can get it with i2cdetect -l
 #
 import logging
-from ina219 import INA219
+LIB=0
+if LIB == 1:
+    # https://github.com/hrshovon/py_ina219_smbus/tree/master address here fixed at 0x40 and default bus = 0 
+    from ina_219_smbus import ina219_i2c as INA219
+    RANGE_16V = 0     # Range 0-16 volts
+    RANGE_32V = 1     # Range 0-32 volts
+    GAIN_1_40MV = 0   # Maximum shunt voltage 40mV
+    GAIN_2_80MV = 1   # Maximum shunt voltage 80mV
+    GAIN_4_160MV = 2  # Maximum shunt voltage 160mV
+    GAIN_8_320MV = 3  # Maximum shunt voltage 320mV
+    GAIN_AUTO = -1    # Determine gain automatically
+else:
+    # https://github.com/chrisb2/pi_ina219 
+    from ina219 import INA219
 # as per GY-219 which measures up to 3.2 A
 SHUNT_OHMS = 0.1
 MAX_EXPECTED_AMPS = 0.2
@@ -34,8 +47,13 @@ KTOPIC='sensor_data'
 	
 # generate json message with the data
 def generate_data(id=1):
-    ina = INA219(SHUNT_OHMS, MAX_EXPECTED_AMPS, busnum=BNUM, address=ADDR, log_level=logging.INFO)
-    ina.configure(ina.RANGE_16V, ina.GAIN_AUTO)
+    if LIB == 1:
+        ina = INA219(_BUS=BNUM)  
+        ina.set_gain(GAIN_AUTO)
+        ina.set_brang(RANGE_16V)        
+    else:      
+        ina = INA219(SHUNT_OHMS, MAX_EXPECTED_AMPS, busnum=BNUM, address=ADDR, log_level=logging.INFO)
+        ina.configure(ina.RANGE_16V, ina.GAIN_AUTO)
     return {
         'sensor_id': id,
         'bus_voltage': ina.voltage(),
