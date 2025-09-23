@@ -9,6 +9,6 @@ BINARY_FL_NM='log.bin'
 record_fmt = '<IHBd'                                        # binary records as described uint32, uint16, uint8, double
 record_size = struct.calcsize(record_fmt)
 with open(BINARY_FL_NM, 'rb') as f:
-  while chunk := f.read(record_size):
-    timestamp, code, flag, value = struct.unpack(record_fmt, chunk)
-    print(timestamp, code, flag, value)
+    while chunk := f.read(record_size):
+        timestamp, code, flag, value = struct.unpack(record_fmt, chunk)
+        print(timestamp, code, flag, value)
