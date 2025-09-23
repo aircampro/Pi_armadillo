@@ -4,6 +4,7 @@
 # simple i/o sequencer to make block write values to go to PLC or io block.
 # 
 import math
+import struct
 
 # pin list e.g. [ 2, 6, 4, 8, 7] to output block
 #
@@ -32,6 +33,18 @@ def reverse_bits(num, bit_size):
             result |= 1 << (bit_size - 1 - i)
     return result
 
+def pack_i32(data, e=1):
+    if e == 1:
+        return struct.pack('<i',  data)
+    else:
+        return struct.pack('>i',  data)
+
+def pack_f32(data, e=1):
+    if e == 1:
+        return struct.pack('<f',  data)
+    else:
+        return struct.pack('>f',  data)
+        
 # returns a block write number to output pin numbers
 def block_to_outpins(block_out=0, bits=0xF, offset=1):
     for i in range(0, int(bits)):
