@@ -25,7 +25,7 @@ int mcp3204_access_misra(char *bus, uint8_t cmd, uint16_t *read_data)
             .bits_per_word = 0
         };
 			
-        if ((bus == NULL) || (read_data == NULL))
+        if ((*bus == NULL) || (*read_data == NULL))
 		{
 			ret_v = 3;
 		}
@@ -63,7 +63,7 @@ int mcp3204_read_diff_misra(char *bus, ch_diff ch_conf, uint16_t *out)
 {
 	    int ret_v = 0;
 		
-		if (bus == NULL)
+		if (*bus == NULL)
 		{
 			ret_v = 3;
 		}
@@ -89,7 +89,7 @@ int mcp3204_read_misra(char *bus, int ch, uint16_t *out)
 {
 	    int ret_v = 0;
 
-		if (bus == NULL)
+		if (*bus == NULL)
 		{
 			ret_v = 3;
 		}
