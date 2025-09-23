@@ -25,6 +25,13 @@ def pin_list_toggle_to_output( pin_list=[ 2, 6, 4, 8, 7], offset=1, block_out=0 
         block_out ^= int(math.pow(2,(pin_no-offset)))
     return block_out
 
+def reverse_bits(num, bit_size):
+    result = 0
+    for i in range(bit_size):
+        if num & (1 << i):
+            result |= 1 << (bit_size - 1 - i)
+    return result
+
 # returns a block write number to output pin numbers
 def block_to_outpins(block_out=0, bits=0xF, offset=1):
     for i in range(0, int(bits)):
@@ -50,3 +57,4 @@ if __name__ == '__main__':
     o_block_2 = pin_list_on_to_output( drive )	
     drive = [ 8 ]
     o_block_2 = pin_list_off_to_output( drive )
+    o_block_2_rev = reverse_bits(o_block_2, 16)
