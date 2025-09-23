@@ -252,9 +252,8 @@ class MAX30101:
         smp_avg = (SMP_Average.A2 << CONFIG.SMP_AVE_SH) & CONFIG.SMP_AVE                # configure average 2 samples 
         fifo_a_full = 0x12                                                              # set interrupt when 18 samples empty 14 unread
         self.bus.write_byte_data(self.max30101_addresss, CONFIG.FIFO_RA, (fifo_a_full | smp_avg))
-        time.sleep(0.1)
-        mode = mde                                                                      # choose the device mode
-        self.bus.write_byte_data(self.max30101_addresss, CONFIG.MODE_RA, mode)
+        time.sleep(0.1)                                                                 
+        self.bus.write_byte_data(self.max30101_addresss, CONFIG.MODE_RA, self.mode)     # set the device mode
         time.sleep(0.1)
 
 TEST_ON=False                                                                           # enable test if True when loading the library
@@ -262,10 +261,11 @@ if __name__ == '__main__':
     if TEST_ON == True:
         sensor = MAX30101()                                                             # make device object
         sensor.i2c_init()                                                               # configure device
-        for rep in range(0,100):                                                        # test for 100 cycles
+        for rep in range(0, 1000):                                                      # test for 1000 cycles
             sensor.readInterupt1()                                                      # read interrupt
             sensor.readData()                                                           # check and process data
             sensor.readInterupt2()  
             sensor.readData()     
             print(f" led1 : {self.led1} led2 : {self.led2} led3 : {self.led3}")
+
             print(f" die temp : {self.dt_value}")            
