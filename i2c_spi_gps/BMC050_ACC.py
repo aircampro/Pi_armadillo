@@ -4,7 +4,15 @@
 #	https://www.bosch-sensortec.com/en/homepage/products_3/6_axis_sensors_2/ecompass/bmc050_1/bmc050
 #
 import os
-import smbus2 as smbus
+#
+# sudo apt-get install python-smbus
+#
+import sys
+# python 3.6 > supports smbus2 now for i2c communication
+if sys.version_info[0] >= 3 and sys.version_info[1] >= 6:
+    import smbus2 as smbus
+else:
+    import smbus
 from collections import OrderedDict
 from logging import basicConfig, getLogger, DEBUG, FileHandler, Formatter
 import sys
@@ -44,7 +52,7 @@ class BMC050:
         self.init_logger()
         self.bmc050_address = address
         self._bus = smbus.SMBus(bus_no)
-	self.temperature = 0
+	    self.temperature = 0
         self.error = 0
         self.accelx = 0
         self.accely = 0
