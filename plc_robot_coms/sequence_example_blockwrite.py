@@ -44,5 +44,9 @@ if __name__ == '__main__':
     # step 2
 	drive = [ 2, 5 ]
     o_block_1 = pin_list_on_to_output( drive )
+    time.sleep(200)    
+    o_block_1 = pin_list_off_to_output( drive )
 	drive = [ 15, 10 ]	
     o_block_2 = pin_list_on_to_output( drive )	
+    drive = [ 8 ]
+    o_block_2 = pin_list_off_to_output( drive )
