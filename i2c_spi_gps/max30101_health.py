@@ -227,14 +227,14 @@ class MAX30101:
                     self.fifo_buf.append(cmdbuff)
                     no_available -= 1 
                     if len(self.fifo_buf) == 3:
-                        self.led1 = (self.fifo_buf[0] << 16) | (self.fifo_buf[0] << 8) | self.fifo_buf[2] 
                         self.pled1 = self.led1 
+                        self.led1 = (self.fifo_buf[0] << 16) | (self.fifo_buf[0] << 8) | self.fifo_buf[2] 
                     elif len(self.fifo_buf) == 6:
-                        self.led2 = (self.fifo_buf[3] << 16) | (self.fifo_buf[4] << 8) | self.fifo_buf[5] 
                         self.pled2 = self.led2 
+                        self.led2 = (self.fifo_buf[3] << 16) | (self.fifo_buf[4] << 8) | self.fifo_buf[5] 
                     elif len(self.fifo_buf) == 9:
-                        self.led3 = (self.fifo_buf[6] << 16) | (self.fifo_buf[7] << 8) | self.fifo_buf[8] 
-                        self.pled3 = self.led3                         
+                        self.pled3 = self.led3 
+                        self.led3 = (self.fifo_buf[6] << 16) | (self.fifo_buf[7] << 8) | self.fifo_buf[8]                  
                         self.prev_fifo_buf = self.fifo_buf
                         self.fifo_buf = [] 
                 writeReg(reg_address=FIFO.FIFO_RD_PTRA, data=0x0)                        
@@ -269,3 +269,4 @@ if __name__ == '__main__':
             print(f" led1 : {self.led1} led2 : {self.led2} led3 : {self.led3}")
 
             print(f" die temp : {self.dt_value}")            
+
