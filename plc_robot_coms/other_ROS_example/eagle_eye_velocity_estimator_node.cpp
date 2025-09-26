@@ -23,7 +23,7 @@ This is how we publish and filter the realsense camera IMU data
 ros2 launch realsense2_camera rs_launch.py enable_gyro:=true enable_accel:=true unite_imu_method:=1
 sudo apt install ros-humble-imu-filter-madgwick                 
 # madgewick correction ROS package that estimates attitude (angle) with a Madgwick filter from acceleration, gyro, and geomagnetic sensor data and outputs it
-ros2 run imu_filter_madgwick imu_filter_madgwick_node --ros-args -p use_mag:=False -p world_frame:=enu -p publish_tf:=False -r imu/data_raw:=/camera/imu
+ros2 run imu_filter_madgwick imu_filter_madgwick_node --ros-args -p use_mag:=False -p world_frame:=enu -p publish_tf:=False -r imu/data_raw:=/camera/camera/imu  # if not /camera/imu
 # name for filter subscriber is imu/data_raw published as imu/data in our example we taking it from the realsense camera 
 name to VelocityEstimator class VelocityEstimate method must be of :- sensor_msgs::Imu
 https://docs.ros.org/en/api/sensor_msgs/html/msg/Imu.html
@@ -117,3 +117,4 @@ int main(int argc, char** argv)
 
   return 0;
 }
+
