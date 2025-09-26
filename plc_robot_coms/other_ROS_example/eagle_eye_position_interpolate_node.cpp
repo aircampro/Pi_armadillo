@@ -20,12 +20,59 @@ Subscribed Topics
 /rtklib_nav (rtklib_msgs/RtklibNav)
 /imu/data_raw (sensor_msgs/Imu)
 
+full list as follows :-
+/eagleye/acc_x_offset
+/eagleye/acc_x_scale_factor
+/eagleye/angular_velocity_offset_stop
+/eagleye/distance
+/eagleye/eagleye/fix
+/eagleye/eagleye/geo_pose_with_covariance
+/eagleye/eagleye/heading_interpolate_3rd
+/eagleye/eagleye/pitching
+/eagleye/eagleye/pose
+/eagleye/eagleye/rolling
+/eagleye/enu_absolute_pos
+/eagleye/enu_absolute_pos_interpolate
+/eagleye/enu_relative_pos
+/eagleye/enu_vel
+/eagleye/fix
+/eagleye/geo_pose_with_covariance
+/eagleye/gnss/fix
+/eagleye/gnss/gga
+/eagleye/gnss/rmc
+/eagleye/gnss/rtklib_nav
+/eagleye/gnss_compass_pose
+/eagleye/gnss_smooth_pos_enu
+/eagleye/heading_1st
+/eagleye/heading_2nd
+/eagleye/heading_3rd
+/eagleye/heading_interpolate_1st
+/eagleye/heading_interpolate_2nd
+/eagleye/heading_interpolate_3rd
+/eagleye/height
+/eagleye/imu/data_corrected
+/eagleye/imu/data_tf_converted
+/eagleye/navsat/reliability_gga
+/eagleye/pitching
+/eagleye/pose
+/eagleye/rolling
+/eagleye/rtklib/fix
+/eagleye/slip_angle
+/eagleye/twist
+/eagleye/twist_with_covariance
+/eagleye/vehicle/twist
+/eagleye/velocity
+/eagleye/velocity_scale_factor
+/eagleye/velocity_status
+/eagleye/yaw_rate_offset_1st
+/eagleye/yaw_rate_offset_2nd
+/eagleye/yaw_rate_offset_stop
+
 Main Published Topics
 /eagleye/fix (sensor_msgs/NavSatFix)
 /eagleye/twist (ngeometry_msgs/TwistStamped)
 
 */
-
 
 #include "ros/ros.h"
 #include "coordinate/coordinate.hpp"
