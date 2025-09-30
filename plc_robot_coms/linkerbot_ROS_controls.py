@@ -415,7 +415,7 @@ def control_hand(hnd):
         pub_r.publish(joint_state)	
     else:
         pub.publish(joint_state)
-	
+
     while not rospy.is_shutdown():  
         if hnd == "both":
             position = do_sequence()                           # every other step on each hand (otherwise make 2 sequences for same action on both hands)
