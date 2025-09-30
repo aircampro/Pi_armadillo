@@ -403,8 +403,6 @@ def control_hand(hnd):
 		warn.colorMsg(msg="you must pass either left or right pr both to choose the hand", color="red")
         return 
     rate = rospy.Rate(30)                                                                        # Setting frequency 30Hz
-    set_speed()
-    time.sleep(3)
     joint_state.header = std_msgs.msg.Header()
     joint_state.header.seq=0
     joint_state.header.stamp = rospy.Time.now() 
