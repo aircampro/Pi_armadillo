@@ -45,7 +45,7 @@ if __name__ == '__main__':
     delta_s = 1                                                                     # how much to increase the speed by
     no_loops = 2                                                                    # number of repeat loops
     cm = ColorMsg()                                                                 # color wrapper object to print
-    
+
     pub = rospy.Publisher("/cb_hand_setting_cmd", String, queue_size=10)            # publisher to change the speed
     msg = String()  
     count = 0   
