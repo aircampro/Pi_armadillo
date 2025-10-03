@@ -2,6 +2,7 @@
 # remote ssh to remote computer ro execute command
 #
 import paramiko
+import argparse
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='parser')
