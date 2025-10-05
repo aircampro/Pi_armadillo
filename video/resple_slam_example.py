@@ -173,6 +173,8 @@ class CostMapGenNode(Node):
         vehicles_mask = self.get_mask(segm_img, 'Vehicles')     
         water_mask = self.get_mask(segm_img, 'Water')
         ts_mask = self.get_mask(segm_img, 'TrafficSign')
+        rt_mask = self.get_mask(segm_img, 'RailTrack')
+        tl_mask = self.get_mask(segm_img, 'TrafficLight')
 
         # places to land mask
         places2land_mask = np.ones(segm_img.shape[:2])==1
@@ -196,6 +198,14 @@ class CostMapGenNode(Node):
         # cost for traffic sign
         if ts_mask.any():
             cost_map += self.get_heat((ts_mask*255).astype('uint8'))
+
+        # cost for traffic light
+        if tl_mask.any():
+            cost_map += self.get_heat((tl_mask*255).astype('uint8'))
+
+        # cost for rail track
+        if rt_mask.any():
+            cost_map += self.get_heat((rt_mask*255).astype('uint8'))
 
         # cost for landing terrain label
         cost_map += places2land_mask
