@@ -121,6 +121,9 @@ class CamNode(Node):
                 self.vel.angular.z = 0.0
                 self.cmd_vel_pub.publish(self.vel)                                             # publish the twist to ROS 
                 self._vel_lock.release()
+                msg = String()
+                msg.data = 'ang.z: %f lin.x: %f' % (self.vel.angular.z, self.vel.linear.x)
+                self.publisher_.publish(msg)
 
     def callback_scan(self, data):
         fov = np.deg2rad(60)
