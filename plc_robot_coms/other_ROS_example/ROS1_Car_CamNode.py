@@ -107,23 +107,23 @@ class CamNode():
                             break
                 image_msg = cv_bridge.cv2_to_imgmsg(img, 'bgr8')
                 self._result_pub.publish(image_msg)
-                if self._vel_lock.acquire(False): 
-                    if self.min_range is not None:
-                        if self.min_range >= SPT:
-                            if not(brake<KEEP_BRAKE and brake>0):                             # no brake applied from the video feed
-                                self.vel.linear.x = 0.2                                       # go forward x                              
-                            ctrl.steer(0.0)                                                   # steering of piCar is ahead
-                            self.vel.angular.z = 0.0
-                        else:
-                            vel.linear.x = 0.0
-                            if self.direction == "RIGHT":
-                                self.vel.angular.z = 0.5
-                                ctrl.steer(-0.1)                                              # turn right
-                            elif self.direction == "LEFT":
-                                self.vel.angular.z = -0.5
-                                ctrl.steer(0.1)                                               # turn left
-                    self.cmd_vel_pub.publish(self.vel)                                        # publish the twist to ROS   
-                    self._vel_lock.release()                    
+            if self._vel_lock.acquire(False): 
+                if self.min_range is not None:
+                    if self.min_range >= SPT:
+                        if not(brake<KEEP_BRAKE and brake>0):                             # no brake applied from the video feed
+                            self.vel.linear.x = 0.2                                       # go forward x                              
+                        ctrl.steer(0.0)                                                   # steering of piCar is ahead
+                        self.vel.angular.z = 0.0
+                    else:
+                        vel.linear.x = 0.0
+                        if self.direction == "RIGHT":
+                            self.vel.angular.z = 0.5
+                            ctrl.steer(-0.1)                                              # turn right
+                        elif self.direction == "LEFT":
+                            self.vel.angular.z = -0.5
+                            ctrl.steer(0.1)                                               # turn left
+                self.cmd_vel_pub.publish(self.vel)                                        # publish the twist to ROS   
+                self._vel_lock.release()                    
         ctrl.brake()                                                                      # stop  
         if self._vel_lock.acquire(False):         
             self.vel.linear.x = 0.0

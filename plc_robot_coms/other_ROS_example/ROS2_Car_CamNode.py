@@ -90,30 +90,27 @@ class CamNode(Node):
                 image_msg = cv_bridge.cv2_to_imgmsg(img, 'bgr8')
                 self._result_pub.publish(image_msg)
 
-                if self.min_range is not None:
-                    if self.min_range >= SPT:
-                        if self._vel_lock.acquire(False):    
-                            if not(self.brake<KEEP_BRAKE and self.brake>0):                   # no brake applied from the video feed
-                                self.vel.linear.x = 0.2                                       # go forward x                              
-                            ctrl.steer(0.0)                                                   # steering of piCar is ahead
-                            self.vel.angular.z = 0.0
-                            self._vel_lock.release()
-                    else:
-                        if self._vel_lock.acquire(False):
-                            self.vel.linear.x = 0.0
-                            if self.direction == "RIGHT":
-                                self.vel.angular.z = 0.5
-                                ctrl.steer(-0.1)                                              # turn right
-                            elif self.direction == "LEFT":
-                                self.vel.angular.z = -0.5
-                                ctrl.steer(0.1)                                               # turn left
-                            self._vel_lock.release()
-                        msg = String()
-                        msg.data = 'ang.z: %f lin.x: %f' % (self.vel.angular.z, self.vel.linear.x)
-                        self.publisher_.publish(msg)
-                if self._vel_lock.acquire(False): 
-                    self.cmd_vel_pub.publish(self.vel)                                        # publish the twist to ROS                  
-                    self._vel_lock.release()
+            if self.min_range is not None:
+                if self.min_range >= SPT:
+                    if self._vel_lock.acquire(False):    
+                        if not(self.brake<KEEP_BRAKE and self.brake>0):                   # no brake applied from the video feed
+                            self.vel.linear.x = 0.2                                       # go forward x                              
+                        ctrl.steer(0.0)                                                   # steering of piCar is ahead
+                        self.vel.angular.z = 0.0
+                        self._vel_lock.release()
+                else:
+                    if self._vel_lock.acquire(False):
+                        self.vel.linear.x = 0.0
+                        if self.direction == "RIGHT":
+                            self.vel.angular.z = 0.5
+                            ctrl.steer(-0.1)                                              # turn right
+                        elif self.direction == "LEFT":
+                            self.vel.angular.z = -0.5
+                            ctrl.steer(0.1)                                               # turn left
+                        self._vel_lock.release()
+            if self._vel_lock.acquire(False): 
+                self.cmd_vel_pub.publish(self.vel)                                        # publish the twist to ROS                  
+                self._vel_lock.release()
         else:
             ctrl.brake()                                                                      # stop      
             if self._vel_lock.acquire(False):         
@@ -121,9 +118,9 @@ class CamNode(Node):
                 self.vel.angular.z = 0.0
                 self.cmd_vel_pub.publish(self.vel)                                             # publish the twist to ROS 
                 self._vel_lock.release()
-                msg = String()
-                msg.data = 'ang.z: %f lin.x: %f' % (self.vel.angular.z, self.vel.linear.x)
-                self.publisher_.publish(msg)
+        msg = String()
+        msg.data = 'ang.z: %f lin.x: %f' % (self.vel.angular.z, self.vel.linear.x)
+        self.publisher_.publish(msg)
 
     def callback_scan(self, data):
         fov = np.deg2rad(60)
