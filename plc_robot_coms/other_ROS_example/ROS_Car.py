@@ -21,6 +21,7 @@
 import rospy
 from sensor_msgs.msg import Image
 from geometry_msgs.msg import Twist
+from sensor_msgs.msg import LaserScan
 import cv2
 from cv_bridge import CvBridge
 import numpy as np
@@ -167,6 +168,7 @@ class Node():
         ctrl = CarController()                               # interface to PWM controlled motors on the car
         ctrl.steer(0)                                        # ahead
         count_loop = 0
+        vel = Twist()       
         while not rospy.is_shutdown():                       # while ROS running grab the frames from the camera
 
             if self._msg_lock.acquire(False):                # If there is no lock on the message (not being written to in the moment)
@@ -175,8 +177,7 @@ class Node():
                 self._msg_lock.release()
             else:
                 rate.sleep()
-                continue
-                    
+                continue                                                      # create twist message for ROS control when laser scanner is inside range                   
             if msg is not None:                                                       # If the message is not empty
                 np_image = cv_bridge.imgmsg_to_cv2(msg, 'bgr8')                       # Convert the message to an OpenCV object
                 img_resize = cv2.resize(np_image, (256, 256))
@@ -204,7 +205,6 @@ class Node():
                 image_msg = cv_bridge.cv2_to_imgmsg(img, 'bgr8')
                 self._result_pub.publish(image_msg)
 
-                vel = Twist()                                                            # create twist message for ROS control when laser scanner is inside range
                 if self.min_range is not None:
                     if self.min_range >= SPT:
                         if not(brake<KEEP_BRAKE and brake>0):                             # no brake applied from the video feed
