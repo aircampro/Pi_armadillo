@@ -49,10 +49,13 @@
 #define	ARM_RAD_RANGE (1350)
 #define	HAND_WIDTH_RANGE (350)
 #define	CROW_POS	(1)
+#define	SVPOS_TO_RAD(p)	(((double)(p)/1800.0)*M_PI)
 
 /*-------------- function definitions ---------------*/
 int RSTorqueOnOff( HID_UART_DEVICE dev, short sMode ,BYTE id,int num);
 int RSGetAngle( HID_UART_DEVICE dev ,BYTE id,short *getParam);
+void rad_to_pos(double *x, double *y, double *z, double *yaw, double *w, short *sPos, int num, double base_angle);
+void getPosition(double *x, double *y, double *z, double *yaw, double *width, double base_angle);
 int RSMove( HID_UART_DEVICE dev , short *sPoss, unsigned short sTime ,BYTE id,int num);
 int ReadLocalEcho(HID_UART_DEVICE dev ,unsigned char *sendbuf,unsigned int data_len);
 int RSWriteMem( HID_UART_DEVICE dev , BYTE address , BYTE size , BYTE id , BYTE *data , int num);
@@ -159,6 +162,16 @@ int main(int argc, char *argv[])
 		RSTorqueOnOff(dev, 0, 1, servoNum);
 	}
 
+	double x = 0;
+	double y = 0;
+	double z = 0;
+	double yaw = 0;
+	double width = 0;
+	getPosition(&x, &y, &z, &yaw, &width);
+	printf("X:%+6.2fmm, Y:%+6.2fmm, Z:%+6.2fmm", x, y, z);
+	if (servoNum == 5)
+	    printf(", Yaw:%+6.2fdeg, Width:%6.2fmm", yaw, width);
+		
 	printf("close device\n");
 	HidUart_Close(dev);
 
@@ -339,6 +352,42 @@ int RSGetAngle( HID_UART_DEVICE dev ,BYTE id,short *getParam)
 	return TRUE;
 }
 
+void rad_to_pos(double *x, double *y, double *z, double *yaw, double *w, short *sPos, int num, double base_angle) {
+	double tx, ty;
+	double lx, ly;
+
+	ty = sin(SVPOS_TO_RAD(sPos[0])) * AXISLEN_A	+ sin(SVPOS_TO_RAD(sPos[0] + sPos[1])) * AXISLEN_B;
+	tx = cos(SVPOS_TO_RAD(sPos[0])) * AXISLEN_A	+ cos(SVPOS_TO_RAD(sPos[0] + sPos[1])) * AXISLEN_B;
+	tx -= X_OFS;
+	lx = tx;
+	ly = ty;
+	tx = (lx * cos(base_angle / 180.0 * M_PI) - ly * sin(base_angle / 180.0 * M_PI)) + BASE_OFFSET_X;
+	ty = (lx * sin(base_angle / 180.0 * M_PI) + ly * cos(base_angle / 180.0 * M_PI)) + BASE_OFFSET_Y;
+	*x = tx;
+	*y = ty;
+	*z = RAD_TO_HEIGHT(sPos[2]);
+	if (num > 3) {
+		*yaw = (double) (sPos[3] + sPos[0] + sPos[1]) / 10.0;
+		*w = RAD_TO_WIDTH(sPos[4], CROW_POS);
+	}
+}
+
+void getPosition(double *x, double *y, double *z, double *yaw, double *width, double base_angle) {
+
+    // x,y,z,yaw,w;				
+	short pos[5] = { 0, 0, 0, 0, 0 };		
+
+	for (int i = 0; i < servoNum; i++) {
+		if (!RSGetAngle(dev, i + 1, &pos[i])) {
+			printf("Faild to retrive angle of servo %d.\n", i);
+		}
+	}
+	printf("X:%+5d, Y:%+5d, Z:%+5d\n", pos[0], pos[1], pos[2]);
+	rad_to_pos(x, y, z, yaw, width, pos, 5, base_angle);
+    //printf("X:%+.1fmm Y:%+.1fmm Z:%+.1fmm",x,y,z);
+    //if(servoNum==5) printf(" Yaw:%+.1fdeg Width:%.1fmm",yaw,width);
+    //printf("\n");
+}
 
 int RSMove( HID_UART_DEVICE dev , short *sPoss, unsigned short sTime ,BYTE id,int num)
 {
