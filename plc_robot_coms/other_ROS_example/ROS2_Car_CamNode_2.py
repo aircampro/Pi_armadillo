@@ -30,10 +30,10 @@ class CamNode(Node):
         self.reset_pb = rpb
 
     def joy_callback(self, Joy): 
-        if Joy.buttons[self.reset_pb] == 1:                                                 # reset was pressed
-            self.running = True
-            self.count_loop = 0
         if self._run_lock.acquire(False): 
+            if Joy.buttons[self.reset_pb] == 1:                                                 # reset was pressed
+                self.running = True
+                self.count_loop = 0
             if self.running == True:                                                         # we didnt hit STOP altogether yet
                 self._run_lock.release()
                 if self._vel_lock.acquire(False): 
@@ -173,3 +173,4 @@ class CamNode(Node):
         else:
             self.direction = "LEFT"
         self.min_range = min_range
+
