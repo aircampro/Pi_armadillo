@@ -23,6 +23,17 @@
 #
 # sudo pip uninstall enum34; pip install empy
 #
+# Change the 5 to 7 lines of the ~/colcon_ws/src/<your project name>/package.xml proj=robo_picar_controls
+# <exec_depends>rclpy</exec_depends>
+# <exec_depends>std_msgs</exec_depends>
+# <exec_depends>geometry_msgs</exec_depends>
+# <exec_depends>sensor_msgs</exec_depends>
+# <exec_depends>sensor_msgs</exec_depends>
+#
+# add to entry points in setup.python
+#
+# ‘camnode = robo_picar_controls.camnode:main’,
+#
 import rospkg
 version = rospkg.RosStack().get_stack_version('ros')
 _ROS = int(version)                                                     # set to the version of ROS being used 1 or 2 
