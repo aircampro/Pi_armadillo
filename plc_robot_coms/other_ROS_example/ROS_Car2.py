@@ -34,6 +34,8 @@
 #
 # ‘camnode = robo_picar_controls.camnode:main’,
 #
+# further ref:- https://demura.net/robot/ros2/20748.html
+#
 import rospkg
 version = rospkg.RosStack().get_stack_version('ros')
 _ROS = int(version)                                                     # set to the version of ROS being used 1 or 2 
