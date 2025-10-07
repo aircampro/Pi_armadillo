@@ -54,8 +54,8 @@
 /*-------------- function definitions ---------------*/
 int RSTorqueOnOff( HID_UART_DEVICE dev, short sMode ,BYTE id,int num);
 int RSGetAngle( HID_UART_DEVICE dev ,BYTE id,short *getParam);
-void rad_to_pos(double *x, double *y, double *z, double *yaw, double *w, short *sPos, int num, double base_angle);
-void getPosition(double *x, double *y, double *z, double *yaw, double *width, double base_angle);
+void rad_to_pos(double *x, double *y, double *z, double *yaw, double *w, short *sPos, int num, double base_angle, double base_offset_x, double base_offset_y);
+void getPosition(double *x, double *y, double *z, double *yaw, double *width, double base_angle, double base_offset_x, double base_offset_y);
 int RSMove( HID_UART_DEVICE dev , short *sPoss, unsigned short sTime ,BYTE id,int num);
 int ReadLocalEcho(HID_UART_DEVICE dev ,unsigned char *sendbuf,unsigned int data_len);
 int RSWriteMem( HID_UART_DEVICE dev , BYTE address , BYTE size , BYTE id , BYTE *data , int num);
@@ -352,7 +352,7 @@ int RSGetAngle( HID_UART_DEVICE dev ,BYTE id,short *getParam)
 	return TRUE;
 }
 
-void rad_to_pos(double *x, double *y, double *z, double *yaw, double *w, short *sPos, int num, double base_angle) {
+void rad_to_pos(double *x, double *y, double *z, double *yaw, double *w, short *sPos, int num, double base_angle, double base_offset_x, double base_offset_y) {
 	double tx, ty;
 	double lx, ly;
 
@@ -361,8 +361,8 @@ void rad_to_pos(double *x, double *y, double *z, double *yaw, double *w, short *
 	tx -= X_OFS;
 	lx = tx;
 	ly = ty;
-	tx = (lx * cos(base_angle / 180.0 * M_PI) - ly * sin(base_angle / 180.0 * M_PI)) + BASE_OFFSET_X;
-	ty = (lx * sin(base_angle / 180.0 * M_PI) + ly * cos(base_angle / 180.0 * M_PI)) + BASE_OFFSET_Y;
+	tx = (lx * cos(base_angle / 180.0 * M_PI) - ly * sin(base_angle / 180.0 * M_PI)) + base_offset_x;
+	ty = (lx * sin(base_angle / 180.0 * M_PI) + ly * cos(base_angle / 180.0 * M_PI)) + base_offset_y;
 	*x = tx;
 	*y = ty;
 	*z = RAD_TO_HEIGHT(sPos[2]);
@@ -372,7 +372,7 @@ void rad_to_pos(double *x, double *y, double *z, double *yaw, double *w, short *
 	}
 }
 
-void getPosition(double *x, double *y, double *z, double *yaw, double *width, double base_angle) {
+void getPosition(double *x, double *y, double *z, double *yaw, double *width, double base_angle, double base_offset_x, double base_offset_y) {
 
     // x,y,z,yaw,w;				
 	short pos[5] = { 0, 0, 0, 0, 0 };		
@@ -383,7 +383,7 @@ void getPosition(double *x, double *y, double *z, double *yaw, double *width, do
 		}
 	}
 	printf("X:%+5d, Y:%+5d, Z:%+5d\n", pos[0], pos[1], pos[2]);
-	rad_to_pos(x, y, z, yaw, width, pos, 5, base_angle);
+	rad_to_pos(x, y, z, yaw, width, pos, 5, base_angle, base_offset_x, base_offset_y);
     //printf("X:%+.1fmm Y:%+.1fmm Z:%+.1fmm",x,y,z);
     //if(servoNum==5) printf(" Yaw:%+.1fdeg Width:%.1fmm",yaw,width);
     //printf("\n");
@@ -515,5 +515,6 @@ int SetTXOpenDrain(HID_UART_DEVICE dev )
 	HidUart_GetPinConfig(dev,  pinConfig,  &useSuspendValues, &suspendValue, &suspendMode, &rs485Level, &clkDiv);
 	pinConfig[10] = 0x01;
 	return HidUart_SetPinConfig(dev,  pinConfig, useSuspendValues, suspendValue, suspendMode,rs485Level, clkDiv);
+
 
 }
