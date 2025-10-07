@@ -167,7 +167,7 @@ int main(int argc, char *argv[])
 	double z = 0;
 	double yaw = 0;
 	double width = 0;
-	getPosition(&x, &y, &z, &yaw, &width);
+	getPosition(&x, &y, &z, &yaw, &width, base_angle, base_offset_x, base_offset_y);
 	printf("X:%+6.2fmm, Y:%+6.2fmm, Z:%+6.2fmm", x, y, z);
 	if (servoNum == 5)
 	    printf(", Yaw:%+6.2fdeg, Width:%6.2fmm", yaw, width);
@@ -518,3 +518,4 @@ int SetTXOpenDrain(HID_UART_DEVICE dev )
 
 
 }
+
