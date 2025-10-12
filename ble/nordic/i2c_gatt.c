@@ -894,7 +894,7 @@ void main(void)
     _SensorSettings s;
     LSM6DS3DATASTRUCT lsm_data;
     float temperature = 0.0f;
-    set_up_sensor(&s)
+    set_up_sensor(&s);
     ret_code_t rc = setup_i2c(&s);
     APP_ERROR_CHECK(rc);
 	while (1)
@@ -916,8 +916,8 @@ void main(void)
 		bt_gatt_notify(NULL, &vnd_attrs[2], &p_field, sizeof(p_field));
 		bt_gatt_notify(NULL, &vnd_attrs[4], &r_field, sizeof(r_field));
 		bt_gatt_notify(NULL, &vnd_attrs[6], &y_field, sizeof(y_field));
-
 		bt_le_adv_update_data(ad, ARRAY_SIZE(ad), NULL, 0);
         nrf_delay_ms(5000);
 	}
+
 }
