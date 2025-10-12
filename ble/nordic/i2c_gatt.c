@@ -872,11 +872,6 @@ void main(void)
 	gpio_pin_write(port0, 17, 1);
 	k_sleep(500);
 
-	// sensor
-
-	k_sleep(500);
-	update_sensor_data(lsm_data.ang.x, lsm_data.ang.y, lsm_data.ang.z);
-
 	// set up BLE
 	int err;
 	err = bt_enable(bt_ready);
@@ -921,3 +916,4 @@ void main(void)
 	}
 
 }
+
