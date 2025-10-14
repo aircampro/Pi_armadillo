@@ -186,7 +186,7 @@ _set_text(): Sets text in the GUI
 
                 # wait the sleep time
                 time.sleep(self._SIMULATION_SLEEP_TIME)
-            except KeyboardInterrupt:
+        except KeyboardInterrupt:
                 loop = False
         p.disconnect()
 
@@ -243,4 +243,5 @@ if __name__ == "__main__":
     elif len(sys.argv[0]) == 2: 
         main(str(sys.argv[1]), str(sys.argv[2]))	
     else:
+
         print("arg1=youturdf file arg2=your plane urdf file")    
