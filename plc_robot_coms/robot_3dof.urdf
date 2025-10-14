@@ -1,0 +1,163 @@
+<?xml version="1.0"?>
+<robot name="robot_3dof">
+
+    <!-- ベースリンク -->
+    <link name="base_link">
+        <!-- 見た目，干渉判定，慣性なし -->
+    </link>
+
+
+    <!-- ベースリンクとリンク1間の関節 -->
+    <joint name="joint1" type="revolute">
+
+        <parent link="base_link"/>
+        <child link="link1"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <axis xyz="0 0 1"/>
+        <limit lower="-3.14" upper="3.14" effort="100" velocity="5.0"/>
+
+    </joint>
+
+
+    <!-- リンク1 -->
+    <link name="link1">
+
+        <!-- 見た目 -->
+        <visual>
+            <origin xyz="0.0 0.0 0.5"/>
+            <geometry>
+                <box size="0.2 0.2 1.0"/>
+            </geometry>
+        </visual>
+
+        <!-- 干渉判定 -->
+        <collision>
+            <origin xyz="0.0 0.0 0.5"/>
+            <geometry>
+                <box size="0.2 0.2 1.0"/>
+            </geometry>
+        </collision>
+
+        <!-- 慣性行列 -->
+        <inertial>
+            <origin xyz="0.0 0.0 0.5"/>
+            <!-- 質量は適当 -->
+            <mass value="1.0"/>
+            <inertia ixx="0.0866667" iyy="0.0866667" izz="0.0066667" ixy="0.0" ixz="0.0" iyz="0.0"/>
+        </inertial>
+
+    </link>
+
+
+    <!-- リンク1とリンク2間の関節 -->
+    <joint name="joint2" type="revolute">
+
+        <parent link="link1"/>
+        <child link="link2"/>
+        <origin xyz="0 0 1.0" rpy="0 0 0"/>
+        <axis xyz="0 1 0"/>
+        <limit lower="-3.14" upper="3.14" effort="100" velocity="5.0"/>
+
+    </joint>
+
+
+    <!-- リンク2 -->
+    <link name="link2">
+
+        <!-- 見た目 -->
+        <visual>
+            <origin xyz="0.0 0.0 0.5"/>
+            <geometry>
+                <box size="0.2 0.2 1.0"/>
+            </geometry>
+        </visual>
+
+        <!-- 干渉判定 -->
+        <collision>
+            <origin xyz="0.0 0.0 0.5"/>
+            <geometry>
+                <box size="0.2 0.2 1.0"/>
+            </geometry>
+        </collision>
+
+        <!-- 慣性行列 -->
+        <inertial>
+            <origin xyz="0.0 0.0 0.5"/>
+            <!-- 質量は適当 -->
+            <mass value="1.0"/>
+            <inertia ixx="0.0866667" iyy="0.0866667" izz="0.0066667" ixy="0.0" ixz="0.0" iyz="0.0"/>
+        </inertial>
+
+    </link>
+
+
+    <!-- リンク2とリンク3間の関節 -->
+    <joint name="joint3" type="revolute">
+
+        <parent link="link2"/>
+        <child link="link3"/>
+        <origin xyz="0 0 1.0" rpy="0 0 0"/>
+        <axis xyz="0 1 0"/>
+        <limit lower="-3.14" upper="3.14" effort="100" velocity="5.0"/>
+
+    </joint>
+
+
+    <!-- リンク3 -->
+    <link name="link3">
+
+        <!-- 見た目 -->
+        <visual>
+            <origin xyz="0.0 0.0 0.5"/>
+            <geometry>
+                <box size="0.2 0.2 1.0"/>
+            </geometry>
+        </visual>
+
+        <!-- 干渉判定 -->
+        <collision>
+            <origin xyz="0.0 0.0 0.5"/>
+            <geometry>
+                <box size="0.2 0.2 1.0"/>
+            </geometry>
+        </collision>
+
+        <!-- 慣性行列 -->
+        <inertial>
+            <origin xyz="0.0 0.0 0.5"/>
+            <!-- 質量は適当 -->
+            <mass value="1.0"/>
+            <inertia ixx="0.0866667" iyy="0.0866667" izz="0.0066667" ixy="0.0" ixz="0.0" iyz="0.0"/>
+        </inertial>
+
+    </link>
+
+
+    <!-- リンク3とエンドエフェクタ間の関節 -->
+    <joint name="ee_joint" type="fixed">
+
+        <parent link="link3"/>
+        <child link="ee_link"/>
+        <origin xyz="0 0 1.0" rpy="0 0 0"/>
+
+    </joint>
+
+
+    <!-- エンドエフェクタ -->
+    <link name="ee_link">
+
+        <visual>
+            <geometry>
+                <sphere radius="0.05"/>
+            </geometry>
+            <material name="red">
+                <color rgba="1 0 0 1"/>
+            </material>
+        </visual>
+
+        <!-- 見た目だけ定義して，干渉判定および慣性はなし -->
+
+    </link>
+
+
+</robot>
