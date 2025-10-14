@@ -1,3 +1,5 @@
+# !/usr/bin/python
+# coding:utf-8
 from enum import Enum
 import pybullet as p    
 import pybullet_data    
@@ -245,3 +247,4 @@ if __name__ == "__main__":
     else:
 
         print("arg1=youturdf file arg2=your plane urdf file")    
+
