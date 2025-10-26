@@ -27,7 +27,7 @@ MY_TZ='Europe/Moscow'
 TELEM_CHOICES=[ "soracom", "beebotte", "mosquito", "ubidots", "machinist", "aws", "azure", "yandex", "twillio", "smtp_email", "ssl_tls_server", \
     "ssl_23_server", "cloud_mqtt", "gcs_blob", "splunk", "gcs_spread", "ambient", "influxdb", "redis", "mongo", "mysql", "sybase", "oracle", "sqllite", "pg", \ 
     "fluvio", "scyllia", "rocks", "ali", "taiga", "msaccess", "riak", "elas", "neo4j", "cumulocity", "sftp", "coAp", "sms_gsm_modem", "ibmdb", "couchbase", "ignition", \ 
-    "denzow", "azure_iot", "sim8001_modem_sms", "sim8001_modem_gprs" ]
+    "denzow", "azure_iot", "sim8001_modem_sms", "sim8001_modem_gprs", "meshblu", "amqp" ]
 SORACOM=0
 BEEBOTTE=1
 MOSQUITO=2
@@ -73,6 +73,8 @@ DENZOW=41
 AZURE_IOT=42
 SIM8001_SMS=43
 SIM8001_GPRS=44
+MESHBLU=45
+AMQP=46
 # ============= make your choice of cloud service here from list above ================== 
 MY_CURRENT_TELEM=TELEM_CHOICES[SORACOM]
 
@@ -440,6 +442,36 @@ elif MY_CURRENT_TELEM == "ibmdb":
     DSN = settings.DSN
     USN = settings.USN
     PWD = settings.PWD
+
+# =============================================  AMQP  ============================================================
+#   
+# Messaging in AMQP with kombu
+#
+# ref:- https://qiita.com/yuuichi-fujioka/items/2e19f7779aed37abc943
+#
+elif MY_CURRENT_TELEM == "amqp":
+    from kombu import Connection, Exchange, Queue, Consumer
+    RKEY='rt.key'
+    CONN='amqp://guest:guest@localhost:5672//'
+    NAM='foo_exc'
+    BC='bar_queue'
+    def callback(body, message):
+        print(body)
+        message.ack()
+    # set-up channel and callback for reading
+    def setup_amqp(n=NAM, r=RKEY):
+        exchange = Exchange(n, type='direct')
+        with Connection(CONN) as c:
+            bound = exchange(c.default_channel)
+            bound.declare()
+        queue = Queue(BC, exchange=exchange, routing_key=r)
+        with Connection(CONN) as c:
+            bound = queue(c.default_channel)
+            bound.declare()
+        with Connection(CONN) as c:
+            with Consumer(c.default_channel, queues=[queue], callbacks=[callback]):
+                c.drain_events()
+    setup_amqp()
 
 # =============================================  use couchbase cloud  ============================================================
 #
@@ -2319,6 +2351,28 @@ def Enocean2Telemetry(s_port, telem_opt):
         with open('denzow.pickle', 'wb') as f:
             pickle.dump(CARD_SENT, f)    
 
+    # meshblu
+    def sendDataMeshBlu(desc1, temp1, desc2, temp2):
+        idcp_ip       = "{IDCF IP}"
+        trigger_uuid  = "{trigger-1 uuid}"
+        trigger_token = "{trigger-1 token}"
+    
+        url = "http://" + idcp_ip + "/data/" + trigger_uuid
+        headers = {
+            "meshblu_auth_uuid": trigger_uuid,
+            "meshblu_auth_token": trigger_token
+        }
+        payload = {desc1:temp1,desc2:temp2}
+        r = requests.post(url, headers=headers, data=payload)
+
+    # amqp
+    def send2AMQP(desc1, temp1, desc2, temp2):
+        exchange = Exchange(NAM, type='direct')
+        with Connection(CONN) as c:
+            bound_exc = exchange(c.default_channel)
+            msg = bound_exc.Message(f"{desc1} {temp1} {desc2} {temp2}")
+            bound_exc.publish(msg, routing_key=RKEY)
+        
     # ==== Choose the iOt you want to use according to the define in top section ====        
     if telem_opt == "soracom":
         sendData=sendDataSoraCom
@@ -2340,6 +2394,8 @@ def Enocean2Telemetry(s_port, telem_opt):
         sendData=sendDataMachinist   
     elif telem_opt == "sftp":
         sendData=upload_sftp_client
+    elif telem_opt == "amqp":
+        sendData=send2AMQP      
     elif telem_opt == "coAp":
         sendData=upload_coAp    
     elif telem_opt == "aws":
@@ -2422,6 +2478,8 @@ def Enocean2Telemetry(s_port, telem_opt):
         GTOPIC=CTOPIC
     elif telem_opt == "splunk":
         sendData=sendDataSplunk
+    elif telem_opt == "meshblu":
+        sendData=sendDataMeshBlu
     elif telem_opt == "ambient":
         import ambient # this is how to install it --> sudo pip install git+https://github.com/AmbientDataInc/ambient-python-lib.git
         am = ambient.Ambient(channelID, writeKey)  
