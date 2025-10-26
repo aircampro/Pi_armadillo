@@ -2,6 +2,7 @@
 // for cxxopts use https://github.com/TadaoYamaoka/cxxopts/blob/master/include/cxxopts.hpp
 //
 // can be used to play music, robot speak, location information system (bus/train)
+// compiles as :- g++ MPD_Player.cpp -l boost_system -l pthread
 #include <stdio.h>
 #include <iostream>
 #include <string>
@@ -73,3 +74,4 @@ int main(int argc, char **argv) {
   return 0;
 
 }
+
