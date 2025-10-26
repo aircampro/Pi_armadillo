@@ -1,6 +1,7 @@
 // client for MPD (music player daemon) https://www.musicpd.org/
 // for cxxopts use https://github.com/TadaoYamaoka/cxxopts/blob/master/include/cxxopts.hpp
 //
+// can be used to play music, robot speak, location information system (bus/train)
 #include <stdio.h>
 #include <iostream>
 #include <string>
@@ -70,4 +71,5 @@ int main(int argc, char **argv) {
   }
 
   return 0;
+
 }
