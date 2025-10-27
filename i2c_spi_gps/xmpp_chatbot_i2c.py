@@ -101,14 +101,20 @@ def drive_op_with_feedback(mode="on", opin=17, ipin=27):
 def command(cmd):
     return subprocess.Popen(cmd, stdout=subprocess.PIPE,shell=True).communicate()[0]
 
-def remove(str):
-    x = 0 
-    while x <len(e):
-        try:
-            e.remove('--') 
-        except:
-            None
-        x += 1
+def removee(e):
+    x = 0
+    pvals = -1
+    while x != pvals:                     # for some reason i had to iterate this multiple times ? when they are the same they are all gone
+        pvals = x
+        x = 0 
+        while x <len(e):
+            try:
+                e.remove('--') 
+                #print(x)
+            except:
+                None
+            x += 1
+        #print("end ",x)
     x = 0
     while x < len(e):
         try:
@@ -143,9 +149,9 @@ def probe_i2c():
         cmd = 'i2cdetect -y 1'
         cmd_result = command(cmd)
         str = cmd_result.decode("utf-8") 
-        str2 = str.split() 
-        str = list(str2) 
-        return remove(str)
+        str2 = str.split()                  # Separate by space.
+        str = list(str2)                    # Storing in an Array                    
+        return removee(str)
     except:
         print("i2c detect error")
         return -1
