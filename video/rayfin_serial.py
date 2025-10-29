@@ -165,8 +165,8 @@ def serial_open():
     if '/dev/ttyAMA0' in serial_ports.values():
         serial_ports[str(len(serial_ports))]='/dev/ttyS0'
     port_val = serial_ports[ input(f'enter serial port {serial_ports}:') ]
-    boud_val = int(input('eneter board rate in bps:'))
-    prty_val = input(f'eneter parity as 。[N:None, O:Odd, E:Even]:')
+    boud_val = int(input('enter board rate in bps:'))
+    prty_val = input(f'enter parity as 。[N:None, O:Odd, E:Even]:')
     Serial_Port=serial.Serial(port=port_val, baudrate=boud_val, parity= prty_val)
     print(f'open{port_val}/{boud_val}bps/parity:{prty_val}')
 
@@ -181,4 +181,5 @@ if __name__ == '__main__':
     thread_1 = threading.Thread(target=serial_write)
     thread_2 = threading.Thread(target=serial_read)
     thread_1.start()
+
     thread_2.start()
