@@ -29,6 +29,17 @@ def PID(kp, ki, kd, theta_goal, theta_current, error_sum, error_pre):
     m = (kp * error) + (ki * error_sum) + (kd*error_diff)  # calculate factor
     return m, error_sum, error
 
+def clamp(h, l, v):
+    v = max(v, l)
+    v = min(v, h)
+    return v
+
+def reverse(h, v):
+    v = h - v
+    if v < 0:
+        v = 0
+    return v
+
 class TempPID:
     REGISTER_FILE = "demo_app.db"
     """
@@ -37,7 +48,7 @@ class TempPID:
     The file will be created automatically if it doesn't exist.
     """
 
-    def __init__(self, b=False) -> None:
+    def __init__(self, b=False, h=5.0, l=0, r=False) -> None:
         node_info = uavcan.node.GetInfo_1.Response(
             software_version=uavcan.node.Version_1(major=1, minor=0),
             name="org.opencyphal.pycyphal.demo.demo_app",
@@ -46,6 +57,10 @@ class TempPID:
         self.error_pre = 0
         self.self.error_sum = 0
         self.basic = b
+        self.high_lim = h
+        self.low_lim = l
+        self.reverse_action = r
+
         # The Node class is basically the central part of the library -- it is the bridge between the application and
         # the UAVCAN network. Also, it implements certain standard application-layer functions, such as publishing
         # heartbeats and port introspection messages, responding to GetInfo, serving the register API, etc.
@@ -149,6 +164,9 @@ class TempPID:
                 voltage_output = temperature_error * gain_p                                                                                                            # Suppose this is a basic P-controller.
             else:
                 voltage_output, self.error_sum, self.error_pre = PID(gain_p, gain_i, gain_d, temperature_setpoint, m.kelvin, self.error_sum, self.error_pre)            # acp - added PID controller
+                voltage_output = clamp(self.high_lim, self.low_lim, voltage_output)
+                if self.reverse_action == True:
+                    voltage_output = reverse(self.high_lim, voltage_output)                
             await self._pub_v_cmd.publish(uavcan.si.unit.voltage.Scalar_1(voltage_output))
 
     def close(self) -> None:
