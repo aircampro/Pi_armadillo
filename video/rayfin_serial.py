@@ -100,7 +100,7 @@ def serial_write():
             elif opt == 4 and not (tim == -1 or npics == -1):
                 data = f"Repeat:TakePicture|WaitFor:{tim}|{npics}"
             elif opt == 5 and not (tim == -1):
-                data = f"StartRecording|WaitFor:tim}"
+                data = f"StartRecording|WaitFor:{tim}"
             elif opt == 6:
                 data = "StopRecording"
             elif opt == 7:
@@ -183,3 +183,4 @@ if __name__ == '__main__':
     thread_1.start()
 
     thread_2.start()
+
