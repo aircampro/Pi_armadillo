@@ -35,6 +35,8 @@ def clamp(h, l, v):
     return v
 
 def reverse(h, v):
+    if v < 0:
+        v = 0
     v = h - v
     if v < 0:
         v = 0
@@ -190,3 +192,4 @@ async def main() -> None:
 
 if __name__ == "__main__":
     asyncio.run(main())
+
