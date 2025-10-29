@@ -79,7 +79,8 @@ def print_options():
             val = min(val,800)
             val = max(val,50)
     except:
-        print("ibvalid action")
+        print("invalid action")
+        opt = -1
     return opt, val, tim, npics
 
 #------------------------------
@@ -181,6 +182,4 @@ if __name__ == '__main__':
     thread_1 = threading.Thread(target=serial_write)
     thread_2 = threading.Thread(target=serial_read)
     thread_1.start()
-
     thread_2.start()
-
