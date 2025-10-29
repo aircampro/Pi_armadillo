@@ -136,9 +136,11 @@ def serial_write():
                 data = "IncreaseExposureValue"
             elif opt == 22:
                 data = f"UpdateISO:{val}"
-
-            data=data.encode('utf-8')
-            Serial_Port.write(data)
+            else:
+                data = -1
+            if not data == -1:
+                data=data.encode('utf-8')
+                Serial_Port.write(data)
 
 #----------------------------------
 # function to read back serial data
@@ -183,3 +185,4 @@ if __name__ == '__main__':
     thread_2 = threading.Thread(target=serial_read)
     thread_1.start()
     thread_2.start()
+
