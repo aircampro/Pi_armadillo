@@ -22,10 +22,7 @@ constexpr std::uint8_t no_pattern = 17;
 
 int main()
 {
-    int step = 0;
-    int timeout_count = 0;
     init_platform();
-
     print("Zybo sequence example using API\n\r");
 
     XGpioPs instXGpioPs;
@@ -46,7 +43,7 @@ int main()
         led_pattern_next = (led_pattern_next + 1) % no_pattern;                      // cycle the patterns
         sleep(1);	
     }
-
     cleanup_platform();
     return 0;
+
 }
