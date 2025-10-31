@@ -13,6 +13,182 @@
 #define IIC_SCLK_RATE		1/(100000)
 #define 24FC1025_SLAVE_ADDR     (0x50)                                  // 24FC1025 memory
 
+// macros for converting endianness if you require it
+//Load unaligned 16-bit integer (little-endian encoding)
+#define LOAD16LE(p) ( \
+   ((uint16_t)(((uint8_t *)(p))[0]) << 0) | \
+   ((uint16_t)(((uint8_t *)(p))[1]) << 8))
+
+//Load unaligned 16-bit integer (big-endian encoding)
+#define LOAD16BE(p) ( \
+   ((uint16_t)(((uint8_t *)(p))[0]) << 8) | \
+   ((uint16_t)(((uint8_t *)(p))[1]) << 0))
+
+//Load unaligned 24-bit integer (little-endian encoding)
+#define LOAD24LE(p) ( \
+   ((uint32_t)(((uint8_t *)(p))[0]) << 0)| \
+   ((uint32_t)(((uint8_t *)(p))[1]) << 8) | \
+   ((uint32_t)(((uint8_t *)(p))[2]) << 16))
+
+//Load unaligned 24-bit integer (big-endian encoding)
+#define LOAD24BE(p) ( \
+   ((uint32_t)(((uint8_t *)(p))[0]) << 16) | \
+   ((uint32_t)(((uint8_t *)(p))[1]) << 8) | \
+   ((uint32_t)(((uint8_t *)(p))[2]) << 0))
+
+//Load unaligned 32-bit integer (little-endian encoding)
+#define LOAD32LE(p) ( \
+   ((uint32_t)(((uint8_t *)(p))[0]) << 0) | \
+   ((uint32_t)(((uint8_t *)(p))[1]) << 8) | \
+   ((uint32_t)(((uint8_t *)(p))[2]) << 16) | \
+   ((uint32_t)(((uint8_t *)(p))[3]) << 24))
+
+//Load unaligned 32-bit integer (big-endian encoding)
+#define LOAD32BE(p) ( \
+   ((uint32_t)(((uint8_t *)(p))[0]) << 24) | \
+   ((uint32_t)(((uint8_t *)(p))[1]) << 16) | \
+   ((uint32_t)(((uint8_t *)(p))[2]) << 8) | \
+   ((uint32_t)(((uint8_t *)(p))[3]) << 0))
+
+//Load unaligned 48-bit integer (little-endian encoding)
+#define LOAD48LE(p) ( \
+   ((uint64_t)(((uint8_t *)(p))[0]) << 0) | \
+   ((uint64_t)(((uint8_t *)(p))[1]) << 8) | \
+   ((uint64_t)(((uint8_t *)(p))[2]) << 16) | \
+   ((uint64_t)(((uint8_t *)(p))[3]) << 24) | \
+   ((uint64_t)(((uint8_t *)(p))[4]) << 32) | \
+   ((uint64_t)(((uint8_t *)(p))[5]) << 40)
+
+//Load unaligned 48-bit integer (big-endian encoding)
+#define LOAD48BE(p) ( \
+   ((uint64_t)(((uint8_t *)(p))[0]) << 40) | \
+   ((uint64_t)(((uint8_t *)(p))[1]) << 32) | \
+   ((uint64_t)(((uint8_t *)(p))[2]) << 24) | \
+   ((uint64_t)(((uint8_t *)(p))[3]) << 16) | \
+   ((uint64_t)(((uint8_t *)(p))[4]) << 8) | \
+   ((uint64_t)(((uint8_t *)(p))[5]) << 0))
+
+//Load unaligned 64-bit integer (little-endian encoding)
+#define LOAD64LE(p) ( \
+   ((uint64_t)(((uint8_t *)(p))[0]) << 0) | \
+   ((uint64_t)(((uint8_t *)(p))[1]) << 8) | \
+   ((uint64_t)(((uint8_t *)(p))[2]) << 16) | \
+   ((uint64_t)(((uint8_t *)(p))[3]) << 24) | \
+   ((uint64_t)(((uint8_t *)(p))[4]) << 32) | \
+   ((uint64_t)(((uint8_t *)(p))[5]) << 40) | \
+   ((uint64_t)(((uint8_t *)(p))[6]) << 48) | \
+   ((uint64_t)(((uint8_t *)(p))[7]) << 56))
+
+//Load unaligned 64-bit integer (big-endian encoding)
+#define LOAD64BE(p) ( \
+   ((uint64_t)(((uint8_t *)(p))[0]) << 56) | \
+   ((uint64_t)(((uint8_t *)(p))[1]) << 48) | \
+   ((uint64_t)(((uint8_t *)(p))[2]) << 40) | \
+   ((uint64_t)(((uint8_t *)(p))[3]) << 32) | \
+   ((uint64_t)(((uint8_t *)(p))[4]) << 24) | \
+   ((uint64_t)(((uint8_t *)(p))[5]) << 16) | \
+   ((uint64_t)(((uint8_t *)(p))[6]) << 8) | \
+   ((uint64_t)(((uint8_t *)(p))[7]) << 0))
+
+//Store unaligned 16-bit integer (little-endian encoding)
+#define STORE16LE(a, p) \
+   ((uint8_t *)(p))[0] = ((uint16_t)(a) >> 0) & 0xFFU, \
+   ((uint8_t *)(p))[1] = ((uint16_t)(a) >> 8) & 0xFFU
+
+//Store unaligned 16-bit integer (big-endian encoding)
+#define STORE16BE(a, p) \
+   ((uint8_t *)(p))[0] = ((uint16_t)(a) >> 8) & 0xFFU, \
+   ((uint8_t *)(p))[1] = ((uint16_t)(a) >> 0) & 0xFFU
+
+//Store unaligned 24-bit integer (little-endian encoding)
+#define STORE24LE(a, p) \
+   ((uint8_t *)(p))[0] = ((uint32_t)(a) >> 0) & 0xFFU, \
+   ((uint8_t *)(p))[1] = ((uint32_t)(a) >> 8) & 0xFFU, \
+   ((uint8_t *)(p))[2] = ((uint32_t)(a) >> 16) & 0xFFU
+
+//Store unaligned 24-bit integer (big-endian encoding)
+#define STORE24BE(a, p) \
+   ((uint8_t *)(p))[0] = ((uint32_t)(a) >> 16) & 0xFFU, \
+   ((uint8_t *)(p))[1] = ((uint32_t)(a) >> 8) & 0xFFU, \
+   ((uint8_t *)(p))[2] = ((uint32_t)(a) >> 0) & 0xFFU
+
+//Store unaligned 32-bit integer (little-endian encoding)
+#define STORE32LE(a, p) \
+   ((uint8_t *)(p))[0] = ((uint32_t)(a) >> 0) & 0xFFU, \
+   ((uint8_t *)(p))[1] = ((uint32_t)(a) >> 8) & 0xFFU, \
+   ((uint8_t *)(p))[2] = ((uint32_t)(a) >> 16) & 0xFFU, \
+   ((uint8_t *)(p))[3] = ((uint32_t)(a) >> 24) & 0xFFU
+
+//Store unaligned 32-bit integer (big-endian encoding)
+#define STORE32BE(a, p) \
+   ((uint8_t *)(p))[0] = ((uint32_t)(a) >> 24) & 0xFFU, \
+   ((uint8_t *)(p))[1] = ((uint32_t)(a) >> 16) & 0xFFU, \
+   ((uint8_t *)(p))[2] = ((uint32_t)(a) >> 8) & 0xFFU, \
+   ((uint8_t *)(p))[3] = ((uint32_t)(a) >> 0) & 0xFFU
+
+//Store unaligned 48-bit integer (little-endian encoding)
+#define STORE48LE(a, p) \
+   ((uint8_t *)(p))[0] = ((uint64_t)(a) >> 0) & 0xFFU, \
+   ((uint8_t *)(p))[1] = ((uint64_t)(a) >> 8) & 0xFFU, \
+   ((uint8_t *)(p))[2] = ((uint64_t)(a) >> 16) & 0xFFU, \
+   ((uint8_t *)(p))[3] = ((uint64_t)(a) >> 24) & 0xFFU, \
+   ((uint8_t *)(p))[4] = ((uint64_t)(a) >> 32) & 0xFFU, \
+   ((uint8_t *)(p))[5] = ((uint64_t)(a) >> 40) & 0xFFU,
+
+//Store unaligned 48-bit integer (big-endian encoding)
+#define STORE48BE(a, p) \
+   ((uint8_t *)(p))[0] = ((uint64_t)(a) >> 40) & 0xFFU, \
+   ((uint8_t *)(p))[1] = ((uint64_t)(a) >> 32) & 0xFFU, \
+   ((uint8_t *)(p))[2] = ((uint64_t)(a) >> 24) & 0xFFU, \
+   ((uint8_t *)(p))[3] = ((uint64_t)(a) >> 16) & 0xFFU, \
+   ((uint8_t *)(p))[4] = ((uint64_t)(a) >> 8) & 0xFFU, \
+   ((uint8_t *)(p))[5] = ((uint64_t)(a) >> 0) & 0xFFU
+
+//Store unaligned 64-bit integer (little-endian encoding)
+#define STORE64LE(a, p) \
+   ((uint8_t *)(p))[0] = ((uint64_t)(a) >> 0) & 0xFFU, \
+   ((uint8_t *)(p))[1] = ((uint64_t)(a) >> 8) & 0xFFU, \
+   ((uint8_t *)(p))[2] = ((uint64_t)(a) >> 16) & 0xFFU, \
+   ((uint8_t *)(p))[3] = ((uint64_t)(a) >> 24) & 0xFFU, \
+   ((uint8_t *)(p))[4] = ((uint64_t)(a) >> 32) & 0xFFU, \
+   ((uint8_t *)(p))[5] = ((uint64_t)(a) >> 40) & 0xFFU, \
+   ((uint8_t *)(p))[6] = ((uint64_t)(a) >> 48) & 0xFFU, \
+   ((uint8_t *)(p))[7] = ((uint64_t)(a) >> 56) & 0xFFU
+
+//Store unaligned 64-bit integer (big-endian encoding)
+#define STORE64BE(a, p) \
+   ((uint8_t *)(p))[0] = ((uint64_t)(a) >> 56) & 0xFFU, \
+   ((uint8_t *)(p))[1] = ((uint64_t)(a) >> 48) & 0xFFU, \
+   ((uint8_t *)(p))[2] = ((uint64_t)(a) >> 40) & 0xFFU, \
+   ((uint8_t *)(p))[3] = ((uint64_t)(a) >> 32) & 0xFFU, \
+   ((uint8_t *)(p))[4] = ((uint64_t)(a) >> 24) & 0xFFU, \
+   ((uint8_t *)(p))[5] = ((uint64_t)(a) >> 16) & 0xFFU, \
+   ((uint8_t *)(p))[6] = ((uint64_t)(a) >> 8) & 0xFFU, \
+   ((uint8_t *)(p))[7] = ((uint64_t)(a) >> 0) & 0xFFU
+
+//Swap a 16-bit integer
+#define SWAPINT16(x) ( \
+   (((uint16_t)(x) & 0x00FFU) << 8) | \
+   (((uint16_t)(x) & 0xFF00U) >> 8))
+
+//Swap a 32-bit integer
+#define SWAPINT32(x) ( \
+   (((uint32_t)(x) & 0x000000FFUL) << 24) | \
+   (((uint32_t)(x) & 0x0000FF00UL) << 8) | \
+   (((uint32_t)(x) & 0x00FF0000UL) >> 8) | \
+   (((uint32_t)(x) & 0xFF000000UL) >> 24))
+
+//Swap a 64-bit integer
+#define SWAPINT64(x) ( \
+   (((uint64_t)(x) & 0x00000000000000FFULL) << 56) | \
+   (((uint64_t)(x) & 0x000000000000FF00ULL) << 40) | \
+   (((uint64_t)(x) & 0x0000000000FF0000ULL) << 24) | \
+   (((uint64_t)(x) & 0x00000000FF000000ULL) << 8) | \
+   (((uint64_t)(x) & 0x000000FF00000000ULL) >> 8) | \
+   (((uint64_t)(x) & 0x0000FF0000000000ULL) >> 24) | \
+   (((uint64_t)(x) & 0x00FF000000000000ULL) >> 40) | \
+   (((uint64_t)(x) & 0xFF00000000000000ULL) >> 56))
+
 // define a structure to contain all data on the i2c line connected on SCL pi5, SDA pi3
 typedef struct  {
     double Temperature;                                                        
@@ -284,7 +460,6 @@ void write_24fc1025( unsigned char* registers, unsigned char* dataV, unsigned in
 
 float read_24fc1025_real( unsigned char* registers ) {
 
-    bool endian = false;
 	char RecvBuffer[4];
     double atmp = 0;
 	union { float f; unsigned int i; } t;
@@ -292,11 +467,7 @@ float read_24fc1025_real( unsigned char* registers ) {
 		RecvBuffer[idx] = wire->read2(*registers[idx]);			
 		usleep(100);
 	}
-    if (!endian) {
-	    t.i = RecvBuffer[0] << 24 | RecvBuffer[1] << 16 | RecvBuffer[2] << 8 | RecvBuffer[3];
-	} else {
-	    t.i = RecvBuffer[3] << 24 | RecvBuffer[2] << 16 | RecvBuffer[1] << 8 | RecvBuffer[0];
-    }
+	t.i = RecvBuffer[0] << 24 | RecvBuffer[1] << 16 | RecvBuffer[2] << 8 | RecvBuffer[3];
 	return t.f;
 }
 
@@ -348,3 +519,4 @@ int main()
 
 	return 0;
 }
+
