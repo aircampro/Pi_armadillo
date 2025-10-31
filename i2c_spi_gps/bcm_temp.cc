@@ -197,6 +197,7 @@ typedef struct  {
 	float MemReal1;
 } i2cData_t; 
 
+int g_endian = 0;                                                       // enable 1 to do 32bit endian swap
 
 // software I2C
 class I2C {
@@ -446,7 +447,6 @@ unsigned int read_24fc1025( unsigned char* registers ) {
 void write_24fc1025( unsigned char* registers, unsigned char* dataV, unsigned int datalen ) {
 
 	char RecvBuffer[datalen];
-	unsigned int result = 0;
     double atmp = 0;
 	for(int idx=0; idx < 2; idx++) {                                       // write memory address
 		wire->write2(*registers[idx]);
@@ -468,6 +468,9 @@ float read_24fc1025_real( unsigned char* registers ) {
 		usleep(100);
 	}
 	t.i = RecvBuffer[0] << 24 | RecvBuffer[1] << 16 | RecvBuffer[2] << 8 | RecvBuffer[3];
+	if (g_endian == 1) {
+		t.i = SWAPINT32(t.i);
+	}
 	return t.f;
 }
 
@@ -510,6 +513,9 @@ int main()
     printf( "float %X\n", ( a.i >> 16 ) & 0xFF );
     printf( "float %X\n", ( a.i >> 8 ) & 0xFF );
     printf( "float %X\n", ( a.i ) & 0xFF );
+	if (g_endian == 1) {
+		a.i = SWAPINT32(a.i);
+	}
     unsigned char dataArr2[4] = { ( a.i >> 24 ) & 0xFF, ( a.i >> 16 ) & 0xFF, ( a.i >> 8 ) & 0xFF, ( a.i ) & 0xFF};       // data to write to memeory 3	
     write_24fc1025( &registers, &dataArr2, 4 );
 	while (1) {
@@ -519,4 +525,5 @@ int main()
 
 	return 0;
 }
+
 
