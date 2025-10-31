@@ -633,15 +633,27 @@ int loop(XIicPs *Iic)
 
 	xil_printf("temp=%.2f;press=%.2f;humid=%.2f;\n", temp_act, press_act, hum_act);
     sprintf(text0, "temp=%.2f", temp_act);
-	ST7032_setCursor(&Iic, 0, 0);
+	Status = ST7032_setCursor(&Iic, 0, 0);
+	if(Status != XST_SUCCESS){
+		return XST_FAILURE;
+	}
 	while(*text0){
-		ST7032_write(&Iic, *text0);
+		Status = ST7032_write(&Iic, *text0);
+	    if(Status != XST_SUCCESS){
+		    return XST_FAILURE;
+	    }
 		text0++;
 	}
-	ST7032_setCursor(&Iic, 1, 0);
+	Status = ST7032_setCursor(&Iic, 1, 0);
+	if(Status != XST_SUCCESS){
+		return XST_FAILURE;
+	}
     sprintf(text1, "oress=%.2f humid=%.2f", press_act, hum_act);
 	while(*text1){
-		ST7032_write(&Iic, *text1);
+		Status = ST7032_write(&Iic, *text1);
+	    if(Status != XST_SUCCESS){
+		    return XST_FAILURE;
+	    }
 		text1++;
 	}
 	sleep(1);
@@ -679,4 +691,5 @@ int main(void)
 #endif		
 	}
 	return XST_SUCCESS;
+
 }
