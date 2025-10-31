@@ -10,7 +10,7 @@
 #define I2C_SCL_PIN RPI_V2_GPIO_P1_05
 #define I2C_SDA_PIN RPI_V2_GPIO_P1_03
 #define ADT7410_SLAVE_ADDR		(0x48)                                  // ADT7410 temperature reading
-#define IIC_SCLK_RATE		1/(100000)
+#define IIC_SCLK_RATE		  (100000)
 #define 24FC1025_SLAVE_ADDR     (0x50)                                  // 24FC1025 memory
 
 // macros for converting endianness if you require it
@@ -525,5 +525,6 @@ int main()
 
 	return 0;
 }
+
 
 
