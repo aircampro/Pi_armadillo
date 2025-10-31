@@ -9,7 +9,7 @@
 #include "xil_printf.h"
 #include "sleep.h"
 
-#include "BME280.h"
+#include "bme280.h"
 
 unsigned long int hum_raw,temp_raw,pres_raw;
 signed long int t_fine;
@@ -413,4 +413,5 @@ int main(void)
 #endif		
 	}
 	return XST_SUCCESS;
+
 }
