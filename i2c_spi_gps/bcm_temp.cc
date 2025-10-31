@@ -18,7 +18,9 @@ typedef struct  {
     double Temperature;                                                        
     unsigned int SetPoint; 
     unsigned int MemState1;	
+	float MemReal1;
 } i2cData_t; 
+
 
 // software I2C
 class I2C {
@@ -280,6 +282,24 @@ void write_24fc1025( unsigned char* registers, unsigned char* dataV, unsigned in
 	}
 }
 
+float read_24fc1025_real( unsigned char* registers ) {
+
+    bool endian = false;
+	char RecvBuffer[4];
+    double atmp = 0;
+	union { float f; unsigned int i; } t;
+	for(int idx=0; idx < 4; idx++) {                                       
+		RecvBuffer[idx] = wire->read2(*registers[idx]);			
+		usleep(100);
+	}
+    if (!endian) {
+	    t.i = RecvBuffer[0] << 24 | RecvBuffer[1] << 16 | RecvBuffer[2] << 8 | RecvBuffer[3];
+	} else {
+	    t.i = RecvBuffer[3] << 24 | RecvBuffer[2] << 16 | RecvBuffer[1] << 8 | RecvBuffer[0];
+    }
+	return t.f;
+}
+
 void setup()
 {
 	bcm2835_init();
@@ -295,9 +315,11 @@ i2cData_t loop()
 	unsigned char registers[2] = { 0x00, 0x00 };                           // memory address MSB and LSB
 	unsigned int ii = read_24fc1025(&registers);
 	i2_values.SetPoint = ii;
-	registers[2] = { 0x00, 0x04 };                           // memory address MSB and LSB
+	registers[2] = { 0x00, 0x04 };                                        // memory address MSB and LSB
 	ii = read_24fc1025(&registers);
 	i2_values.MemState1 = ii;
+	registers[2] = { 0x00, 0x08 };                                         // memory storing a float number	
+	i2_values.MemReal1 = read_24fc1025_real(&registers);
 	return i2_values;
 }
 
@@ -310,10 +332,18 @@ int main()
     dataArr[2] = { 0x0F, 0xF0 };                                           // data to write to memeory 2
 	registers[2] = { 0x00, 0x04 };                                         // memory address MSB and LSB
     write_24fc1025( &registers, &dataArr, 2 );
-	
+	registers[2] = { 0x00, 0x08 };                                         // memory register 3 where we will store a float number
+    union { float f; int i; } a;
+    a.f = -2.5f;	                                                       // write a float value to memory
+    printf( "float %X\n", ( a.i >> 24 ) & 0xFF );
+    printf( "float %X\n", ( a.i >> 16 ) & 0xFF );
+    printf( "float %X\n", ( a.i >> 8 ) & 0xFF );
+    printf( "float %X\n", ( a.i ) & 0xFF );
+    unsigned char dataArr2[4] = { ( a.i >> 24 ) & 0xFF, ( a.i >> 16 ) & 0xFF, ( a.i >> 8 ) & 0xFF, ( a.i ) & 0xFF};       // data to write to memeory 3	
+    write_24fc1025( &registers, &dataArr2, 4 );
 	while (1) {
 		i2cData_t vals=loop();
-		printf("Temp=%f Spt=%d state=%d\n", vals.Temperature, vals.SetPoint, vals.MemState1);
+		printf("Temp=%f Spt=%d state=%d realV=%f\n", vals.Temperature, vals.SetPoint, vals.MemState1, vals.MemReal1);
 	}
 
 	return 0;
