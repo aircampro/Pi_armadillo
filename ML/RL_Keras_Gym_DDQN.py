@@ -32,8 +32,6 @@ if KV <= 2.5:
     from keras.optimizers import Adam,SGD,RMSprop,AdamW,Adadelta,Adagrad,Adamax,Adafactor,Nadam,Ftrl,Lion,Lamb,Muon
 else:
     from keras.optimizers import adam_v2
-model.compile(loss='categorical_crossentropy',optimizer=adam_v2.Adam(learning_rate=0.001), metrics=['accuracy'])
-
 # check the keras model for compatibility with this
 #import h5py
 #with h5py.File("model.hdf5", "r") as fp:
@@ -56,7 +54,7 @@ def huberloss(y_true, y_pred):
 
 # [2] Define the Q function as a class for deep learning networks
 class QNetwork:
-    def __init__(self, learning_rate=0.01, state_size=4, action_size=2, hidden_size=10, o=0):
+    def __init__(self, learning_rate=0.01, state_size=4, action_size=2, hidden_size=10, o=0, lf=0):
         self.model = Sequential()
         self.model.add(Dense(hidden_size, activation='relu', input_dim=state_size))
         self.model.add(Dense(hidden_size, activation='relu'))
@@ -66,9 +64,9 @@ class QNetwork:
         else:
             self.optim=[adam_v2.Adam]
         self.optimizer = self.optim[o](lr=learning_rate)                                         # Adam is the learning method to reduce errors
-        # self.model.compile(loss='mse', optimizer=self.optimizer)
-        self.model.compile(loss=huberloss, optimizer=self.optimizer)
- 
+        self.lossf = [huberloss, 'categorical_crossentropy', 'mse']
+        self.model.compile(loss=self.lossf[lf], optimizer=self.optimizer)
+
     # Weight training
     def replay(self, memory, batch_size, gamma, targetQN):
         inputs = np.zeros((batch_size, 4))
@@ -222,4 +220,5 @@ for episode in range(num_episodes):                                             
             #    if isrender == 0:
             #        env = wrappers.Monitor(env, './movie/cartpole-experiment-1')         # When saving videos
             #        isrender = 1
+
             #    islearned=1;
