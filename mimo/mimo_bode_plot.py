@@ -9,14 +9,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy import signal
 
-J = [8 -3 -3; -3 8 -3; -3 -3 8];
-F = 0.2*eye(3);
-A = -J\F;
-B = inv(J);
-C = eye(3);
-D = 0;
-sys_mimo = ss(A,B,C,D);
-
 #  ----------- define you state models -------------------
 def build_torsional_system_ss() -> Tuple[
     np.matrix,
@@ -252,4 +244,5 @@ def main(state_space_model: str) -> None:
     plot_mimo_bode(resp)
 
 if __name__ == "__main__":
+
     main()
