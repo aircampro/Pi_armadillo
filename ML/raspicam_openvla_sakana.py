@@ -58,8 +58,7 @@ class OpenVLMInterface:
         output_ids = self.model.generate(**inputs)
         output_ids = output_ids[:, inputs.input_ids.shape[1]:]
         generated_text = self.processor.batch_decode(output_ids, skip_special_tokens=True)[0].strip()
-
-    return generated_text
+        return generated_text
 
     def predict_openvla(self, image, prompt, unnorm_key="bridge_orig"):
         """Predicts the robot's action based on the provided image and instruction."""
@@ -120,3 +119,4 @@ def main(instruction: str):
 
 if __name__ == '__main__':
     main()
+
