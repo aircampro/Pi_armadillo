@@ -54,9 +54,8 @@ def get_tele(fid):
         return []
     return response
 
-# these functions help in finding lat lon for location to fly tp
 from geopy import geocoders
-# pip install geopy 
+# pip install geopy geocoder
 def get_city_lat_lon(city="Cleveland, OH 44106"):
     gn = geocoders.GeoNames()
     print(gn.geocode(city))
@@ -69,6 +68,20 @@ def get_distance(stl="Tokyo tower, Tokyo, Japan", endl="Times Square, Manhattan,
     src = (loc_st.latitude, loc_st.longitude)
     dist = (loc_end.latitude, loc_end.longitude)
     return distance.distance(src, dist).km, distance.distance(src, dist).miles
+
+def sho_google_maps(place="日本 北九州"):
+    from geopy.geocoders import Nominatim
+    geolocator = Nominatim(user_agent="test-dayo")
+    location = geolocator.geocode(place)
+    print("Lat, long = ",location.latitude, location.longitude)
+    print("full address = ", location.address)
+    loc_dict = dict(location.raw)
+    print("Lat, long = ", loc_dict["lat"], loc_dict["lon"])
+    print("full address = ", loc_dict["display_name"])
+    print("class and type = ", loc_dict["class"], loc_dict["type"])
+    url = f"https://www.google.com/maps/search/?api=1&query={location.latitude, location.longitude}"
+    import webbrowser
+    webbrowser.open(url)
 
 def mission(la=37.534329, lo=-122.331413, pit=10, h=0):
     """Perform mission as programmed via the Skydio API"""
