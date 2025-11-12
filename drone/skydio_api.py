@@ -270,6 +270,8 @@ if __name__ == "__main__":
     try:
         if not API_TOKEN:
             API_TOKEN = args.api_token
+        m = mission()
+        print(m)
         display_battery_info(args.csv_file)
         f = get_flight_info()
         print(f)
@@ -283,3 +285,4 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"Error: {e}")
         print("Tip: Make sure you have a valid API token and network connection.")
+
