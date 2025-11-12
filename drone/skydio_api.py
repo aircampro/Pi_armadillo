@@ -54,6 +54,34 @@ def get_tele(fid):
         return []
     return response
 
+def mission():
+    """Perform mission as programmed via the Skydio API"""
+    body = {
+        "name": "My GPS Mission",
+        "waypoints": [
+            {
+                "name": "Photo of HQ",
+                "action": "PHOTO",
+                "orientation": {
+                    "gimbal_pitch_degrees": 20,
+                    "heading_degrees": 60,
+                },
+                "position": {
+                    "frame": "GPS",
+                    "latitude": 37.534329,
+                    "longitude": -122.331413,
+                    # Since GPS altitude tends to be unreliable, you
+                    # can also specify a z value in feet above the
+                    # takeoff location, by setting z_frame to NAV
+                    "z": 3,
+                    "z_frame": "NAV"
+                },
+            }
+        ],
+    }
+    r = requests.post(f"{API_BASE}/v{VERSION}/mission/template", data=body)
+    return r
+
 def format_flight_time(seconds):
     """Convert flight time from seconds to hours:minutes:seconds format"""
     hours = seconds // 3600
