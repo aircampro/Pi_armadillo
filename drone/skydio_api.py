@@ -54,7 +54,23 @@ def get_tele(fid):
         return []
     return response
 
-def mission():
+# these functions help in finding lat lon for location to fly tp
+from geopy import geocoders
+# pip install geopy 
+def get_city_lat_lon(city="Cleveland, OH 44106"):
+    gn = geocoders.GeoNames()
+    print(gn.geocode(city))
+    return gn.geocode(city)
+
+from geopy import distance
+def get_distance(stl="Tokyo tower, Tokyo, Japan", endl="Times Square, Manhattan, NY"):
+    loc_st = geolocator.geocode(stl)
+    loc_end = geolocator.geocode(endl)
+    src = (loc_st.latitude, loc_st.longitude)
+    dist = (loc_end.latitude, loc_end.longitude)
+    return distance.distance(src, dist).km, distance.distance(src, dist).miles
+
+def mission(la=37.534329, lo=-122.331413, pit=10, h=0):
     """Perform mission as programmed via the Skydio API"""
     body = {
         "name": "My GPS Mission",
@@ -63,13 +79,13 @@ def mission():
                 "name": "Photo of HQ",
                 "action": "PHOTO",
                 "orientation": {
-                    "gimbal_pitch_degrees": 20,
-                    "heading_degrees": 60,
+                    "gimbal_pitch_degrees": pit,
+                    "heading_degrees": h,
                 },
                 "position": {
                     "frame": "GPS",
-                    "latitude": 37.534329,
-                    "longitude": -122.331413,
+                    "latitude": la,
+                    "longitude": lo,
                     # Since GPS altitude tends to be unreliable, you
                     # can also specify a z value in feet above the
                     # takeoff location, by setting z_frame to NAV
@@ -285,4 +301,3 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"Error: {e}")
         print("Tip: Make sure you have a valid API token and network connection.")
-
