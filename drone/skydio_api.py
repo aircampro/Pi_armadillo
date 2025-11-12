@@ -83,6 +83,17 @@ def sho_google_maps(place="日本 北九州"):
     import webbrowser
     webbrowser.open(url)
 
+#alternative lib here $ pip install geocoder
+def get_city_lat_lon_2(loc_name='日本 国会議事堂'):
+    import geocoder
+    # you have to pay to use this
+    # g = geocoder.google('Mountain View, CA')
+    # print(g.latlng)
+    location = loc_name
+    ret = geocoder.osm(location, timeout=5.0)
+    print(ret.latlng)
+    return ret.latlng
+
 def mission(la=37.534329, lo=-122.331413, pit=10, h=0):
     """Perform mission as programmed via the Skydio API"""
     body = {
