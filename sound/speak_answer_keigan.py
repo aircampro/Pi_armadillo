@@ -165,7 +165,7 @@ def listen_and_act(port_1="/dev/ttyUSB0"):
             except:
                 robot_brain = "can not understand the turn command you said... example turn to left 39"               
         elif "bye bye" in you:
-            robot_brain = "goofbye closing the program"
+            robot_brain = "goodbye closing the program"
             change_voice(robot_mouth, MY_LANG, "female")
             robot_mouth.say(robot_brain)
             robot_mouth.runAndWait()
@@ -173,9 +173,11 @@ def listen_and_act(port_1="/dev/ttyUSB0"):
         else:
             robot_brain = "did not understand"
 
-        change_voice(robot_mouth, MY_LANG, "VoiceGenderFemale")
+        #change_voice(robot_mouth, MY_LANG, "VoiceGenderFemale")
         robot_mouth.say(robot_brain)
         robot_mouth.runAndWait()
 
 if __name__ == "__main__":
     set_named_voice()
+    listen_and_act()
+
