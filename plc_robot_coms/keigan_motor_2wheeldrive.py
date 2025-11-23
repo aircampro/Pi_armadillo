@@ -7,6 +7,7 @@
 # pip install pykeigan-moto
 #
 from pykeigan import usbcontroller
+from pykeigan import blecontroller
 from pykeigan import utils
 import time
 import math
@@ -111,8 +112,8 @@ def pid_controller(sp=steer_p, si=steer_i, slp=steer_load_p, sli=steer_load_i):
         gain_i = steer_i
         gain_d = steer_d        
 
-    eI = eI + RUN_CMD_INTERVAL * x                                         # 偏差 積分
-    eD = (x - x_old) / RUN_CMD_INTERVAL                                    # 偏差 微分
+    eI = eI + RUN_CMD_INTERVAL * x                                        
+    eD = (x - x_old) / RUN_CMD_INTERVAL                                    
     delta_v = gain_p * x + gain_i * eI + gain_d * eD
     
     # Anti-windup
@@ -151,9 +152,13 @@ class State(Enum):
 # Two Wheel Drive Car
 class TWD():
     # port_left, port_right 
-    def __init__(self, port_left, port_right, safe_time = 1, safe_option = 1, wheel_d = 100, tread = 400, button_event_cb = None):
-        self.left = usbcontroller.USBController(port_left,False)
-        self.right = usbcontroller.USBController(port_right,False)
+    def __init__(self, port_left, port_right, mode="usb", safe_time = 1, safe_option = 1, wheel_d = 100, tread = 400, button_event_cb = None):
+        if mode == "usb":
+            self.left = usbcontroller.USBController(port_left,False)
+            self.right = usbcontroller.USBController(port_right,False)
+        else:
+            self.left = blecontroller.BLEController(port_left,False)
+            self.right = blecontroller.BLEController(port_right,False)        
         self.left.enable_check_sum(True)
         self.right.enable_check_sum(True)
         self.safe_time = safe_time
@@ -583,35 +588,3 @@ class TWD():
 
     def turn_round(self):
         self.pivot_turn(20, 180, 10)
-
-
-
-
-
-
-
-
-
-
- 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
