@@ -248,7 +248,7 @@ class TWD():
         self.cur_state = State.STATE_IDLE
 
     def pid_run(self):
-        self.cur_state = State.STATE_IDLE
+        self.cur_state = State.STATE_RUN
 
     def pid_reset(self):
         self.do_pid_reset = True
@@ -588,3 +588,35 @@ class TWD():
 
     def turn_round(self):
         self.pivot_turn(20, 180, 10)
+
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
