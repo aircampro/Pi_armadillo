@@ -14,6 +14,7 @@ import sys
 import pygame
 # import the 2 wheel drive object
 import ../plc_robot_comms/keigan_motor_2wheeldrive
+import os
 
 # define the screen size
 WIDTH = 1270
@@ -44,7 +45,7 @@ font = pygame.font.Font(None, 50)
 # e.g. to specify on windows msgothic  font = pygame.font.Font("C:/Windows/Fonts/msgothic.ttc", 50)
 
 # load and show a png object on your screen this will move with the mouse, also make flipped image
-img_path = Path(__file__).parent / "images" / "ur_image.png" 
+img_path = os.path.dirname(os.path.abspath("__file__")) + "/images" + "/ur_image.png" 
 inu = pygame.image.load(str(img_path))
 inu_imgR = pygame.transform.scale(inu, (50, 50))
 inu_imgL = pygame.transform.flip(inu_imgR, True, False)
@@ -73,21 +74,21 @@ player.y = speed
 running = True
 
 # this is if you want a button to press on the screen to do something once centre mouse wheel clicked
-img_path = Path(__file__).parent / "images" / "stop_btn.png" 
+img_path = os.path.dirname(os.path.abspath("__file__")) + "/images" + "/stop_btn.png" 
 btn_img = pygame.image.load(str(img_path)) 
 # draw the click button to stop the cart
 btn = screen.blit(btn_img, (BX, BY))
 
-img_path = Path(__file__).parent / "images" / "rec_btn.png" 
+img_path = os.path.dirname(os.path.abspath("__file__")) + "/images" + "/rec_btn.png" 
 rec_img = pygame.image.load(str(img_path)) 
 
-img_path = Path(__file__).parent / "images" / "end_rec_btn.png" 
+img_path = os.path.dirname(os.path.abspath("__file__")) + "/images" + "/end_rec_btn.png" 
 end_rec_img = pygame.image.load(str(img_path)) 
 
-img_path = Path(__file__).parent / "images" / "play_btn.png" 
+img_path = os.path.dirname(os.path.abspath("__file__")) + "/images" + "/play_btn.png" 
 play_img = pygame.image.load(str(img_path)) 
 
-img_path = Path(__file__).parent / "images" / "stop_play_btn.png" 
+img_path = os.path.dirname(os.path.abspath("__file__")) + "/images" + "/stop_play_btn.png" 
 stop_play_img = pygame.image.load(str(img_path)) 
 
 # draw the click buttons for the action record and replay
