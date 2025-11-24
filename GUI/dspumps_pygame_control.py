@@ -162,8 +162,9 @@ def stop_pump2():
     try:
         pmps.test_pump2_stop()
     except:
-        print("pump 2 failed to stop in time")
-        P2FAIL=2
+        if P2RUN:
+            print("pump 2 failed to stop in time")
+            P2FAIL=2
 
 def run_pump1():
     global P1FAIL
@@ -182,8 +183,9 @@ def stop_pump1():
     try:
         pmps.test_pump1_stop()
     except:
-        print("pump 1 failed to stop in time")
-        P1FAIL=2
+        if P1RUN:
+            print("pump 1 failed to stop in time")
+            P1FAIL=2
 
 # update globals periodicaly with live data and perform change over if failure of running pump inline  
 def scheduler():
