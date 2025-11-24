@@ -66,6 +66,9 @@ def reset_pump1():
         COUT1 = 0
         COUT3 = 0
         GT1 = 0
+        return 1
+    else:
+        return 0
 
 def reset_pump2():
     global P2FAIL
@@ -77,6 +80,9 @@ def reset_pump2():
         COUT2 = 0
         COUT4 = 0
         GT2 = 0
+        return 1
+    else:
+        return 0
 
 # start the pump and either get running feedback (started ok, or timeout fail)
 def start_pump1_feedback():
@@ -326,14 +332,16 @@ def main_run():
                 pushFlag3 = True 
                 act_txt = "change duty"                 
             elif reset_bt.collidepoint(mx, my) and pushFlag4 == False: 
-                reset_pump1()
-                reset_pump2()
-                stop_pump1()
-                stop_pump2()
-                if p.duty == 0:
-                    start_pump1()
-                else:
-                    start_pump2()
+                v=reset_pump1()
+                if v == 1:
+                    v=reset_pump2()
+                if v == 1:
+                    stop_pump1()
+                    stop_pump2()
+                    if p.duty == 0:
+                        start_pump1()
+                    else:
+                        start_pump2()
                 pushFlag4 = True 
                 act_txt = "reset"                                 
         else:
