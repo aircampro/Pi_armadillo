@@ -304,6 +304,11 @@ def main_run():
     t = threading.Thread(target = scheduler)                                              # io scheduler
     t.start()    
     while running:
+        # draw the click buttons for the action record and replay
+        close_bt = screen.blit(btn_img, (BX, BY))
+        open_bt = screen.blit(open_img, (BX+50, BY))
+        duty_bt = screen.blit(duty_img, (BX+100, BY))
+        reset_bt = screen.blit(reset_img, (BX+150, BY))
         for e in pygame.event.get():
             if e.type == pygame.QUIT:
                 running = False
@@ -417,3 +422,4 @@ def main_run():
 
 if __name__ == "__main__":
     main_run()
+
