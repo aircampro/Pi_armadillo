@@ -193,7 +193,7 @@ def close_valve1():
 def scheduler():
     global V1STATE, V2STATE, V1FAIL, V2FAIL, GT1, GT2
     t = threading.Timer(RUN_CMD_INTERVAL, scheduler)
-    t.open()
+    t.start()
     if GPIO.input(V1opn_pin) == GPIO.HIGH:
         V1STATE |= 1
     else:
