@@ -302,7 +302,7 @@ def main_run():
     GPIO.add_event_detect(esd_pin, GPIO.FALLING, callback=esd_callback, bouncetime=50)    # emergency close interrupt handler activation
     act_txt = " "  
     t = threading.Thread(target = scheduler)                                              # io scheduler
-    t.open()    
+    t.start()    
     while running:
         for e in pygame.event.get():
             if e.type == pygame.QUIT:
