@@ -19,12 +19,6 @@ print(f"{kd_tree.leafsize=}")
 print(f"{kd_tree.size=}")
 print(f"{kd_tree.maxes=}")
 print(f"{kd_tree.mins=}")
-# kd_tree.m=2
-# kd_tree.n=100
-# kd_tree.leafsize=16
-# kd_tree.size=15
-# kd_tree.maxes=array([0.99660085, 0.98942514])
-# kd_tree.mins=array([0.01764816, 0.00777515]
 
 # In this case, we will set k=2 and explore the closest points to the first and second.
 #
@@ -67,8 +61,7 @@ kd_tree2 = KDTree(points2)
 indexes = kd_tree1.query_ball_tree(kd_tree2, r=0.2)
 for i in range(len(indexes)):
     for j in indexes[i]:
-        plt.plot([points1[i, 0], points2[j, 0]],
-                 [points1[i, 1], points2[j, 1]], "-r")
+        plt.plot([points1[i, 0], points2[j, 0]], [points1[i, 1], points2[j, 1]], "-r")
 plt.show()
 
 # If you want to search for a point within a certain range in a single kd-tree,
@@ -94,7 +87,3 @@ kd_tree2 = KDTree(points2)
 indexes = kd_tree1.query_ball_tree(kd_tree2, r=0.2)
 sparse_distance_matrix = kd_tree1.sparse_distance_matrix(kd_tree2, 0.2, output_type="ndarray")
 print(sparse_distance_matrix)
-
-
-
-
