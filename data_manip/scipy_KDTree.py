@@ -11,7 +11,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.spatial import cKDTree
 points = np.random.random((20, 2))
-kd_tree = KDTree(points)
+kd_tree = cKDTree(points)
 
 print(f"{kd_tree.m=}")
 print(f"{kd_tree.n=}")
@@ -87,3 +87,6 @@ kd_tree2 = KDTree(points2)
 indexes = kd_tree1.query_ball_tree(kd_tree2, r=0.2)
 sparse_distance_matrix = kd_tree1.sparse_distance_matrix(kd_tree2, 0.2, output_type="ndarray")
 print(sparse_distance_matrix)
+
+
+
