@@ -15,6 +15,23 @@ import atexit
 import numpy as np
 import threading
 import traitlets
+import os
+import signal
+
+RUN_LOOP=False
+def sig_hangup_handler(sig, frame):
+    sys.stderr.write('sig_hangup_handler({})\n'.format(sig))
+    try:
+        sys.stderr.write('restarting...\n')
+        os.execve('/usr/bin/python3', ['/usr/bin/python3', 'nvidia_csi_usb_interface.py'], {})
+    except OSError as e:
+        sys.stderr.write("execve():{}\n".format(e))
+        os._exit(1)
+
+def handler(signum, frame):
+    global RUN_LOOP
+    print(f'handler active (signum={signum})')
+    RUN_LOOP = False
 
 class CSICamera(Camera):
     capture_device = traitlets.Integer(default_value=0)
@@ -76,6 +93,9 @@ class USBCamera(Camera):
             raise RuntimeError('Could not read image from camera')
 
 if __name__ == "__main__":
+    signal.signal(signal.SIGHUP, sig_hangup_handler)                      # try re-start on a hang-up
+    signal.signal(signal.SIGUSR1, handler)                                # user graceful kill
+    signal.signal(signal.SIGUSR2, handler)
     if len(sys.argv[0]) >= 1:
         if sys.argv[1] == "csi":
             camera = CSICamera(width=224, height=224, capture_width=1080, capture_height=720, capture_fps=30)
@@ -84,7 +104,7 @@ if __name__ == "__main__":
     else:
         camera = USBCamera(capture_device=1)    
 
-    while True:
+    while RUN_LOOP == True:
         image = camera.read()
         cv2.imshow('nvidia image', image)	
         # q will exit
