@@ -61,10 +61,10 @@ class ComplexMLD(nn.Module):
 
 if __name__ == '__main__':
 
-    d_type = "int"
-    csv_fname = "cnn.csv"
-	bs = 10
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    d_type = "int"                                                                          # data type to use
+    csv_fname = "cnn.csv"                                                                   # data information
+	bs = 10                                                                                 
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'                                 # check if cuda available
     # x = torch.randn(2,1,10,10) - using random data
     df = pd.read_csv(csv_fname)                                                              # file containing x,y data
     x = df['x']                                                                              # x axis only
@@ -81,4 +81,4 @@ if __name__ == '__main__':
         opt.zero_grad()
         loss.backward()
         opt.step()
-        print(i, loss.item())
+        print(f"loss {i} {loss.item()}")
