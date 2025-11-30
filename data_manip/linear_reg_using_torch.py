@@ -64,7 +64,7 @@ if __name__ == '__main__':
         opt = optim.SGD(model.parameters(), lr=0.01)                                            # model optimizer 
         niter = 1000
     elif model_name.find("linear_net") == -1:
-        model = Net()                                                                           # using our default net input_size=10, hidden_size=5, output_size=3
+        model = Net().to(device)                                                                           # using our default net input_size=10, hidden_size=5, output_size=3
         optimizer = optim.SGD(model.parameters(), lr=0.01)
         criterion = nn.CrossEntropyLoss()
         sum_loss = 0.0 
@@ -167,4 +167,5 @@ if __name__ == '__main__':
         _, predicted = torch.max(outputs.data, 1)
         y_predicted = predicted.numpy()
         accuracy = 100 * np.sum(predicted.numpy() == y_test) / len(y_predicted)
+
         print('test accuracy: {:.1f}%'.format(accuracy))
