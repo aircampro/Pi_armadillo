@@ -29,8 +29,7 @@ class CSICamera(Camera):
             if not re:
                 raise RuntimeError('Could not read image from camera.')
         except:
-            raise RuntimeError(
-                'Could not initialize camera.  Please see error trace.')
+            raise RuntimeError('Could not initialize camera.  Please see error trace.')
         atexit.register(self.cap.release)
 
     def __del__(self):
@@ -60,8 +59,7 @@ class USBCamera(Camera):
             if not re:
                 raise RuntimeError('Could not read image from camera.')    
         except:
-            raise RuntimeError(
-                'Could not initialize camera.  Please see error trace.')
+            raise RuntimeError('Could not initialize camera.  Please see error trace.')
         atexit.register(self.cap.release)
 
     def __del__(self):
@@ -92,6 +90,5 @@ if __name__ == "__main__":
         # q will exit
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
-    del camera
+    del camera                                     # Things like a system shutdown or os._exit() won't call the atexit function, but things like a keyboard interrupt or sys.exit() will do no problem
     cv2.destroyAllWindows()
-
