@@ -18,7 +18,7 @@ import traitlets
 import os
 import signal
 
-RUN_LOOP=False
+RUN_LOOP=True
 def sig_hangup_handler(sig, frame):
     sys.stderr.write('sig_hangup_handler({})\n'.format(sig))
     try:
@@ -112,3 +112,4 @@ if __name__ == "__main__":
             break
     del camera                                     # Things like a system shutdown or os._exit() won't call the atexit function, but things like a keyboard interrupt or sys.exit() will do no problem
     cv2.destroyAllWindows()
+
