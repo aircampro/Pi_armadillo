@@ -116,10 +116,10 @@ if __name__ == '__main__':
             y_ = model.forward(bx)
             loss = torch.mean((y_ - by)**2)
 
-            # 最適化                                                                
-            opt.zero_grad()                             # 勾配初期化                                            
-            loss.backward()                             # 勾配計算(backward)                                    
-            opt.step()                                  # パラメータ更新         
+            # optimization                                                               
+            opt.zero_grad()                                                          # Gradient initialization                                           
+            loss.backward()                                                          # Gradient calculation (backward)                                    
+            opt.step()                                                               # Parameter update         
             print('%05d/%05d loss=%.5f' % (iiter, niter, loss.item()))
             losses.append(loss.item())                 
         elif model_name.find("linear_net") == -1:
@@ -169,3 +169,4 @@ if __name__ == '__main__':
         accuracy = 100 * np.sum(predicted.numpy() == y_test) / len(y_predicted)
 
         print('test accuracy: {:.1f}%'.format(accuracy))
+
