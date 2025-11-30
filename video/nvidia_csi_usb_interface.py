@@ -10,10 +10,8 @@
 #
 import sys
 import cv2
-
 from .camera import Camera                                           # from jetcam library on github
 import atexit
-import cv2
 import numpy as np
 import threading
 import traitlets
@@ -95,4 +93,5 @@ if __name__ == "__main__":
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
     del camera
+
     cv2.destroyAllWindows()
