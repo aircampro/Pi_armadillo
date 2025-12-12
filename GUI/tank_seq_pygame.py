@@ -180,7 +180,7 @@ def sequence():
                     pushFlag2 = False 
             screen.blit(s1scale, (TPOSX, TPOSY))
         elif SEQ_STATE == 2:                           # start pump
-            if inputs[SEQ_STATE+5] == 1:               # conductivity probe covered then start pump
+            if inputs[5] == 1:                         # conductivity probe covered then start pump
                 outputs = [ 0, 1, 1 ] 
             else:
                 STATE_REACHED = 2			
@@ -196,7 +196,7 @@ def sequence():
                     pushFlag2 = False 
             screen.blit(s2scale, (TPOSX, TPOSY))
         elif SEQ_STATE == 3:                           # wait for level to drop and return to filling
-            if inputs[SEQ_STATE+5] == 0:               # conductivity probe un-covered then stop pump
+            if inputs[5] == 0:                         # conductivity probe un-covered then stop pump
                 outputs = [ instate, 0, 0 ]            # open inlet valve
                 signal.alarm(V_TRAVEL_T)
                 if STATE_REACHED == 1:
@@ -215,6 +215,16 @@ def sequence():
         else:
             textimg1 = font.render("Sequence OK", True, pygame.Color("BLUE"))
         screen.blit(textimg1, (TPOSX, TPOSY+150))
+        if inputs[5] == 0:
+            textimg1 = font.render("Level Low", True, pygame.Color("RED"))
+        else:
+            textimg1 = font.render("Level OK", True, pygame.Color("BLUE"))
+        screen.blit(textimg1, (TPOSX, TPOSY+250))
+        if inputs[6] == 1:
+            textimg1 = font.render("Level High", True, pygame.Color("RED"))
+        else:
+            textimg1 = font.render("Level OK", True, pygame.Color("BLUE"))
+        screen.blit(textimg1, (TPOSX, TPOSY+350))
         pygame.display.update()
         with open(p_f_name, 'wb') as f:                                   # save states for power cycle reset
             pickle.dump(SEQ_STATE, f) 
@@ -227,6 +237,3 @@ def sequence():
 
 if __name__ == '__main__':
     sequence()
-
-
-
