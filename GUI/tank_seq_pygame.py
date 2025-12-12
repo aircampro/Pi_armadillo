@@ -156,11 +156,13 @@ def sequence():
                 if STATE_REACHED == 1:
                     SEQ_STATE = 1
                     START_PB = 0
+                    pushFlag1 = False
             elif STOP_PB == 1:
                 outputs = [ instate, 0, 0 ]             # open inlet valve
                 signal.alarm(V_TRAVEL_T)
                 if STATE_REACHED == 1:
-                    STOP_PB = 0		
+                    STOP_PB = 0	
+	                pushFlag2 = False 
             else:
                 outputs = [ instate, 0, 0 ]             # open inlet valve
                 signal.alarm(V_TRAVEL_T)
@@ -175,6 +177,7 @@ def sequence():
                 if STATE_REACHED == 1:
                     STOP_PB = 0	
                     SEQ_STATE = 0
+                    pushFlag2 = False 
             screen.blit(s1scale, (TPOSX, TPOSY))
         elif SEQ_STATE == 2:                           # start pump
             if inputs[SEQ_STATE+5] == 1:               # conductivity probe covered then start pump
@@ -190,6 +193,7 @@ def sequence():
                 if STATE_REACHED == 1:
                     STOP_PB = 0	
                     SEQ_STATE = 0
+                    pushFlag2 = False 
             screen.blit(s2scale, (TPOSX, TPOSY))
         elif SEQ_STATE == 3:                           # wait for level to drop and return to filling
             if inputs[SEQ_STATE+5] == 0:               # conductivity probe un-covered then stop pump
@@ -203,6 +207,7 @@ def sequence():
                 if STATE_REACHED == 1:
                     STOP_PB = 0	
                     SEQ_STATE = 0
+                    pushFlag2 = False 
             screen.blit(s3scale, (TPOSX, TPOSY))
         put_signals()                                 # drive i.o
         if STATE_REACHED == 2:
@@ -222,4 +227,5 @@ def sequence():
 
 if __name__ == '__main__':
     sequence()
+
 
