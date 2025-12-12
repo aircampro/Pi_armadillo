@@ -206,9 +206,9 @@ def sequence():
             screen.blit(s3scale, (TPOSX, TPOSY))
         put_signals()                                 # drive i.o
         if STATE_REACHED == 2:
-            textimg1 = font.render(f"Sequence Error", True, pygame.Color("RED"))
+            textimg1 = font.render("Sequence Error", True, pygame.Color("RED"))
         else:
-            textimg1 = font.render(f"Sequence OK", True, pygame.Color("BLUE"))
+            textimg1 = font.render("Sequence OK", True, pygame.Color("BLUE"))
         screen.blit(textimg1, (TPOSX, TPOSY+150))
         pygame.display.update()
         with open(p_f_name, 'wb') as f:                                   # save states for power cycle reset
@@ -222,3 +222,4 @@ def sequence():
 
 if __name__ == '__main__':
     sequence()
+
