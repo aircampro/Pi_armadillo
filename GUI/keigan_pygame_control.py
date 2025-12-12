@@ -40,6 +40,7 @@ BLACK = (0, 0, 0)
 CRAD = 25
 BX=TPOSX
 BY=HEIGHT-100                                                         # buttons @ bottom of the screen
+pygame.font.init()
 font = pygame.font.Font(None, 50)
 
 # e.g. to specify on windows msgothic  font = pygame.font.Font("C:/Windows/Fonts/msgothic.ttc", 50)
