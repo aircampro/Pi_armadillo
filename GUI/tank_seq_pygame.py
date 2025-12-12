@@ -167,7 +167,7 @@ def sequence():
         elif mdown[RIGHT_CLK]:
             pushFlag1 = False  
             pushFlag2 = False 
-        if mdown[MID_CLK]:                                                                  # middle wheel down activates the screen button selection
+        elif mdown[MID_CLK]:                                                                  # middle wheel down activates the screen button selection
             print("wheel pressed checking to see if it was over the button")
             if stop_bt.collidepoint(mx, my) and pushFlag1 == False:                         # stop sequence 
                 STOP_PB = 1
@@ -368,3 +368,4 @@ def sequence():
 
 if __name__ == '__main__':
     sequence()
+
