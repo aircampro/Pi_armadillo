@@ -53,7 +53,7 @@ stop_pump_on_to=True                                                   # if you 
 EMPTY_TO=200.0
 feed_flag = True                                                       # feed flag means continuosly feed until flag cleared by operator
 signal.signal(signal.SIGALRM, handler)                                 # timed alarm handler
-
+FAIL_STEP=0
 # get input i.o
 def get_signals():
     global inputs
@@ -73,6 +73,7 @@ def put_signals():
 def handler(signum, frame):
     global STATE_REACHED
     global signal_active
+    global FAIL_STEP
     get_signals()                                                      # update the i/o (no need for mutex as we refresh i.o here)
     print(f'handler (signum={signum})')
 
@@ -97,6 +98,7 @@ def handler(signum, frame):
 	    pass
     else:
         STATE_REACHED = 2
+        FAIL_STEP = SEQ_STATE
     signal_active = 0
 
 # set a new signal to check state if we are not already waiting then call the handler after that time
@@ -312,7 +314,7 @@ def sequence():
                 screen.blit(s6lscale, (TPOSX, TPOSY))            
         put_signals()                                      # drive i.o
         if STATE_REACHED == 2:
-            textimg1 = font.render("Sequence Error", True, pygame.Color("RED"))
+            textimg1 = font.render(f"Sequence Error {FAIL_STEP}", True, pygame.Color("RED"))
         elif STATE_REACHED == 3:
             textimg1 = font.render("Timeout emptying tank", True, pygame.Color("RED"))
         elif STATE_REACHED == 1:
@@ -370,4 +372,3 @@ def sequence():
 
 if __name__ == '__main__':
     sequence()
-
