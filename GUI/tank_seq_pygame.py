@@ -1,6 +1,7 @@
 #!/usr/bin/python
 #
-# example of a simple tank with a discharge pump fill and empty operations
+# Example of a simple tank with a discharge pump fill and empty operations
+# shows how to do a timed event without using a thread
 #
 import signal
 import time
@@ -25,11 +26,10 @@ pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption(" Tank Sequence Control ")
 clock  = pygame.time.Clock()
-RED = (255, 0, 0)
-GREEN = (0, 255, 0)
-BLUE = (0, 0, 255)
+RED = (255, 50, 0)
+GREEN = (0, 255, 50)
+BLUE = (0, 100, 255)
 BLACK = (0, 0, 0)
-CRAD = 25
 BX=TPOSX
 BY=HEIGHT-100                                                         # buttons @ bottom of the screen
 font = pygame.font.Font(None, 50)
@@ -48,6 +48,10 @@ STATE_REACHED = 0
 V_TRAVEL_T=10                                                          # valve travel time
 ACTIVE = True
 instate = 1                                                            # state for the inlet valve depending on the hi hi level in the tank
+signal_active = 0
+stop_pump_on_to=True                                                   # if you timeout emptying then stop pump
+EMPTY_TO=200.0
+signal.signal(signal.SIGALRM, handler)                                 # timed alarm handler
 
 # get input i.o
 def get_signals():
@@ -67,22 +71,33 @@ def put_signals():
 # time alarm triggered handler which checks if we reached the correct state after the time or if not flags a failure to the HMI
 def handler(signum, frame):
     global STATE_REACHED
+    global signal_active
     get_signals()                                                      # update the i/o (no need for mutex as we refresh i.o here)
     print(f'handler (signum={signum})')
 
-    if inputs[0] == instate and inputs[1] == 1 and inputs[2] == 0 and inputs[3] == 1 and inputs[4] == 0 and SEQ_STATE == 0 and START_PB == 1:
+    # confirmation of condition to exit of each step
+    if inputs[0] == 0 and inputs[1] == 1 and inputs[2] == 0 and inputs[3] == 1 and inputs[4] == 0 and ((SEQ_STATE == 0 and START_PB == 1) or SEQ_STATE == 5):
 	    STATE_REACHED = 1
-    elif inputs[0] == instate and inputs[1] == 1 and inputs[2] == 1 and inputs[3] == 0 and inputs[4] == 0 and SEQ_STATE == 1:
+    elif inputs[0] == 0 and inputs[1] == 1 and inputs[2] == 0 and inputs[3] == 1 and inputs[4] == 0 and ((STATE_REACHED == 3 and stop_pump_on_to == True) or STOP_PB == 1 or SEQ_STATE == 0) and instate == 0:
 	    STATE_REACHED = 1
-    elif inputs[0] == instate and inputs[1] == 1 and inputs[2] == 1 and inputs[3] == 0 and inputs[4] == 1 and SEQ_STATE == 2:
+    elif inputs[0] == 1 and inputs[1] == 0 and inputs[2] == 0 and inputs[3] == 1 and inputs[4] == 0 and ((STATE_REACHED == 3 and stop_pump_on_to == True) or STOP_PB == 1 or SEQ_STATE == 0) and instate == 1:
 	    STATE_REACHED = 1
-    elif inputs[1] == 0 and inputs[0] == instate and inputs[2] == 0 and inputs[3] == 1 and inputs[4] == 0 and STOP_PB == 1:
+    elif inputs[0] == 0 and inputs[1] == 1 and inputs[2] == 1 and inputs[3] == 0 and inputs[4] == 0 and (SEQ_STATE == 1 or SEQ_STATE == 4):
 	    STATE_REACHED = 1
+    elif inputs[0] == 0 and inputs[1] == 1 and inputs[2] == 1 and inputs[3] == 0 and inputs[4] == 1 and SEQ_STATE == 2:
+	    STATE_REACHED = 1
+    elif (SEQ_STATE == 3 and not (STATE_REACHED == 3)) or ((STATE_REACHED == 3 and stop_pump_on_to == False):
+	    pass
     else:
         STATE_REACHED = 2
-     
-# timed alarm handler
-signal.signal(signal.SIGALRM, handler)
+    signal_active = 0
+
+# set a new signal to check state if we are not already waiting then call the handler after that time
+def set_signal(tim, caller):
+    global signal_active
+    if not signal_active == caller:
+        signal.alarm(tim)
+        signal_active = caller  
 
 def sequence():
     global ACTIVE
@@ -90,6 +105,8 @@ def sequence():
     global STATE_REACHED
     global SEQ_STATE
     global outputs
+    global signal_active
+
     GPIO.setmode(GPIO.BCM) 
     for i in range(0,len(ipins)):    
         GPIO.setup(i, GPIO.IN, pull_up_down=GPIO.PUD_UP)                              # input config
@@ -100,10 +117,13 @@ def sequence():
     btn_img = pygame.image.load(str(img_path)) 
     img_path = os.path.dirname(os.path.abspath("__file__")) + "/images" + "/start_btn.png" 
     start_img = pygame.image.load(str(img_path)) 
+    img_path = os.path.dirname(os.path.abspath("__file__")) + "/images" + "/step_btn.png" 
+    step_img = pygame.image.load(str(img_path)) 
     # draw the click buttons for the action record and replay
     stop_bt = screen.blit(btn_img, (BX, BY))
     start_bt = screen.blit(start_img, (BX+50, BY))
-
+    step_bt = screen.blit(start_img, (BX+100, BY))
+    
     # load sequence state sprites
     img_path = os.path.dirname(os.path.abspath("__file__")) + "/images" + "/step0.png" 
     s0 = pygame.image.load(str(img_path))
@@ -133,14 +153,19 @@ def sequence():
             pushFlag2 = False 
         if mdown[MID_CLK]:                                                                  # middle wheel down activates the screen button selection
             print("wheel pressed checking to see if it was over the button")
-            if stop_bt.collidepoint(mx, my) and pushFlag1 == False: 
+            if stop_bt.collidepoint(mx, my) and pushFlag1 == False:                         # stop sequence 
+                STOP_PB = 1
+                pushFlag1 = True               
+            elif start_bt.collidepoint(mx, my) and pushFlag2 == False:                      # start sequence 
                 if SEQ_STATE == 0:
                     START_PB = 1
-                    pushFlag1 = True                 
-            elif start_bt.collidepoint(mx, my) and pushFlag2 == False: 
-                STOP_PB = 1
-                pushFlag2 = True  
+                    pushFlag2 = True  
+            elif step_bt.collidepoint(mx, my):                                              # step sequence (can use on error)
+                SEQ_STATE += 1
+                SEQ_STATE = SEQ_STATE % 4
+                
         get_signals()                                   # update i.o
+        # continously check the high tank level to control the inlet
         if inputs[6] == 1:                              # high high lvel will force input closed
             instate = 0                                 # inlet is interlocked closed 
         else:
@@ -152,66 +177,108 @@ def sequence():
                 screen.blit(s1scale, (TPOSX, TPOSY))  
             if STOP_PB == 1:
                 outputs = [ instate, 0, 0 ]             # open inlet valve
-                signal.alarm(V_TRAVEL_T)
+                set_signal(V_TRAVEL_T, 1)
                 if STATE_REACHED == 1:
                     STOP_PB = 0	
-	                pushFlag2 = False                 
+	                pushFlag2 = False 
+                    START_PB = 0
+                    pushFlag1 = False    
+                    STATE_REACHED = 0                    
             elif START_PB == 1:
-                outputs = [ 0, 0, 0 ]                   # close inlet valve
-                signal.alarm(V_TRAVEL_T)                # check valve limits after travel time
+                outputs = [ 0, 0, 0 ]                    # close inlet valve
+                set_signal(V_TRAVEL_T, 2)                # check valve limits after travel time
                 if STATE_REACHED == 1:
                     SEQ_STATE = 1
                     START_PB = 0
+                    STATE_REACHED = 0
                     pushFlag1 = False
             else:
-                outputs = [ instate, 0, 0 ]             # open inlet valve
-                signal.alarm(V_TRAVEL_T)
-        elif SEQ_STATE == 1:                            # open outlet valve
-            outputs = [ 0, 1, 0 ]                      
-            signal.alarm(V_TRAVEL_T)                    # check valve limits after travel time
+                outputs = [ instate, 0, 0 ]               # open inlet valve
+                set_signal(V_TRAVEL_T, 3)
+        elif SEQ_STATE == 1:                              # open outlet valve
             if STATE_REACHED == 1:
                 SEQ_STATE = 2
-            if STOP_PB == 1:
+                STATE_REACHED = 0
+            if STOP_PB == 1:                              # we could just return to step 0 but show picture until back in that state
                 outputs = [ instate, 0, 0 ]                   
-                signal.alarm(V_TRAVEL_T)
+                set_signal(V_TRAVEL_T, 1)
                 if STATE_REACHED == 1:
                     STOP_PB = 0	
                     SEQ_STATE = 0
                     pushFlag2 = False 
+                    STATE_REACHED = 0
+            else:
+                outputs = [ 0, 1, 0 ]                      
+                set_signal(V_TRAVEL_T,4)                   # check valve limits after travel time            
             screen.blit(s1scale, (TPOSX, TPOSY))
-        elif SEQ_STATE == 2:                           # start pump
-            if inputs[5] == 1:                         # conductivity probe covered then start pump
+        elif SEQ_STATE == 2:                               # start pump
+            if inputs[5] == 1:                             # conductivity probe covered then start pump
                 outputs = [ 0, 1, 1 ] 
             else:
                 STATE_REACHED = 2			
-            signal.alarm(V_TRAVEL_T)                   # check valve limits after travel time
             if STATE_REACHED == 1:
                 SEQ_STATE = 3
+                STATE_REACHED = 0
+                start_tm = time.time()                     # log start time for timed operation
             if STOP_PB == 1:
                 outputs = [ instate, 0, 0 ]                   
-                signal.alarm(V_TRAVEL_T)
+                set_signal(V_TRAVEL_T, 1)
                 if STATE_REACHED == 1:
                     STOP_PB = 0	
                     SEQ_STATE = 0
+                    STATE_REACHED = 0
                     pushFlag2 = False 
+            else:
+                set_signal(V_TRAVEL_T, 5)                   # check valve limits after travel time
             screen.blit(s2scale, (TPOSX, TPOSY))
-        elif SEQ_STATE == 3:                           # wait for level to drop and return to filling
-            if inputs[5] == 0:                         # conductivity probe un-covered then stop pump
-                outputs = [ instate, 0, 0 ]            # open inlet valve
-                signal.alarm(V_TRAVEL_T)
-                if STATE_REACHED == 1:
-                    SEQ_STATE = 0			
+        elif SEQ_STATE == 3:                                # wait for level to drop and return to filling		
             if STOP_PB == 1:
-                outputs = [ instate, 0, 0 ]                   
-                signal.alarm(V_TRAVEL_T)
-                if STATE_REACHED == 1:
-                    STOP_PB = 0	
-                    SEQ_STATE = 0
-                    pushFlag2 = False 
+                outputs = [ instate, 0, 0 ]                
+                SEQ_STATE = 0
+            elif inputs[5] == 0:                           # conductivity probe un-covered then stop pump
+                outputs = [ instate, 0, 0 ]                # open inlet valve
+                SEQ_STATE = 4	
+            elif (time.time() - start_tm) > EMPTY_TO:      # timeout in emptying tank
+                STATE_REACHED = 3                          # set indicator
+                if stop_pump_on_to == True:
+                    outputs = [ instate, 0, 0 ]            # open inlet valve
+                    set_signal(V_TRAVEL_T, 6)
+                    if STATE_REACHED == 1:
+                        SEQ_STATE = 4	
+                        STATE_REACHED = 0                 
             screen.blit(s3scale, (TPOSX, TPOSY))
-        put_signals()                                 # drive i.o
+        elif SEQ_STATE == 4:                               # stop pump first	
+            if STOP_PB == 1:
+                outputs = [ instate, 0, 0 ]                
+                SEQ_STATE = 0
+            else:
+                outputs = [ 0, 1, 0 ]  
+                set_signal(V_TRAVEL_T, 7)
+                if STATE_REACHED == 1:
+                    SEQ_STATE = 5
+                    STATE_REACHED = 0
+            screen.blit(s3scale, (TPOSX, TPOSY))
+        elif SEQ_STATE == 5:                               # close outlet	
+            if STOP_PB == 1:
+                outputs = [ instate, 0, 0 ]                
+                SEQ_STATE = 0
+            else:
+                outputs = [ 0, 0, 0 ]  
+                set_signal(V_TRAVEL_T, 8)
+                if STATE_REACHED == 1:
+                    SEQ_STATE = 0
+                    STATE_REACHED = 0
+            screen.blit(s2scale, (TPOSX, TPOSY)) 
+            
+        put_signals()                                      # drive i.o
         if STATE_REACHED == 2:
             textimg1 = font.render("Sequence Error", True, pygame.Color("RED"))
+        elif STATE_REACHED == 3:
+            textimg1 = font.render("Timeout emptying tank", True, pygame.Color("RED"))
+        elif STATE_REACHED == 1:
+            textimg1 = font.render(f"Step {SEQ_STATE} complete", True, pygame.Color("RED"))
+        elif STATE_REACHED == 0:
+            textimg1 = font.render(f"Step {SEQ_STATE} waiting", True, pygame.Color("RED"))
         else:
             textimg1 = font.render("Sequence OK", True, pygame.Color("BLUE"))
         screen.blit(textimg1, (TPOSX, TPOSY+150))
@@ -225,6 +292,25 @@ def sequence():
         else:
             textimg1 = font.render("Level OK", True, pygame.Color("BLUE"))
         screen.blit(textimg1, (TPOSX, TPOSY+350))
+        if SEQ_STATE == 0 and START_PB == 0 and instate = 1:
+            textimg1 = font.render("Filling", True, pygame.Color("YELLOW"))
+        elif SEQ_STATE == 0 and START_PB == 0 and instate = 0:
+            textimg1 = font.render("Filled to high level", True, pygame.Color("YELLOW"))
+        elif SEQ_STATE == 0 and START_PB == 1:
+            textimg1 = font.render("Closing inlet", True, pygame.Color("YELLOW"))
+        elif SEQ_STATE == 1:
+            textimg1 = font.render("Opening outlet", True, pygame.Color("YELLOW"))
+        elif SEQ_STATE == 2:
+            textimg1 = font.render("Starting pump", True, pygame.Color("YELLOW"))
+        elif SEQ_STATE == 3:
+            textimg1 = font.render("Waiting for low level", True, pygame.Color("YELLOW"))
+        elif SEQ_STATE == 4:
+            textimg1 = font.render("Stopping pump", True, pygame.Color("YELLOW"))
+        elif SEQ_STATE == 5:
+            textimg1 = font.render("Closing outlet", True, pygame.Color("YELLOW"))
+        else:
+            textimg1 = font.render("Sequence Step Unknown", True, pygame.Color("BLUE"))
+        screen.blit(textimg1, (TPOSX, TPOSY+450))
         pygame.display.update()
         with open(p_f_name, 'wb') as f:                                   # save states for power cycle reset
             pickle.dump(SEQ_STATE, f) 
