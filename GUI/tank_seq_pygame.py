@@ -93,7 +93,7 @@ def handler(signum, frame):
 	    STATE_REACHED = 1
     elif inputs[0] == 1 and inputs[1] == 0 and inputs[2] == 1 and inputs[3] == 0 and inputs[4] == 0 and SEQ_STATE == 6 and inputs[5] == 0:
 	    STATE_REACHED = 1
-    elif (SEQ_STATE == 3 and not (STATE_REACHED == 3)) or ((STATE_REACHED == 3 and stop_pump_on_to == False):
+    elif SEQ_STATE == 3:
 	    pass
     else:
         STATE_REACHED = 2
@@ -370,3 +370,4 @@ def sequence():
 
 if __name__ == '__main__':
     sequence()
+
