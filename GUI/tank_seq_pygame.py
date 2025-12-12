@@ -85,6 +85,8 @@ def handler(signum, frame):
 	    STATE_REACHED = 1
     elif inputs[0] == 0 and inputs[1] == 1 and inputs[2] == 1 and inputs[3] == 0 and inputs[4] == 0 and (SEQ_STATE == 1 or SEQ_STATE == 4):
 	    STATE_REACHED = 1
+    elif inputs[0] == 0 and inputs[1] == 1 and inputs[2] == 0 and inputs[3] == 1 and inputs[4] == 0 and SEQ_STATE == 5:
+	    STATE_REACHED = 1
     elif inputs[0] == 0 and inputs[1] == 1 and inputs[2] == 1 and inputs[3] == 0 and inputs[4] == 1 and SEQ_STATE == 2:
 	    STATE_REACHED = 1
     elif inputs[0] == 1 and inputs[1] == 0 and inputs[2] == 1 and inputs[3] == 0 and inputs[4] == 1 and SEQ_STATE == 6 and inputs[5] == 1:
@@ -368,4 +370,3 @@ def sequence():
 
 if __name__ == '__main__':
     sequence()
-
