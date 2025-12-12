@@ -136,7 +136,7 @@ def sequence():
             if stop_bt.collidepoint(mx, my) and pushFlag1 == False: 
                 if SEQ_STATE == 0:
                     START_PB = 1
-                pushFlag1 = True                 
+                    pushFlag1 = True                 
             elif start_bt.collidepoint(mx, my) and pushFlag2 == False: 
                 STOP_PB = 1
                 pushFlag2 = True  
@@ -227,5 +227,6 @@ def sequence():
 
 if __name__ == '__main__':
     sequence()
+
 
 
