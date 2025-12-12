@@ -63,11 +63,11 @@ class UserInterface():
         # Gauge object base
         spritePoint = self.GaugeState.tankPos
 		GREEN = (0, 255, 70)
-        rectangle1 = Rect(self.tankPos.x-60, self.tankPos.y, self.tankPos.x-20, 100)
+        rectangle1 = Rect(self.GaugeState.tankPos.x-60, self.GaugeState.tankPos.y, self.GaugeState.tankPos.x-20, 100)
 		pygame.draw.rect(self.window, GREEN, rectangle1)
         self.window.blit(self.arrow, spritePoint)
         textimg1 = self.font.render(self.tag_name, True, pygame.Color("BLUE"))
-        self.window.blit(textimg1, (self.tankPos.x-60, 140))		
+        self.window.blit(textimg1, (self.GaugeState.tankPos.x-60, 140))		
         pygame.display.update()    
 
     def run(self):
@@ -82,4 +82,5 @@ class UserInterface():
 if __name__ == '__main__':
     userInterface = UserInterface("Temperature TT0001")
     userInterface.run()
+
     pygame.quit()
