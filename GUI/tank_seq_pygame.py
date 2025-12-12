@@ -149,20 +149,20 @@ def sequence():
             if instate == 1:
                 screen.blit(s0scale, (TPOSX, TPOSY))
             else:
-                screen.blit(s1scale, (TPOSX, TPOSY))            
-            if START_PB == 1:
+                screen.blit(s1scale, (TPOSX, TPOSY))  
+            if STOP_PB == 1:
+                outputs = [ instate, 0, 0 ]             # open inlet valve
+                signal.alarm(V_TRAVEL_T)
+                if STATE_REACHED == 1:
+                    STOP_PB = 0	
+	                pushFlag2 = False                 
+            elif START_PB == 1:
                 outputs = [ 0, 0, 0 ]                   # close inlet valve
                 signal.alarm(V_TRAVEL_T)                # check valve limits after travel time
                 if STATE_REACHED == 1:
                     SEQ_STATE = 1
                     START_PB = 0
                     pushFlag1 = False
-            elif STOP_PB == 1:
-                outputs = [ instate, 0, 0 ]             # open inlet valve
-                signal.alarm(V_TRAVEL_T)
-                if STATE_REACHED == 1:
-                    STOP_PB = 0	
-	                pushFlag2 = False 
             else:
                 outputs = [ instate, 0, 0 ]             # open inlet valve
                 signal.alarm(V_TRAVEL_T)
