@@ -260,6 +260,7 @@ BLACK = (0, 0, 0)
 CRAD = 25
 BX=TPOSX
 BY=HEIGHT-100                                                         # buttons @ bottom of the screen
+pygame.font.init()
 font = pygame.font.Font(None, 50)
 
 # this is if you want a button to press on the screen to do something once centre mouse wheel clicked
@@ -422,4 +423,3 @@ def main_run():
 
 if __name__ == "__main__":
     main_run()
-
