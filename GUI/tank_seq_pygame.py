@@ -32,6 +32,7 @@ BLUE = (0, 100, 255)
 BLACK = (0, 0, 0)
 BX=TPOSX
 BY=HEIGHT-100                                                         # buttons @ bottom of the screen
+pygame.font.init()
 font = pygame.font.Font(None, 50)
 
 inputs = [ 1, 0, 0, 1, 0, 1, 0 ]                                       # states v1 open v1 cls v2 open v2 cls p1 off tank low level tank high high lvel 
