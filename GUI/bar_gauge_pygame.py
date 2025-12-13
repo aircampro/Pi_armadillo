@@ -12,6 +12,7 @@ os.environ['SDL_VIDEO_CENTERED'] = '1'
 class GaugeState(x=70,y=30):
     def __init__(self):
         self.tankPos = Vector2(x, y)
+        self.tankPosBase = Vector2(x, y)
 
     def update(self, moveGaugeCommand):
         self.tankPos += moveGaugeCommand
@@ -29,11 +30,11 @@ class UserInterface():
         self.GaugeState = GaugeState(x,y)
 
         # Rendering properties
-        self.cellSize = Vector2(1280, 720.0)                                # define screen size
+        self.cellSize = Vector2(250.0, 250.0)                                # define screen size
         self.arrow = pygame.image.load("arrow.png")
 
         # Window
-        self.window = pygame.display.set_mode(self.cellSize.x,self.cellSize.y)
+        self.window = pygame.display.set_mode(self.cellSize.x, self.cellSize.y)
         pygame.display.set_caption(title)
         pygame.display.set_icon(pygame.image.load("icon.png"))
         self.moveGaugeCommand = Vector2(0,0)
@@ -63,11 +64,11 @@ class UserInterface():
         # Gauge object base
         spritePoint = self.GaugeState.tankPos
 		GREEN = (0, 255, 70)
-        rectangle1 = Rect(self.GaugeState.tankPos.x-60, self.GaugeState.tankPos.y, self.GaugeState.tankPos.x-20, 100)
+        rectangle1 = Rect(self.GaugeState.tankPosBase.x-60, self.GaugeState.tankPosBase.y, self.GaugeState.tankPosBase.x-20, 100)
 		pygame.draw.rect(self.window, GREEN, rectangle1)
         self.window.blit(self.arrow, spritePoint)
         textimg1 = self.font.render(self.tag_name, True, pygame.Color("BLUE"))
-        self.window.blit(textimg1, (self.GaugeState.tankPos.x-60, 140))		
+        self.window.blit(textimg1, (self.GaugeState.tankPosBase.x-60, 140))		
         pygame.display.update()    
 
     def run(self):
@@ -82,5 +83,4 @@ class UserInterface():
 if __name__ == '__main__':
     userInterface = UserInterface("Temperature TT0001")
     userInterface.run()
-
     pygame.quit()
