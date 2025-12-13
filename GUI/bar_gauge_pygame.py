@@ -62,6 +62,8 @@ class UserInterface():
         self.window.fill((0,0,0))
 
         # Gauge object base
+        backGroundColor=pygame.Color("WHITE")
+        self.window.fill(backGroundColor)
         spritePoint = self.GaugeState.tankPos
 		GREEN = (0, 255, 70)
         rectangle1 = Rect(self.GaugeState.tankPosBase.x-60, self.GaugeState.tankPosBase.y, self.GaugeState.tankPosBase.x-20, 100)
