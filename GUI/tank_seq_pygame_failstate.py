@@ -4,6 +4,9 @@
 # shows how to do a timed event without using a thread
 # a  series of failstates are calculated and chosen from a list of sprite objects depending on equipment fail states
 #
+# works for raspi (as normal) or nvidia jetson https://github.com/NVIDIA/jetson-gpio/tree/master/samples # Board mode
+# for NVIDIA all_board_pins = (7, 11, 12, 13, 15, 16, 18, 19, 21, 22, 23, 24, 26, 29, 31, 32, 33, 35, 36, 37, 38, 40,)
+#
 import signal
 import time
 import RPi.GPIO as GPIO
@@ -36,11 +39,242 @@ BY=HEIGHT-100                                                         # buttons 
 pygame.font.init()
 font = pygame.font.Font(None, 50)
 
-inputs = [ 1, 0, 0, 1, 0, 1, 0 ]                                       # states v1 open v1 cls v2 open v2 cls p1 off tank low level tank high high lvel 
-ipins = [ 17, 16, 11, 21, 22, 23, 26 ]
-outputs = [ 1, 0, 0 ]                                                  # drives v1 open v2 close p1 off
-opins = [ 32, 33, 31 ]                                                 # create a new power save object first time no pickle file
-p_f_name = "seq_state.pcl" 
+# you can use a dict like this to choose various board configs to use different pin layouts
+#
+# If a board has PWM support, the PWM tests expect 'out_a' to be PWM-capable.
+
+p_d = {
+     'JETSON_ORIN_NANO': {
+        # Pre-test configuration, if boot-time pinmux doesn't set up PWM pins:
+        # Set BOARD pin 15 as mux function PWM:
+        # busybox devmem 0x02440020 32 0x400
+        # Set BOARD pin 33 as mux function PWM:
+        # busybox devmem 0x02434040 32 0x401
+        # Board mode pins
+        'out_a': 33,
+        'in_a': 19,
+        'out_b': 11,
+        'in_b': 13,
+        'out_c': 31,
+        'in_c': 7, 
+        'in_d': 16, 
+        'in_e': 11,
+        'in_f':  21,
+        'in_g':  22,    
+        'unimplemented_pins': (),
+        # Other pin modes:
+        'cvm_pin': 'GPIO09',
+        'tegra_soc_pin': 'GP167',
+        'all_pwms': (15, 33),
+    },
+     'JETSON_ORIN_NX': {
+        # Pre-test configuration, if boot-time pinmux doesn't set up PWM pins:
+        # Set BOARD pin 15 as mux function PWM:
+        # busybox devmem 0x02440020 32 0x400
+        # Set BOARD pin 33 as mux function PWM:
+        # busybox devmem 0x02434040 32 0x401
+        # Board mode pins
+        'out_a': 33,
+        'in_a': 19,
+        'out_b': 11,
+        'in_b': 13,
+        'out_c': 31,
+        'in_c': 7, 
+        'in_d': 16, 
+        'in_e': 11,
+        'in_f':  21,
+        'in_g':  22,  
+        'unimplemented_pins': (),
+        # Other pin modes:
+        'cvm_pin': 'GPIO09',
+        'tegra_soc_pin': 'GP167',
+        'all_pwms': (15, 33),
+    },
+     'JETSON_ORIN': {
+        # Pre-test configuration, if boot-time pinmux doesn't set up PWM pins:
+        # Set BOARD pin 15 as mux function PWM:
+        # busybox devmem 0x02440020 32 0x400
+        # Set BOARD pin 18 as mux function PWM:
+        # busybox devmem 0x02434040 32 0x401
+        # Board mode pins
+        'out_a': 18,
+        'in_a': 19,
+        'out_b': 11,
+        'in_b': 13,
+        'out_c': 31,
+        'in_c': 7, 
+        'in_d': 16, 
+        'in_e': 11,
+        'in_f':  21,
+        'in_g':  22,  
+        'unimplemented_pins': (),
+        # Other pin modes:
+        'cvm_pin': 'MCLK05',
+        'tegra_soc_pin': 'GP66',
+        'all_pwms': (15, 18),
+    },
+    'JETSON_XAVIER': {
+        # Pre-test configuration, if boot-time pinmux doesn't set up PWM pins:
+        # Set BOARD pin 18 as mux function PWM:
+        # busybox devmem 0x2434090 32 0x401
+        # Board mode pins
+        'out_a': 18,
+        'in_a': 19,
+        'out_b': 21,
+        'in_b': 22,
+        'out_c': 31,
+        'in_c': 7, 
+        'in_d': 16, 
+        'in_e': 11,
+        'in_f':  21,
+        'in_g':  22,  
+        'unimplemented_pins': (),
+        # Other pin modes:
+        'cvm_pin': 'MCLK05',
+        'tegra_soc_pin': 'SOC_GPIO42',
+        'all_pwms': (13, 15, 18),
+    },
+    'JETSON_TX2': {
+        # Board mode pins
+        'out_a': 18,
+        'in_a': 19,
+        'out_b': 21,
+        'in_b': 22,
+        'out_c': 31,
+        'in_c': 7, 
+        'in_d': 16, 
+        'in_e': 11,
+        'in_f':  21,
+        'in_g':  22,  
+        'unimplemented_pins': (26,),
+        # Other pin modes:
+        'cvm_pin': 'AUDIO_MCLK',
+        'tegra_soc_pin': 'AUD_MCLK',
+    },
+    'JETSON_TX1': {
+        # Board mode pins
+        'out_a': 18,
+        'in_a': 19,
+        'out_b': 21,
+        'in_b': 22,
+        'out_c': 31,
+        'in_c': 7, 
+        'in_d': 16, 
+        'in_e': 11,
+        'in_f':  21,
+        'in_g':  22,  
+        'unimplemented_pins': (),
+        # Other pin modes:
+        'cvm_pin': 'AUDIO_MCLK',
+        'tegra_soc_pin': 'AUD_MCLK',
+    },
+    'JETSON_NANO': {
+        # Pre-test configuration, if boot-time pinmux doesn't set up PWM pins:
+        # Set BOARD pin 32 as mux function PWM (set bits 1:0 to 1 not 3):
+        # sudo busybox devmem 0x700031fc 32 0x45
+        # Set BOARD pin 32 as SFIO (clear bit 0):
+        # sudo busybox devmem 0x6000d504 32 0x2
+        # Board mode pins
+        'out_a': 32,
+        'in_a': 31,
+        'out_b': 29,
+        'in_b': 26,
+        'out_c': 31,
+        'in_c': 7, 
+        'in_d': 16, 
+        'in_e': 11,
+        'in_f':  21,
+        'in_g':  22,  
+        'unimplemented_pins': (),
+        # Other pin modes:
+        'cvm_pin': 'GPIO9',
+        'tegra_soc_pin': 'AUD_MCLK',
+        'all_pwms': (32, 33),
+    },
+    'JETSON_NX': {
+        # Pre-test configuration, if boot-time pinmux doesn't set up PWM pins:
+        # Set BOARD pin 32 as mux function PWM (func 1):
+        # busybox devmem 0x2430040 32 0x401
+        # Set BOARD pin 33 as mux function PWM (func 2):
+        # busybox devmem 0x2440020 32 0x402
+        # Board mode pins
+        'out_a': 32,
+        'in_a': 31,
+        'out_b': 29,
+        'in_b': 26,
+        'out_c': 31,
+        'in_c': 7, 
+        'in_d': 16, 
+        'in_e': 11,
+        'in_f':  21,
+        'in_g':  22,  
+        'unimplemented_pins': (),
+        # Other pin modes:
+        'cvm_pin': 'GPIO09',
+        'tegra_soc_pin': 'AUD_MCLK',
+        'all_pwms': (15, 32, 33),
+    },
+    'CLARA_AGX_XAVIER': {
+        # Pre-test configuration, if boot-time pinmux doesn't set up PWM pins:
+        # Set BOARD pin 18 as mux function PWM:
+        # busybox devmem 0x2434090 32 0x401
+        # Board mode pins
+        'out_a': 18,
+        'in_a': 19,
+        'out_b': 21,
+        'in_b': 22,
+        'out_c': 31,
+        'in_c': 7, 
+        'in_d': 16, 
+        'in_e': 11,
+        'in_f':  21,
+        'in_g':  22,  
+        'unimplemented_pins': (),
+        # Other pin modes:
+        'cvm_pin': 'MCLK05',
+        'tegra_soc_pin': 'SOC_GPIO42',
+        'all_pwms': (15, 18),
+    },
+    'JETSON_TX2_NX': {
+        # Pre-test configuration, if boot-time pinmux doesn't set up PWM pins:
+        # Set BOARD pin 33 as mux function PWM (func 1):
+        # busybox devmem 0x0c3010a8 32 0x401
+        # Set BOARD pin 32 as mux function PWM (func 2):
+        # busybox devmem 0x0c301080 32 0x401
+        # Board mode pins
+        'out_a': 32,
+        'in_a': 31,
+        'out_b': 29,
+        'in_b': 26,
+        'out_c': 31,
+        'in_c': 7, 
+        'in_d': 16, 
+        'in_e': 11,
+        'in_f':  21,
+        'in_g':  22,  
+        'unimplemented_pins': (),
+        # Other pin modes:
+        'cvm_pin': 'GPIO09',
+        'tegra_soc_pin': 'AUD_MCLK',
+        'all_pwms': (32, 33),
+    },
+}
+
+TYP="raspi"
+NV_MODEL=['JETSON_ORIN_NANO','JETSON_ORIN_NX','JETSON_ORIN','JETSON_XAVIER','JETSON_TX2','JETSON_TX1','JETSON_NANO','JETSON_NX','CLARA_AGX_XAVIER','JETSON_TX2_NX']
+choice=2
+if TYP == "raspi":
+    inputs = [ 1, 0, 0, 1, 0, 1, 0 ]                                       # states v1 open v1 cls v2 open v2 cls p1 off tank low level tank high high lvel 
+    ipins = [ 7, 16, 11, 21, 22, 23, 26 ]                                  # input pins
+    outputs = [ 1, 0, 0 ]                                                  # drives v1 open v2 close p1 off
+    opins = [ 32, 33, 31 ]                                                 # output pins
+elif TYP == "nvidia":
+    inputs = [ 1, 0, 0, 1, 0, 1, 0 ]                                       # states v1 open v1 cls v2 open v2 cls p1 off tank low level tank high high lvel 
+    ipins = [ p_d.get(NV_MODEL[choice])['in_a'], p_d.get(NV_MODEL[choice])['in_b'], p_d.get(NV_MODEL[choice])['in_c'], p_d.get(NV_MODEL[choice])['in_d'], p_d.get(NV_MODEL[choice])['in_e'], p_d.get(NV_MODEL[choice])['in_f'], p_d.get(NV_MODEL[choice])['in_g'] ]
+    outputs = [ 1, 0, 0 ]                                                  # drives v1 open v2 close p1 off
+    opins = [ p_d.get(NV_MODEL[choice])['out_a'], p_d.get(NV_MODEL[choice])['out_b'], p_d.get(NV_MODEL[choice])['out_c'] ]    
+
+p_f_name = "seq_state.pkl" 
 try:                                                                   # power cycle state recovery from pickle file
     with open(p_f_name, 'rb') as f:
         SEQ_STATE = pickle.load(f)                                     # load the last saved state before power off from pickle file   
@@ -341,8 +575,14 @@ def sequence():
             screen.blit(step2_screens[E_CODE], (TPOSX, TPOSY))
         elif SEQ_STATE == 3:                               # wait for level to drop and return to filling		
             if STOP_PB == 1:
-                outputs = [ instate, 0, 0 ]                
-                SEQ_STATE = 0
+                outputs = [ instate, 0, 0 ]                # open inlet valve
+                set_signal(V_TRAVEL_T, 1)
+                if STATE_REACHED == 1:
+                    STOP_PB = 0	
+	                pushFlag2 = False 
+                    START_PB = 0
+                    pushFlag1 = False    
+                    STATE_REACHED = 0  
             elif feed_flag == True:                        # request to open inlet and continously feed
                 SEQ_STATE = 6
             elif inputs[5] == 0:                           # conductivity probe un-covered then stop pump
@@ -357,8 +597,14 @@ def sequence():
             screen.blit(step3_screens[E_CODE], (TPOSX, TPOSY))
         elif SEQ_STATE == 4:                               # stop pump first	
             if STOP_PB == 1:
-                outputs = [ instate, 0, 0 ]                
-                SEQ_STATE = 0
+                outputs = [ instate, 0, 0 ]             # open inlet valve
+                set_signal(V_TRAVEL_T, 1)
+                if STATE_REACHED == 1:
+                    STOP_PB = 0	
+	                pushFlag2 = False 
+                    START_PB = 0
+                    pushFlag1 = False    
+                    STATE_REACHED = 0  
             else:
                 outputs = [ 0, 1, 0 ]  
                 set_signal(V_TRAVEL_T, 6)
@@ -368,8 +614,14 @@ def sequence():
             screen.blit(step3_screens[E_CODE], (TPOSX, TPOSY))
         elif SEQ_STATE == 5:                               # close outlet	
             if STOP_PB == 1:
-                outputs = [ instate, 0, 0 ]                
-                SEQ_STATE = 0
+                outputs = [ instate, 0, 0 ]             # open inlet valve
+                set_signal(V_TRAVEL_T, 1)
+                if STATE_REACHED == 1:
+                    STOP_PB = 0	
+	                pushFlag2 = False 
+                    START_PB = 0
+                    pushFlag1 = False    
+                    STATE_REACHED = 0  
             else:
                 outputs = [ 0, 0, 0 ]  
                 set_signal(V_TRAVEL_T, 7)
@@ -379,8 +631,14 @@ def sequence():
             screen.blit(step2_screens[E_CODE], (TPOSX, TPOSY)) 
         elif SEQ_STATE == 6:                               # open inlet and continuosly feed	
             if STOP_PB == 1:
-                outputs = [ instate, 0, 0 ]                
-                SEQ_STATE = 0
+                outputs = [ instate, 0, 0 ]                # open inlet valve
+                set_signal(V_TRAVEL_T, 1)
+                if STATE_REACHED == 1:
+                    STOP_PB = 0	
+	                pushFlag2 = False 
+                    START_PB = 0
+                    pushFlag1 = False    
+                    STATE_REACHED = 0  
             elif feed_flag == False:                       # stop feeding and supply until empty
                 SEQ_STATE = 2 
                 step6_flg = True                
