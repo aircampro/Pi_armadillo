@@ -56,7 +56,6 @@ def get_lucid_volts():
             valu=z.split(":")[1]
             lucid_v_vals.append(valu)
     return lucid_v_vals
-
 # Create a new 'S7Client' object to connect to S7-300/400/1200/1500 PLC.
 # Provide the PLC's IP address and slot/rack information
 client = S7Client(address="10.168.6.170", rack=0, slot=1)
@@ -193,5 +192,6 @@ while True:
             window['IMAGE'].update(img)                                               # display video
         else:
             print('cant capture camera')
+
 
 window.close()
