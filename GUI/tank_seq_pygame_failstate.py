@@ -12,6 +12,8 @@ import time
 import RPi.GPIO as GPIO
 import pygame
 
+# sprite size
+sz = (150, 150) 
 # define the screen size
 WIDTH = 1280.0
 HEIGHT = 720.0
@@ -398,8 +400,7 @@ def sequence():
     start_bt = screen.blit(start_img, (BX+50, BY))
     step_bt = screen.blit(start_img, (BX+100, BY))
     feed_bt = screen.blit(feed_img, (BX+150, BY))
-
-    sz = (150, 150)    
+   
     # load sequence state sprites (normal then failure modes)
     step0_screens = []
     img_path = os.path.dirname(os.path.abspath("__file__")) + "/images" + "/step0.png" 
@@ -662,17 +663,17 @@ def sequence():
             textimg1 = font.render(f"Step {SEQ_STATE} waiting", True, pygame.Color("RED"))
         else:
             textimg1 = font.render("Sequence OK", True, pygame.Color("BLUE"))
-        screen.blit(textimg1, (TPOSX, TPOSY+150))
+        screen.blit(textimg1, (TPOSX, TPOSY+sz[1]+20))
         if inputs[5] == 0:
             textimg1 = font.render("Level Low", True, pygame.Color("RED"))
         else:
             textimg1 = font.render("Level OK", True, pygame.Color("BLUE"))
-        screen.blit(textimg1, (TPOSX, TPOSY+250))
+        screen.blit(textimg1, (TPOSX, TPOSY+sz[1]+20+70))
         if inputs[6] == 1:
             textimg1 = font.render("Level High", True, pygame.Color("RED"))
         else:
             textimg1 = font.render("Level OK", True, pygame.Color("BLUE"))
-        screen.blit(textimg1, (TPOSX, TPOSY+350))
+        screen.blit(textimg1, (TPOSX, TPOSY+sz[1]+20+120))
         if SEQ_STATE == 0 and START_PB == 0 and instate = 1:
             textimg1 = font.render("Filling", True, pygame.Color("YELLOW"))
         elif SEQ_STATE == 0 and START_PB == 0 and instate = 0:
@@ -693,12 +694,12 @@ def sequence():
             textimg1 = font.render("Continous Supply", True, pygame.Color("YELLOW"))
         else:
             textimg1 = font.render("Sequence Step Unknown", True, pygame.Color("BLUE"))
-        screen.blit(textimg1, (TPOSX, TPOSY+450))
+        screen.blit(textimg1, (TPOSX, TPOSY+sz[1]+20+170))
         if feed_flag == True:
             textimg1 = font.render("Continous Supply", True, pygame.Color("GREEN"))
         else:
             textimg1 = font.render("Tank Discharge", True, pygame.Color("GREEN"))
-        screen.blit(textimg1, (TPOSX, TPOSY+500))
+        screen.blit(textimg1, (TPOSX, TPOSY+sz[1]+20+230))
         pygame.display.update()
         with open(p_f_name, 'wb') as f:                                   # save states for power cycle reset
             pickle.dump(SEQ_STATE, f) 
