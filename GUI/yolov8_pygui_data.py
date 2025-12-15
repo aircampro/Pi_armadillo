@@ -124,8 +124,6 @@ def draw_res(img, results, s7d, lucid):
     if s7d[3] == True:
         t = f"v1:{lucid[0] v1:{lucid[1] v1:{lucid[2] v1:{lucid[3] pressure:{s7d[5]} batch:{s7d[6]} in operation "
         cv.putText(img, t, (20, 20), font, 1, (0, 0, 0), 2, cv.LINE_AA)
-    else:
-        print("ok")
     return 0
 
 while True:
@@ -196,5 +194,6 @@ while True:
 
 
 window.close()
+
 
 
