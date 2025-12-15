@@ -120,11 +120,7 @@ def draw_res(img, results, s7d, lucid):
             xy = j.xyxy.numpy().astype(int)
             cv.rectangle(img, (xy[0][0], xy[0][3]), (xy[0][2], xy[0][1]), (0,0,255), 4)
             cls = int(j.cls)
-            cv.putText(img, model.model.names[cls], (xy[0][0], xy[0][3]), font, 1, (0, 0, 0), 2, cv.LINE_AA)
-    if s7d[3] == True:
-        cv.putText(img, f"v1:{lucid[0] v1:{lucid[1] v1:{lucid[2] v1:{lucid[3] pressure:{s7d[5]} batch:{s7d[6]} in operation ", (20, 20), font, 1, (0, 0, 0), 2, cv.LINE_AA)
-    else:
-        cv.putText(img, f"v1:{lucid[0] v1:{lucid[1] v1:{lucid[2] v1:{lucid[3] pressure:{s7d[5]} batch:{s7d[6]} stopped ", (20, 20), font, 1, (0, 0, 0), 2, cv.LINE_AA)    
+            cv.putText(img, model.model.names[cls], (xy[0][0], xy[0][3]), font, 1, (0, 0, 0), 2, cv.LINE_AA)   
     return 0
 
 while True:
@@ -195,3 +191,4 @@ while True:
 
 
 window.close()
+
