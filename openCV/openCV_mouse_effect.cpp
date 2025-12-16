@@ -15,7 +15,6 @@ endif()
 Apply various filters to an image by using mouse click
 
 */
-
 #include <opencv2\opencv.hpp>
 #include <opencv_lib.hpp>
 #include <iostream>
@@ -51,7 +50,7 @@ void mouse_callback(int event, int x, int y, int flags, void *userdata)
 		cout << "Middle mouse button is released." << endl;
 	} else if (event == EVENT_RBUTTONDOWN) {
 		cout << "Right mouse button is pressed." << endl;
-		effect++ % 10;                                                                                                   // change the effect
+		effect++ % 11;                                                                                                   // change the effect
 	} else 	if (event == EVENT_RBUTTONUP) {
 		cout << "Right mouse button is released." << endl;
 	} else if (event == EVENT_LBUTTONDBLCLK) {
@@ -136,6 +135,9 @@ int main(void)
 	        Laplacian(draw_img, dst1, 3);
 	        convertScaleAbs(dst1, dst1, 1, 0);
 	        threshold(dst1, dst1, 0, 255, THRESH_BINARY|THRESH_OTSU);
+            case 10:
+			cvtColor(draw_img, src2, COLOR_BGR2LAB);
+            dst1 = bitwise_not(src2);
             default:
             break;			
         }		
