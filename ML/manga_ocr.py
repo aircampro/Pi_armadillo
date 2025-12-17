@@ -9,8 +9,8 @@ from manga_ocr import MangaOcr
 
 def do_ocr(img_or_path):
     mocr = MangaOcr()
-    img = Image.open(path)
-    text = mocr(img_or_path)
+    img = Image.open(img_or_path)
+    text = mocr(img)
     print(text)
 
 if __name__ == '__main__':
@@ -20,5 +20,6 @@ if __name__ == '__main__':
     else:
         print("please pass file name first")
     do_ocr(filen)
+
 
 
