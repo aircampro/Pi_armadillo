@@ -17,13 +17,13 @@ from ctypes import CDLL
 arducam_vcm = CDLL('libarducam_vcm.so')                                                # arducam i2c autofocus (need to enable i2c) ref:- https://qiita.com/ma2shita/items/c180f818a675741bf660
 
 class range_check():
-  def __init__(self):
-    self.min = 0
-    self.max = 1023
-  def __contains__(self, val):
-    return (self.min <= val and val <= self.max)
-  def __iter__(self):
-    return iter(("Integer", "{} <= N <= {}".format(self.min, self.max)))
+    def __init__(self):
+        self.min = 0
+        self.max = 1023
+    def __contains__(self, val):
+        return (self.min <= val and val <= self.max)
+    def __iter__(self):
+        return iter(("Integer", "{} <= N <= {}".format(self.min, self.max)))
 
 mc_ip_address = '224.0.0.1'
 port = 1024
@@ -128,3 +128,4 @@ if __name__ == '__main__':
     arducam_vcm.vcm_init()
     arducam_vcm.vcm_write(args.focus)
     main()
+
