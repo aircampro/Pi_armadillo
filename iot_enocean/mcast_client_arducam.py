@@ -10,7 +10,7 @@ import struct
 import cv2
 
 mc_ip_address = '224.0.0.1'
-local_ip_address = '192.168.0.1'
+local_ip_address = '10.156.0.1'
 port = 1024
 chunk_size = 4096
 
@@ -110,3 +110,4 @@ def multi_cast_message(ip_address, port, message):
 
 if __name__ == '__main__':
     main(sys.argv[1:])
+
