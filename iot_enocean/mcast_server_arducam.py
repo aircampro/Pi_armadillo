@@ -101,6 +101,8 @@ class MulticastServer(asyncore.dispatcher):
         data, addr = self.socket.recvfrom(42)
         print('Recived Multicast message %s bytes from %s' % (data, addr))
 	    # Once the server recives the multicast signal, open the frame server
+        focus = dara.split("::")[1]                                                             # set focus
+        arducam_vcm.vcm_write(int(focus))
         EtherSenseServer(addr)
         print(sys.stderr, data)
 
