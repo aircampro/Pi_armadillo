@@ -128,4 +128,3 @@ if __name__ == '__main__':
     arducam_vcm.vcm_init()
     arducam_vcm.vcm_write(args.focus)
     main()
-
