@@ -15,7 +15,7 @@ port = 1024
 chunk_size = 4096
 
 def main(argv):
-    multi_cast_message(mc_ip_address, port, 'EtherSensePing::110')                   # ping server and set focus
+    multi_cast_message(mc_ip_address, port, f'EtherSensePing::{int(sys.argv[1])}')                   # ping server and set focus
 
 #UDP client for each camera server 
 class ImageClient(asyncore.dispatcher):
