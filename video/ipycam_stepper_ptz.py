@@ -27,6 +27,7 @@ import datetime
 import sys
 import pickle
 import threading
+import ctypes
 
 class C28BYJ48:
 
