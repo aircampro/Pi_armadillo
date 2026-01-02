@@ -599,7 +599,7 @@ def main():
     #camera.ptz.add_hardware_handler(servo)
 
     # Option 4: Add a gimbal controller (uncomment to use)
-    cFlag = 0                                                                          # set to 1 if you want to load saved state or 0 to initialise the stepper 
+    cFlag = 0                                                                          # set to 1 if you want to load saved state or 0 to initialise the gimbal 
     if cFlag == 1:
         print("\033[34m re-loading saved gimbal motor controller! \033[0m")
         try:
@@ -678,4 +678,5 @@ def hardware_only_example():
     print("Hardware-only mode: Digital PTZ disabled")
 
 if __name__ == "__main__":
+
     main()
