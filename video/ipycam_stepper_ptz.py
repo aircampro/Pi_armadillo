@@ -21,7 +21,7 @@ from ipycam import IPCamera, CameraConfig, PTZHardwareHandler
 import dynamix_driver                                                                                                       # driver included in this folder
 
 # uses this stepper motor https://rajguruelectronics.com/Product/1467/28BYJ-48%20-%205V%20Stepper%20Motor.pdf
-#
+# im using 2 different libs for GPIO for each stepper motor to show there example (you can just choose 1 if you like)  
 from gpiozero import OutputDevice as stepper
 import datetime
 import sys
@@ -601,4 +601,5 @@ def hardware_only_example():
     print("Hardware-only mode: Digital PTZ disabled")
 
 if __name__ == "__main__":
+
     main()
