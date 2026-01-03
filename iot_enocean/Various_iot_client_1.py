@@ -605,7 +605,7 @@ elif MY_CURRENT_TELEM == "supabase":
             message_list = [msg["content"] for msg in messages.data]
 
             return "\n".join(message_list)
-    s = SupaBase()
+    # s = SupaBase()
 
 # This function reads 1 byte of data from the serial port and parses the EnOcean telegram. After analyzing 
 # Telegram, data is sent to the chosen iOt (telemetry/database) system
@@ -2424,6 +2424,7 @@ def Enocean2Telemetry(s_port, telem_opt):
 
     # supabase
     def insert_supabase(desc1, temp1, desc2, temp2):
+        s = SupaBase()
         s.insert_message(f"{desc1} {temp1} {desc2} {temp2}")
     
     # ==== Choose the iOt you want to use according to the define in top section ====        
