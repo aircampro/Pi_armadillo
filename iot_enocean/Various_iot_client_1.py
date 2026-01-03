@@ -96,11 +96,11 @@ if MY_CURRENT_TELEM == "mosquito":
     MQTT_PORT = 1883
     KEEP_ALIVE = 60
 
-# mosquito
+# azure iot
 if MY_CURRENT_TELEM == "azure_iot":
     from azure.iot.device import IoTHubDeviceClient, Message
     CONNECTION_STRING ="<primary_key>"
-    aiot_client = IoTHubDeviceClient.create_from_connection_string(CONNECTION_STRING, websockets=True)
+    # aiot_client = IoTHubDeviceClient.create_from_connection_string(CONNECTION_STRING, websockets=True)
 
 #define a global MQTT Topic which will be set upon choices
 GTOPIC=" "
@@ -699,6 +699,7 @@ def Enocean2Telemetry(s_port, telem_opt):
 
     # AZURE IOT
     def sendAzureIoT(descrip1,temp_data1,descrip2,temp_data2):
+        aiot_client = IoTHubDeviceClient.create_from_connection_string(CONNECTION_STRING, websockets=True)
         mylist = [descrip1,temp_data1,descrip2,temp_data2]
         mystr = '{' + ','.join(map(str,mylist))+'}'
         message = Message(mystr)
