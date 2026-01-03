@@ -586,7 +586,7 @@ class GimbalExample:
 USERNAME="root"
 PASSWORD="passwd"
 IPPORT="192.168.1.221:554"
-RTSP_URL = "rtsp://{USERNAME}:{PASSWORD}@{IPPORT}/cam/realmonitor?channel=1&subtype=1"
+RTSP_URL = f"rtsp://{USERNAME}:{PASSWORD}@{IPPORT}/cam/realmonitor?channel=1&subtype=1"
 os.environ['OPENCV_FFMPEG_CAPTURE_OPTIONS'] = 'rtsp_transport;udp'
 
 # get the ip camera rtsp url directly using onvif
