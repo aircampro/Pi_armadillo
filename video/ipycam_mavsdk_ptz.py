@@ -583,14 +583,39 @@ class GimbalExample:
         print("[Gimbal] Homing motors...")
         self.gimbal.home()
 
-USERNAME="root"
+USERNAME="root"                                                                             # rtsp password 
 PASSWORD="passwd"
-IPPORT="192.168.1.221:554"
-RTSP_URL = f"rtsp://{USERNAME}:{PASSWORD}@{IPPORT}/cam/realmonitor?channel=1&subtype=1"
+IPPORT="192.168.1.221:554"                                                                  # ip and rtsp port for webcam
+RTSP_URL = f"rtsp://{USERNAME}:{PASSWORD}@{IPPORT}/cam/realmonitor?channel=1&subtype=1"     # defualt url
 os.environ['OPENCV_FFMPEG_CAPTURE_OPTIONS'] = 'rtsp_transport;udp'
+DRONE_IP="192.168.1.220"                                                                     # drone IP
+
+# check for a valid ip i.e. 4 dotted integers
+import asyncio
+from mavsdk import System
+from mavsdk.gimbal import GimbalMode, ControlMode, SendMode
+from mavsdk.camera import CameraError, Mode
+from aiodag import task
+
+@task
+async def check_ip(ipa):
+    try:
+        w=ipa.split(".")
+        y=0
+        for ww in w:
+            try:
+                i = int(ww)
+                y += 1
+            except:
+                print("invalid ip")
+                break  
+        return ((len(w)==4) and (y==4))
+    except:
+        return False
 
 # get the ip camera rtsp url directly using onvif
-def get_cam_rtsp():
+@task
+async def get_cam_rtsp():
     video_stream_uri_1 = None
     video_stream_uri_2 = None
     try:
@@ -635,11 +660,6 @@ def get_cam_rtsp():
         print(f"ONVIFError: {e}")
     return video_stream_uri_1, video_stream_uri_2
 
-import asyncio
-from mavsdk import System
-from mavsdk.gimbal import GimbalMode, ControlMode, SendMode
-from mavsdk.camera import CameraError, Mode
-
 # function to get available gimbals non-blocking
 async def get_gimbals(drone, timeout=10):
     gimbals_found = []                                                        # List to store all gimbals found
@@ -676,7 +696,7 @@ class MavSDKDroneCam:
     """
     Example for mavsdk drone gimbal and camera 3-Axis controller. 
     """
-    def __init__(self, droneip=IPPORT.split(":")[0]):
+    def __init__(self, droneip=DRONE_IP):
         self.drone = System()
         await self.connect_to_drone()
 
@@ -747,11 +767,11 @@ class DroneExample:
     """
     Example for mavsdk drone gimbal 3-Axis controller. 
     """
-    def __init__(self):
+    def __init__(self, ip_addr=DRONE_IP):
         self.pan_position = 0                                          
         self.tilt_position = 0
         self.zoom_position = 0
-        self.gimbal = MavSDKDroneCam()                                                                  # we chose the storm32 gimbal (select type from above)                   
+        self.gimbal = MavSDKDroneCam(ip_addr)                                                            # we chose the storm32 gimbal (select type from above)                   
         self.run = False
 
     def __del__(self):
@@ -805,7 +825,7 @@ class DroneExample:
     async def on_goto_home(self) -> None:
         print("[Gimbal] Homing motors...")
         await self.gimbal.move(0, 0, 0)
-
+  
 async def main():
     global RTSP_URL
 
@@ -828,21 +848,54 @@ async def main():
     #camera.ptz.add_hardware_handler(servo)
 
     # Option 5: Add a drone controller (uncomment to use)
-    cFlag = 0                                                                          # set to 1 if you want to load saved state or 0 to initialise the stepper 
+    got_ip = None
+    primary, secondary = get_cam_rtsp()                                                                    # get the camera rtsp if you can
+    if primary is not None:                                                                                # if we found a different ip to the default extract it
+        try:
+            if not primary.find("@") == -1:                                                                # does it have a @ (password field)                                                 
+                got_ip = primary.split("@")[1].split("/")[0]                            
+            else:
+                got_ip = primary.split("//")[1].split("/")[0]
+            if not got_ip.find(":") == -1:                                                                 # contains port split
+                got_ip = got_ip.split(":")[0]                     
+            if check_ip(got_ip) == True:                                                                   # extracted ip is of correct format
+                RTSP_URL = primary                                                                         # change default streaming url to the primary url returned 
+            else:
+                raise ValueError("Invalid primary ip format trying secondary")            
+        except:
+            print("parse error with rtsp (primary url) trying secondary url")                              # then try secondary
+            if secondary is not None:                                                                      # if we found a different ip to the default extract it
+                try:
+                    if not secondary.find("@") == -1:                                                      # does it have a @ (password field)                                                 
+                        got_ip = secondary.split("@")[1].split("/")[0]                              
+                    else:
+                        got_ip = secondary.split("//")[1].split("/")[0]
+                    if not got_ip.find(":") == -1:
+                        got_ip = got_ip.split(":")[0] 
+                    if check_ip(got_ip) == True:                                                           # extracted ip is of correct format
+                        RTSP_URL = secondary                                                               # change default streaming url to the primary url returned
+                    else:
+                        got_ip = None                                                                      # neither ip extracted from the streams were valid use the defualt
+                        print("Invalid secondary ip format using defaulted")
+                except:
+                    print("parse error with rtsp (secondary url) to find ip address using program default")  
+            else:
+                print("no seconday url returned from camera")
+    else:
+        print("no primary url")
+        
+    cFlag = 0                                                                                # set to 1 if you want to load saved state or 0 to initialise the stepper 
     if cFlag == 1:
         print("\033[34m re-loading saved gimbal motor controller! \033[0m")
         try:
             with open('drone.pickle', 'rb') as f:
                 gimbal = pickle.load(f)
-        except:
-            gimbal = DroneExample() 
+        except:    
+            gimbal = DroneExample(DRONE_IP) 
             print("\033[34m no saved file gimbal controller initialised! \033[0m")            
-    else:
-        gimbal = DroneExample()
+    else:              
+        gimbal = DroneExample(DRONE_IP)         
     camera.ptz.add_hardware_handler(gimbal)
-    primary, secondary = get_cam_rtsp()
-    if primary is not None:
-        RTSP_URL = primary
         
     # Note: To enable BOTH hardware and digital PTZ simultaneously, set:
     # camera.ptz.enable_digital_ptz = True
@@ -895,6 +948,7 @@ async def main():
         camera.stop()
         del DroneExample
         cv2.destroyAllWindows()
+
 def hardware_only_example():
     """
     Demo: Hardware-only PTZ (no digital cropping)
