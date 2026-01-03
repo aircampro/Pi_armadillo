@@ -715,9 +715,15 @@ class MavSDKDroneCam:
 
         locations = [(47.397606, 8.543060),(47.398036222362471,8.5450146439425509),(47.397607, 8.543056)]   # list of locations to fly.lat lon
 
+	    print("Fetching GPS at home location....")
+        async for gps_info in self.drone.telemetry.gps_info():                                              # you can use this also in planning the route relative
+            print(f"GPS info: {gps_info}")
+            break
+        
 	    print("Fetching amsl altitude at home location....")
         async for terrain_info in self.drone.telemetry.home():
             absolute_altitude = terrain_info.absolute_altitude_m
+            print(f"abs alt: {absolute_altitude}")
             break
 
         print("-- Arming")
