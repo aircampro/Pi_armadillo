@@ -27,7 +27,7 @@ MY_TZ='Europe/Moscow'
 TELEM_CHOICES=[ "soracom", "beebotte", "mosquito", "ubidots", "machinist", "aws", "azure", "yandex", "twillio", "smtp_email", "ssl_tls_server", \
     "ssl_23_server", "cloud_mqtt", "gcs_blob", "splunk", "gcs_spread", "ambient", "influxdb", "redis", "mongo", "mysql", "sybase", "oracle", "sqllite", "pg", \ 
     "fluvio", "scyllia", "rocks", "ali", "taiga", "msaccess", "riak", "elas", "neo4j", "cumulocity", "sftp", "coAp", "sms_gsm_modem", "ibmdb", "couchbase", "ignition", \ 
-    "denzow", "azure_iot", "sim8001_modem_sms", "sim8001_modem_gprs", "meshblu", "amqp" ]
+    "denzow", "azure_iot", "sim8001_modem_sms", "sim8001_modem_gprs", "meshblu", "amqp", "supabase" ]
 SORACOM=0
 BEEBOTTE=1
 MOSQUITO=2
@@ -75,6 +75,7 @@ SIM8001_SMS=43
 SIM8001_GPRS=44
 MESHBLU=45
 AMQP=46
+SUPABASE=47
 # ============= make your choice of cloud service here from list above ================== 
 MY_CURRENT_TELEM=TELEM_CHOICES[SORACOM]
 
@@ -558,6 +559,54 @@ elif MY_CURRENT_TELEM == "denzow":
             CARD_SENT = pickle.load(f) 
     except:
         CARD_SENT = 0    
+
+elif MY_CURRENT_TELEM == "supabase":
+    # pip install supabase psycopg2-binary
+    import os
+    from supabase import create_client, Client
+    SUPABASE_URL = os.environ.get("SUPABASE_URL")
+    SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
+
+    class SupaBase:
+        def __init__(self, table_name: str = "enocean"):
+            self.supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+            self.create_table()
+
+        def create_table(table_name: str = "enocean") -> bool:
+            """
+            Supabase PostgreSQL
+            """
+            # create table
+            query = f"""
+            CREATE TABLE IF NOT EXISTS {table_name} (
+                id SERIAL PRIMARY KEY,
+                content TEXT NOT NULL,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc', now())
+            );
+            """
+            try:
+                response = self.supabase.rpc("execute_sql", {"query": query}).execute()
+                print(response.data)                                                            # Should be just the success message text
+                return True
+            except Exception as e:
+                print(f"exception : {e}")
+                return False
+
+        def insert_message(content: str, table_name: str = "enocean") -> None:
+            """
+            inserts the data as a string to supabase
+            """
+            data = {
+                "content": content,
+            }
+            response = self.supabase.table(table_name).insert(data).execute()
+
+            messages = self.supabase.table(table_name).select("*").order("created_at", desc=False).limit(5).execute()
+            message_list = [msg["content"] for msg in messages.data]
+
+            return "\n".join(message_list)
+    s = SupaBase()
+
 # This function reads 1 byte of data from the serial port and parses the EnOcean telegram. After analyzing 
 # Telegram, data is sent to the chosen iOt (telemetry/database) system
 def Enocean2Telemetry(s_port, telem_opt):
@@ -2372,7 +2421,11 @@ def Enocean2Telemetry(s_port, telem_opt):
             bound_exc = exchange(c.default_channel)
             msg = bound_exc.Message(f"{desc1} {temp1} {desc2} {temp2}")
             bound_exc.publish(msg, routing_key=RKEY)
-        
+
+    # supabase
+    def insert_supabase(desc1, temp1, desc2, temp2):
+        s.insert_message(f"{desc1} {temp1} {desc2} {temp2}")
+    
     # ==== Choose the iOt you want to use according to the define in top section ====        
     if telem_opt == "soracom":
         sendData=sendDataSoraCom
@@ -2537,6 +2590,8 @@ def Enocean2Telemetry(s_port, telem_opt):
         sendData=sendDataIBMDB
     elif telem_opt == "couchbase":
         sendData=couchbase_upsert_document
+    elif telem_opt == "supabase":
+        sendData=insert_supabase
     else:                                                    # we asume its for mosquito broker internally running on host e.g. raspberry pi 4
         client = mqtt.Client()
         client.on_connect = on_connect
