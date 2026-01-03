@@ -711,6 +711,32 @@ class MavSDKDroneCam:
             await asyncio.sleep(4)
             self.print_gimbal_position_task.cancel()  
 
+    async def drone_mission(self):
+
+        locations = [(47.397606, 8.543060),(47.398036222362471,8.5450146439425509),(47.397607, 8.543056)]   # list of locations to fly.lat lon
+
+	    print("Fetching amsl altitude at home location....")
+        async for terrain_info in self.drone.telemetry.home():
+            absolute_altitude = terrain_info.absolute_altitude_m
+            break
+
+        print("-- Arming")
+        await self.drone.action.arm()
+        print("-- Taking off")
+        await self.drone.action.takeoff()
+        await asyncio.sleep(1)
+        # To fly drone 20m above the ground plane
+        flying_alt = absolute_altitude + 20.0
+        # goto_location() takes Absolute MSL altitude
+        await self.drone.action.goto_location(locations[0][0], locations[0][1], flying_alt, 0)
+        await asyncio.sleep(10)
+        await self.drone.action.goto_location(locations[1][0], locations[1][1], flying_alt, 0)
+        await asyncio.sleep(10)
+        await self.drone.action.goto_location(locations[2][0], locations[2][1], flying_alt, 0)	
+        await asyncio.sleep(10)
+        print("-- Landing")
+        await self.drone.action.land()
+
 class DroneExample:
     """
     Example for mavsdk drone gimbal 3-Axis controller. 
@@ -726,8 +752,10 @@ class DroneExample:
         del MavSDKDroneCam                                                                               # clean-up
 
     async def on_continuous_move(self, pan_dly: float, tilt_speed: float, zoom_speed: float) -> None:
-        print(f"Unsupported for STorM32 [Gimbal] Running at speed: pan={pan_speed}, tilt={tilt_speed}")
-
+        print(f"Unsupported for MavSDK [Gimbal] Running at speed: pan={pan_speed}, tilt={tilt_speed}")
+        print("-- Calling mission")
+        await self.gimbal.drone_mission()
+        
     async def on_stop(self) -> None:
         self.run = False
         print("[Gimbal] Motors stopped")
