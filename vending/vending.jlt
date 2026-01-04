@@ -39,7 +39,7 @@ function initialise_vend_array(n::Int64)::Array{MachineItem, 1}
 end
 
 function initialise_i64_array(n::Int64)::Array{Int64, 1}
-    var ret = fill(0.0, n)
+    var ret = fill(0, n)
     return ret
 end
 
@@ -102,7 +102,7 @@ function cancel()::Bool
             vend_array[ii].item_name = selling_array[ii].item_name
             vend_array[ii].price = selling_array[ii].price
         end
-		slots_to_open = initialise_float_array(no_of_vend_slots)
+		slots_to_open = initialise_i64_array(no_of_vend_slots)
 		slots_idx = 0
         println("cancelled your transactions Balance restored to $Balance")
     else
@@ -119,7 +119,7 @@ function confirm_sale()
 		    println(" open slot,,,, $f")
         end		
         println("confirmed sale $Balance remains")
-	    slots_to_open = initialise_float_array(no_of_vend_slots)
+	    slots_to_open = initialise_i64_array(no_of_vend_slots)
 		slots_idx = 0
     else
 	    println("please choose items to buy first")
