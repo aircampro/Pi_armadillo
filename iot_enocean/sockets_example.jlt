@@ -57,3 +57,12 @@ function sockpair_dgram()
 	println(read(socks[2], String))
 end
 
+function sockpair_seqpack()
+    var socks = socketpair(UnixSeqpacketSocket)
+	write(socks[1], "test data")
+	# read from other end
+	println(read(socks[2], String))
+end
+
+
+
