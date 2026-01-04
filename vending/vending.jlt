@@ -1,0 +1,172 @@
+# vending machine actions written in juliet 
+#
+
+# ==== vending machine class ====
+module Vending
+
+export MachineItem
+export create_item
+export
+    Balance,
+    add_money
+ export add_item
+ export buy_item
+ export cancel
+ export confirm_sale
+ export replace_item
+ export show_available_items
+
+struct MachineItem
+    item_name::String
+    price::Float64
+end
+
+var vend_array::Array{MachineItem, 1} = initialise_vend_array()
+var selling_array::Array{MachineItem, 1} = initialise_vend_array()
+var product_idx::Int64 = 1
+
+function create_item(d::String, p::Float64)::MachineItem
+    var m::MachineItem = MachineItem(d, p) 
+    return m
+end
+
+function initialise_vend_array()::Array{MachineItem, 1}
+    var ret = fill(MachineItem(" ", 0.0), 10)
+    return ret
+end
+
+function add_item(d::String, p::Float64)::Int64
+    vend_array[product_idx] = create_item(d, p)
+    product_idx += 1
+    product_idx %= 10
+end
+
+function replace_item(d::String, p::Float64, i::Int64)::Int64
+    i %= 10
+    vend_array[i] = create_item(d, p)
+    return i
+end
+
+var Balance::Float64 = 0
+var startBalance::Float64 = 0
+var startedBuying::Bool = false
+
+function add_money(coins::Float64)::Float64
+    Balance = coins
+end
+
+function buy_item(d::String)::Bool
+    var found_item::Bool = false
+    if startedBuying == false 
+        startBalance = Balance
+    end
+    for ii = 1:10
+        if startedBuying == false
+            selling_array[ii].item_name = vend_array[ii].item_name
+            selling_array[ii].price = vend_array[ii].price 
+        end      
+        if vend_array[ii].item_name == d
+            if Balance >= vend_array[ii].price
+                Balance -= vend_array[ii].price
+                # clear the item as sold from the vendor array (can be restored on cancel)
+                vend_array[ii].item_name = " "
+                found_item = true
+                println("added $d to your purchase cart")
+            else
+                println("you havent enough left to buy $d")
+            end
+        end
+    end
+    if startedBuying == false 
+       startedBuying == true
+    end
+    return found_item
+end
+
+function cancel()::Bool
+    if startedBuying == true
+        Balance = startBalance
+        startedBuying = false
+        for ii = 1:10
+            vend_array[ii].item_name = selling_array[ii].item_name
+            vend_array[ii].price = selling_array[ii].price
+        end
+        println("cancelled your transactions Balance restored to $Balance")
+    else
+        println("cannot cancel as you havent started buying")
+    end
+    return true
+end
+
+function confirm_sale()
+    if startedBuying == true
+        startedBuying = false
+        println("confirmed sale $Balance remains")
+    end
+end
+
+function show_available_items()
+    for ii = 1:10
+        var nm::String= vend_array[ii].item_name
+        var pr::Float64= vend_array[ii].price
+        println("item $ii $nm price £ $pr")
+    end
+end
+
+end
+
+# main program
+using .Vending
+function main()
+    # load vend machine with items
+    var x::Int64 = 0
+    x = add_item("whole milk",90.0)
+    x = add_item("goat milk",110.0)
+    x = add_item("sheep milk",106.5)
+    x = add_item("donkey milk",766.5)
+    x = add_item("whole milk",90.0)
+    x = add_item("whole milk",90.0)
+    add_money(300.5)
+    println("your balance is $Balance")
+    var b::Bool = false
+    b = buy_item("whole milk")
+    if b == true
+        println("whole milk added to shopping cart")
+    else
+        println("no whole milk left or insufficient funds")
+    end
+    b = buy_item("donkey milk")
+    if b == true
+        println("donkey milk added to shopping cart")
+    else
+        println("no donkey milk left or insufficient funds")
+    end
+    b = cancel()
+    b = buy_item("whole milk")
+    if b == true
+        println("whole milk added to shopping cart")
+    else
+        println("no whole milk left or insufficient funds")
+    end
+    b = buy_item("whole milk")
+    if b == true
+        println("whole milk added to shopping cart")
+    else
+        println("no whole milk left or insufficient funds")
+    end
+    b = buy_item("sheep milk")
+    if b == true
+        println("sheep milk added to shopping cart")
+    else
+        println("no sheep milk left or insufficient funds")
+    end
+    b = buy_item("goat milk")
+    if b == true
+        println("goat milk added to shopping cart")
+    else
+        println("no goat milk left or insufficient funds")
+    end
+    confirm_sale()
+    show_available_items()
+    x = replace_item("sheep milk", 106.5, 1)
+end
