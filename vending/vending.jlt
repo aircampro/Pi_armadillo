@@ -163,6 +163,7 @@ function main()
         println("no donkey milk left or insufficient funds")
     end
     b = cancel()
+    println("your balance is $Balance")
     b = buy_item("whole milk")
     if b == true
         println("whole milk added to shopping cart")
@@ -190,4 +191,6 @@ function main()
     confirm_sale()
     show_available_items()
     x = replace_item("sheep milk", 106.5, 1)
+    println("your balance is $Balance")
 end
+
