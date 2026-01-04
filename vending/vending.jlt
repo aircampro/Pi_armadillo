@@ -21,28 +21,36 @@ struct MachineItem
     price::Float64
 end
 
-var vend_array::Array{MachineItem, 1} = initialise_vend_array()
-var selling_array::Array{MachineItem, 1} = initialise_vend_array()
-var product_idx::Int64 = 1
+var no_of_vend_slots::Int64 = 10
+var vend_array::Array{MachineItem, 1} = initialise_vend_array(no_of_vend_slots)
+var selling_array::Array{MachineItem, 1} = initialise_vend_array(no_of_vend_slots)
+var product_idx::Int64 = 0
+var slots_to_open::Array{Int64, 1} = initialise_i64_array(no_of_vend_slots)
+var slots_idx::Int64 = 0
 
 function create_item(d::String, p::Float64)::MachineItem
     var m::MachineItem = MachineItem(d, p) 
     return m
 end
 
-function initialise_vend_array()::Array{MachineItem, 1}
-    var ret = fill(MachineItem(" ", 0.0), 10)
+function initialise_vend_array(n::Int64)::Array{MachineItem, 1}
+    var ret = fill(MachineItem(" ", 0.0), n)
+    return ret
+end
+
+function initialise_i64_array(n::Int64)::Array{Int64, 1}
+    var ret = fill(0.0, n)
     return ret
 end
 
 function add_item(d::String, p::Float64)::Int64
-    vend_array[product_idx] = create_item(d, p)
+    vend_array[product_idx+1] = create_item(d, p)
     product_idx += 1
-    product_idx %= 10
+    product_idx %= no_of_vend_slots
 end
 
 function replace_item(d::String, p::Float64, i::Int64)::Int64
-    i %= 10
+    i %= no_of_vend_slots
     vend_array[i] = create_item(d, p)
     return i
 end
@@ -60,17 +68,20 @@ function buy_item(d::String)::Bool
     if startedBuying == false 
         startBalance = Balance
     end
-    for ii = 1:10
+    for ii = 1:no_of_vend_slots
         if startedBuying == false
             selling_array[ii].item_name = vend_array[ii].item_name
             selling_array[ii].price = vend_array[ii].price 
         end      
-        if vend_array[ii].item_name == d
+        if (vend_array[ii].item_name == d) && (found_item == false)
             if Balance >= vend_array[ii].price
                 Balance -= vend_array[ii].price
                 # clear the item as sold from the vendor array (can be restored on cancel)
                 vend_array[ii].item_name = " "
                 found_item = true
+				slots_to_open[slots_idx+1] = ii
+				slots_idx += 1
+				slots_idx %= no_of_vend_slots
                 println("added $d to your purchase cart")
             else
                 println("you havent enough left to buy $d")
@@ -87,10 +98,12 @@ function cancel()::Bool
     if startedBuying == true
         Balance = startBalance
         startedBuying = false
-        for ii = 1:10
+        for ii = 1:no_of_vend_slots
             vend_array[ii].item_name = selling_array[ii].item_name
             vend_array[ii].price = selling_array[ii].price
         end
+		slots_to_open = initialise_float_array(no_of_vend_slots)
+		slots_idx = 0
         println("cancelled your transactions Balance restored to $Balance")
     else
         println("cannot cancel as you havent started buying")
@@ -101,12 +114,20 @@ end
 function confirm_sale()
     if startedBuying == true
         startedBuying = false
+        for ii = 1:no_of_vend_slots
+		    var f::Float64 = slots_to_open[ii]
+		    println(" open slot,,,, $f")
+        end		
         println("confirmed sale $Balance remains")
+	    slots_to_open = initialise_float_array(no_of_vend_slots)
+		slots_idx = 0
+    else
+	    println("please choose items to buy first")
     end
 end
 
 function show_available_items()
-    for ii = 1:10
+    for ii = 1:no_of_vend_slots
         var nm::String= vend_array[ii].item_name
         var pr::Float64= vend_array[ii].price
         println("item $ii $nm price £ $pr")
@@ -169,5 +190,4 @@ function main()
     confirm_sale()
     show_available_items()
     x = replace_item("sheep milk", 106.5, 1)
-
 end
