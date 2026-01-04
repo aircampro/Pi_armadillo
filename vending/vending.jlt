@@ -52,7 +52,7 @@ var startBalance::Float64 = 0
 var startedBuying::Bool = false
 
 function add_money(coins::Float64)::Float64
-    Balance = coins
+    Balance += coins
 end
 
 function buy_item(d::String)::Bool
@@ -169,4 +169,5 @@ function main()
     confirm_sale()
     show_available_items()
     x = replace_item("sheep milk", 106.5, 1)
+
 end
