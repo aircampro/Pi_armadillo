@@ -1,0 +1,59 @@
+# example using sockets library in juliet
+#
+using Sockets
+
+function tcp_client()::Int16
+    try
+        var port::UInt16 = 4442
+	    var sock = connect(port)
+	    var result = read(sock, String)
+	    println("read $result ")
+	    close(sock)
+	    return 0
+    catch e
+	    if e isa SystemError
+		    local e = e::SystemError
+			println(e.message)
+		end
+		return 1
+	end
+end
+
+function udp_rcv()::Int16
+    try
+        var recvi = UDPSocket()
+	    bind(rcvi, "127.0.0.1", IInt16(4999))
+	    var ret = recv(recvi)
+	    # print first char
+	    println(ret[1])
+	    var z::Int64 = len(ret)
+	    # print backwards what was received 
+	    while z > 0
+	        println(ret[z])
+		    z -= 1
+	    end
+	    close(recvi)
+	    return 0
+    catch e
+	    if e isa SystemError
+		    local e = e::SystemError
+			println(e.message)
+		end
+		return 1
+	end
+end
+
+function sockpair_stream()
+    var socks = socketpair(UnixStreamSocket)
+	write(socks[1], "test data")
+	# read from other end
+	println(read(socks[2], String))
+end
+
+function sockpair_dgram()
+    var socks = socketpair(UnixDgramSocket)
+	write(socks[1], "test data")
+	# read from other end
+	println(read(socks[2], String))
+end
+
