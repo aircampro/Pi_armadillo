@@ -45,7 +45,7 @@ function generate_r2_array(n::Int64)::Array{Robot2, 1}
     return ret
 end
 
-struct NoRobotFound <: Exception
+struct RobotNotFound <: Exception
     message::String
 end
 
@@ -64,7 +64,7 @@ function find_all_individuals(input::Array{Robot2, 1}, task::String)::Array{Robo
         end
     end  
     if found == false
-        throw(NoRobotFound("no robot found"))
+        throw(RobotNotFound("no robot found"))
     end 
     return result
 end
@@ -89,4 +89,5 @@ function main()
      var result::Array{Robot2, 1} = find_all_individuals(robots, "welding")
 
 end
+
 
