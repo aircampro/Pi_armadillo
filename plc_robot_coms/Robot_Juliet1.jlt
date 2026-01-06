@@ -1,0 +1,99 @@
+submission.jlt
+"""
+This file will be uploaded for grading. Make sure to not move the `main`
+function from `AdvancedSyntax.jlt` to this file. If you would like to test run
+your code, call the functions in this file inside `main` in `AdvancedSyntax.jlt`.
+"""
+abstract type AbstractRobot end
+
+struct InvalidRobotIdx <: Exception
+    message::String
+end
+
+var R1idx::Int64 = 1
+
+struct Robot1 <: AbstractRobot
+    id::Array{UInt8, 1}
+    function Robot1(i::Array{UInt8, 1})
+        var R1idx::Int64 = length(i)
+        if R1idx > 16
+            throw(InvalidRobotIdx("max number of robots exceeded"))
+        end
+        for zz = 1:R1idx
+            if i[zz] > 255
+                throw(InvalidRobotIdx("invalid robot number"))
+            end
+        end
+        new(i)
+    end
+end
+
+struct Robot2 <: AbstractRobot
+    id::String
+end
+
+struct Point{T <: Number}
+    x::T
+    y::T
+    z::T
+end
+
+get_id(ar::AbstractRobot) = println("not implemented")
+get_id(r1::Robot1) = r1.id
+get_id(r2::Robot2) = r2.id
+
+function generate_r2_array(n::Int64)::Array{Robot2, 1}
+    var ret = fill(Robot2(" "), n)
+    return ret
+end
+
+function generate_u8_array(n::Int64)::Array{UInt8, 1}
+    var ret::Array{UInt8, 1} = fill(0, n)
+    return ret
+end
+
+struct NoRobotFound <: Exception
+    message::String
+end
+
+function find_all_individuals(input::Array{Robot2, 1}, task::String)::Array{Robot2, 1}
+    var arr_sz::Int64 = length(input)
+    var result::Array{Robot2, 1} = generate_r2_array(arr_sz)
+    var idx::Int64 = 1
+    var found::Bool = false
+    for ii = 1:arr_sz
+        var x = findfirst(task, input[ii].id)
+        if ! (x == nothing)
+            found = true
+            result[idx] = x
+            idx += 1
+            idx %= 11
+        end
+    end  
+    if found == false
+        throw(NoRobotFound("no robot found"))
+    end 
+    return result
+end
+
+
+==========
+
+AdvancedSyntax.jlt`
+# The line below includes the code from submission to this file
+include("submission.jlt")
+
+function main()
+    var robots2 = [ Robot1(uuid()), Robot1(uuid()), Robot1(uuid()) ]
+    var robots = [
+        Robot2("welding 1"),
+        Robot2("moving 1"),
+        Robot2("welding 2"),
+        Robot2("moving 2"),
+        Robot2("welding 3"),
+        Robot2("moving 3"),
+        Robot2("welding 4"),
+        Robot2("random 1")
+     ]
+     var result::Array{Robot2, 1} = find_all_individuals(robots, "welding")
+end
