@@ -63,7 +63,7 @@ function find_all_individuals(input::Array{Robot2, 1}, task::String)::Array{Robo
         var x = findfirst(task, input[ii].id)
         if ! (x == nothing)
             found = true
-            result[idx] = x
+            result[idx] = input[ii]
             idx += 1
             idx %= 11
         end
@@ -92,4 +92,5 @@ function main()
         Robot2("random 1")
      ]
      var result::Array{Robot2, 1} = find_all_individuals(robots, "welding")
+
 end
