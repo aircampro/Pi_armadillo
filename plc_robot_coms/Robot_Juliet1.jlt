@@ -10,8 +10,6 @@ struct InvalidRobotIdx <: Exception
     message::String
 end
 
-var R1idx::Int64 = 1
-
 struct Robot1 <: AbstractRobot
     id::Array{UInt8, 1}
     function Robot1(i::Array{UInt8, 1})
@@ -75,8 +73,6 @@ function find_all_individuals(input::Array{Robot2, 1}, task::String)::Array{Robo
     end 
     return result
 end
-
-
 ==========
 
 AdvancedSyntax.jlt`
