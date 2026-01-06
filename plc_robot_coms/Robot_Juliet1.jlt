@@ -45,11 +45,6 @@ function generate_r2_array(n::Int64)::Array{Robot2, 1}
     return ret
 end
 
-function generate_u8_array(n::Int64)::Array{UInt8, 1}
-    var ret::Array{UInt8, 1} = fill(0, n)
-    return ret
-end
-
 struct NoRobotFound <: Exception
     message::String
 end
@@ -94,3 +89,4 @@ function main()
      var result::Array{Robot2, 1} = find_all_individuals(robots, "welding")
 
 end
+
