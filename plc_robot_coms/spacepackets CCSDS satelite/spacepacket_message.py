@@ -908,7 +908,7 @@ class TestUslp(TestCase):
 
 if __name__ == '__main__':
 
-    t.TestSpacePacket()
+    t = TestSpacePacket()
 	t.test_basic_countdown()                       # test the coundown function
 	t.setUp()
 	t.test_basic()                                 # basic header set-update
@@ -937,4 +937,5 @@ if __name__ == '__main__':
     tt.test_header()
     tt.test_frame_pack()
     tt.test_frame_unpack()    
+
  
