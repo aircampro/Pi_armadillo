@@ -147,16 +147,16 @@ def main():
     c1 = Condition(ab_less) 
     c2 = Condition(ab_greater)  
     c3 = Condition(cd_equal) 
-    print(f"c1 {c1} c2 {c2} c3 {c3}") 
+    print(f"c1 {c1()} c2 {c2()} c3 {c3()}") 
     a = 1000
     c = 87
-    print(f"c1 {c1} c2 {c2} c3 {c3}") 
+    print(f"c1 {c1()} c2 {c2()} c3 {c3()}") 
     c = 100
-    print(f"c1 {c1} c2 {c2} c3 {c3}")
+    print(f"c1 {c1()} c2 {c2()} c3 {c3()}")
     c = 89.1
-    print(f"c1 {c1} c2 {c2} c3 {c3}")
+    print(f"c1 {c1()} c2 {c2()} c3 {c3()}")
     c = 100.9
-    print(f"c1 {c1} c2 {c2} c3 {c3}")
+    print(f"c1 {c1()} c2 {c2()} c3 {c3()}")
     # show timer class
     t = Timer(900)
     # show countdown timer
