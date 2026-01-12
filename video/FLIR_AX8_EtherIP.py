@@ -42,7 +42,7 @@ with pycomm3.CIPDriver(ip_addr) as driver:
         request_data=bytearray([1]),
         data_type=pycomm3.BOOL
     )
-  
+
 # please refer to this document https://support.flir.com/Answers/A1239/EIP.pdf
 #
 # auto NUC
