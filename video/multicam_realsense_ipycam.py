@@ -142,9 +142,10 @@ def main_stream(cam_id: str):
     print(f"  Web UI:      http://{config.local_ip}:{config.onvif_port}/")
     print(f"  RTSP Stream: {config.main_stream_rtsp}")
 	print(f"  Preview http://{config.local_ip}:{config.go2rtc_api_port}/stream.html?src={config.main_stream_name}")
-    print(f"  Web UI:      http://{config2.local_ip}:{config2.onvif_port}/")
-    print(f"  RTSP Stream: {config2.main_stream_rtsp}")
-	print(f"  Preview http://{config2.local_ip}:{config2.go2rtc_api_port}/stream.html?src={config2.main_stream_name}")
+    if not CAMERA_ID.find("RealsenseCapture") == -1:
+        print(f"  Web UI:      http://{config2.local_ip}:{config2.onvif_port}/")
+        print(f"  RTSP Stream: {config2.main_stream_rtsp}")
+	    print(f"  Preview http://{config2.local_ip}:{config2.go2rtc_api_port}/stream.html?src={config2.main_stream_name}")
     print(f"{'='*60}\n")
 	# place the urls and ports in a list for using with the proxy file
     # redirect_port += 1 uncomment for single server and comment the first_pass code below
@@ -330,5 +331,4 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         main(sys.argv[1])                                                                     # pass first arg to determine proxy server or not
     else:
-
         main(IM_PROXY)          
