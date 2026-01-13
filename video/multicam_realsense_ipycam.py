@@ -104,7 +104,7 @@ def main_stream(cam_id: str):
     camera = IPCamera(config)
     if not CAMERA_ID.find("RealsenseCapture") == -1:
         onvif_start += 1                                                            # for each increment the onvif port 
-        config2 = CameraConfig(name=f"My Custom Camera {uniq}",
+        config2 = CameraConfig(name=f"My Depth Camera {uniq}",
             manufacturer="MyCompany",
             model="CustomCam-Pro",
             serial_number=f"{uniq}",
@@ -330,4 +330,5 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         main(sys.argv[1])                                                                     # pass first arg to determine proxy server or not
     else:
+
         main(IM_PROXY)          
