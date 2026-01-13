@@ -48,7 +48,7 @@ def test_readme_example():
             if issubclass(o, pyhoff.BusTerminal):
                 print(n)
                 terminal_classes.append(o)
-	wg = devices.WAGO_750_352("172.16.17.2", 11255, terminal_classes, timeout=0.001)
+	wg = WAGO_750_352("172.16.17.2", 11255, terminal_classes, timeout=0.001)
 
     # write a 2s pulse to outputs on wago
     for bt in wg.bus_terminals:
