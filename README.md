@@ -1,5 +1,5 @@
 # Pi_armadillo 
-is a project of tools and applications that will run on a linux box such as a rasberry pi or armadillo
+is a project of tools and applications that will run on a linux box such as a rasberry pi or armadillo or NVIDIA jetson for more cpu intensive work
 there are a series of data gathering routines which connect to spi i2c usb serial ethernet enocean BLE devices as well as hardwired pins
 LoRa and enOcean remote sensors can be read such as temperature humidity, proximity switches on doors etc.
 then there is a series of mechanisms to transfer than information via telemetry iOt cleint server mqtt broker/server OPC BacNet etc.. various AWS AZURE YANDEX uBiDots machinist etc..
@@ -13,6 +13,7 @@ radio links BLE EnOcean LoRa Zigbee etc, usb interfaces, serial. Franka Emika gr
 Can query resnet from a picture or get information from Google Cloud API, haskell webserver examples for scotty and spock. Interface to aldebaran pepper robot from GPT-3
 eSSP and CCtalk protocol examples for communication with money machines and gaming dispensers AES encrpytion and Diffie Hellman key exchange
 visual odometry example allowing the feature detection algorithm to be changed.
+Machine vision for recognition and pose estimation, the use of VLM's to identify voice and recognise pose from camera and robotic automation examples as well as processing of SLAM are shown in example
 .................have fun it is still in development.....
 
 concept pics directory shows overview pictures of interfaces
