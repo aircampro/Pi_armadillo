@@ -145,15 +145,17 @@ class MyVideoPlayer(BoxLayout):
 class ShowVideo(App):
 
     def build(self):
-        return MyVideoPlayer()
+        self.mvp = MyVideoPlayer()
+        return self.mvp
 
     def __del__(self):
-        del MyVideoPlayer
+        del self.mvp
 
 if __name__ == "__main__":
     try:
-        ShowVideo().run()
+        s = ShowVideo()                            #   ShowVideo().run()
+        s.run()
     except KeyboardInterrupt:
-        del ShowVideo
+        del s
     finally:
         print("video player stream closed")
