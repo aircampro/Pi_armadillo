@@ -83,7 +83,7 @@ class SharpProcessor:
                     total_frames = reader.count_frames()
                 except:
                     total_frames = 0
-                if (_VER == 2):
+                if (_VER == 3):
                     # if you want to use pyav $ pip install av	
                     i = 0					
                     for frame in imageio.imiter(video_path_str, plugin="pyav"):
