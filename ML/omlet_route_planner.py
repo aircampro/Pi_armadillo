@@ -10,6 +10,7 @@ import requests                                                                 
 from mavsdk import System                                                                                        # to connect to a drone
 import time
 import threading                                                                                                 # thread to each drone
+import ctypes
 import matplotlib.pyplot as plt
 from matplotlib import colormaps
 import sys
@@ -29,6 +30,7 @@ visit_lon = [ 37.5027991938211, 37.480904634677906, 37.68127434786349, 37.549144
 # To fly drone 20m above the ground plane
 flying_alt = absolute_altitude + 20.0
 loc_db = 0.05                                                                                                  # location deadband
+BAT_ENOUGH=30                                                                                                  # battery threshold for journey
 
 # Class wrapper for threading 
 # you can also kill task e.g. if op_task.is_alive(): op_task.raise_exception()
