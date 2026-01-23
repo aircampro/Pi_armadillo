@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #define CMD0_ESC                                                                           /* uncomment for other type of ESC */
+#define BLHELLI32
 
 extern void motorImplementationInitialize(int motorPins[], int motorMax) ;
 extern void motorImplementationFinalize(int motorPins[], int motorMax) ;
@@ -117,6 +118,21 @@ int main(int argc, char **argv) {
     // stop motors
     for(i=0; i<n; i++) throttles[i] = 0;
     motorImplementationSendThrottles(motorPins, n, throttles);
+
+#if defined(BLHELLI32)
+    dshotRepeatSendCommand(motorPins, n, DSHOT_CMD_LED2_ON, 0, 5000);  
+    usleep(1000);
+    dshotRepeatSendCommand(motorPins, n, DSHOT_CMD_LED2_OFF, 0, 5000);  
+    usleep(1000);	
+    dshotRepeatSendCommand(motorPins, n, DSHOT_CMD_LED0_ON, 0, 5000);  
+    usleep(1000);
+    dshotRepeatSendCommand(motorPins, n, DSHOT_CMD_LED0_OFF, 0, 5000);  
+    usleep(1000);
+    dshotRepeatSendCommand(motorPins, n, DSHOT_CMD_LED1_ON, 0, 5000);  
+    usleep(1000);
+    dshotRepeatSendCommand(motorPins, n, DSHOT_CMD_LED1_OFF, 0, 5000);  
+    usleep(1000);
+#endif
 	
     // finalize
     motorImplementationFinalize(motorPins, n);
