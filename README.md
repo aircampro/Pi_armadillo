@@ -55,7 +55,7 @@ LoRa
 - LoRa radio link via usb port
 
 ML
-- Various machine learning techniques, picture analysis and machine vision
+- Various machine learning techniques, picture analysis and machine vision, mbodi, omlet, openVLA
   
 boost_other
 boost_prog
