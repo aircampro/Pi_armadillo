@@ -25,7 +25,7 @@ This shows the various areas covered for the libraires and API's in this reposit
 Please investigate the directory program for further details I will try to document more detail in time
 
 GUI
-- examples fro trend or control HMI using tkinter
+- examples fro trend or control HMI using tkinter, pygame, openCV, kivy, simpleGUI, streamlit
 
 ITL612 IR SENSOR
 - ITL612 IR camera API
@@ -55,7 +55,7 @@ LoRa
 - LoRa radio link via usb port
 
 ML
-- Various machine learning techniques
+- Various machine learning techniques, picture analysis and machine vision
   
 boost_other
 boost_prog
@@ -89,7 +89,7 @@ echonet
 - echonet for power charges
 
 erlang
-- erl;ang and elixir program examples
+- erlang and elixir program examples
 
 face_robot
 
@@ -157,7 +157,7 @@ sonySRG300
 - camera interface REST using boost
 
 sound
-- sound manipulation
+- sound manipulation and synthesis
 
 tracker_LUT
 - video tracker and lut correction
@@ -169,7 +169,7 @@ vending
 - vending machine examples
 
 video
-- video and camera stuff v4l and ros interfaces etc
+- video and camera stuff v4l and ros interfaces, rtsp streaming onvif, openCV etc
 
 visual_odometry
 - e.g. velodyne
