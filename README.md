@@ -18,6 +18,8 @@ Machine vision for recognition and pose estimation, the use of VLM's to identify
 
 concept pics directory shows overview pictures of interfaces
 
+![worlds](https://github.com/aircampro/Pi_armadillo/blob/main/concept%20pics/overview_concept.jpg)
+
 I will very briefly explain the directories 
 This shows the various areas covered for the libraires and API's in this repository
 Please investigate the directory program for further details I will try to document more detail in time
