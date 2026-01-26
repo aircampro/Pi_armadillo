@@ -30,7 +30,6 @@ elif mode == "rldqn" or mode == "rldqnlstm":                                    
 elif mode == "rlppo2":                                            # chose google RL PPO method
     import stable_baselines3
     from stable_baselines import PPO2
-fi
 
 def make_gif(frames, filename, duration=1./30.):
     imageio.mimsave(filename, frames, 'GIF', **{'duration': duration})
@@ -74,7 +73,6 @@ if __name__ == "__main__":
         model_name = 'cartpoleDQNLstm'
         model = DQN(MlpLstmPolicy, env, verbose=1, tensorboard_log=log_dir)
         model.learn(total_timesteps=10000)
-    fi
     frame = []
     env = gym.wrappers.Monitor(env, 'video/',video_callable=lambda episode_id: True,force = True)
     for i_episode in range(20):
@@ -89,15 +87,16 @@ if __name__ == "__main__":
                 integral += error
                 derivative = error - prev_error
                 prev_error = error
-                pid = np.dot(P * error + I * integral + D * derivative, desired_mask)
+                pid = np.dot(P * error + I * integral + D * derivative, desired_mask)           # get pid prediction
                 action = sigmoid(pid)
                 action = np.round(action).astype(np.int32)
             elif mode == "rlppo" or mode == "rldqn" or mode == "rldqnlstm" or mode == "rlppo2":
-                action, _states = model.predict(state)
+                action, _states = model.predict(state)                                          # use RL model chosen
             state, reward, done, info = env.step(action)                                        # perfrom action 
             frame.append(state)
             if done:
                 print("Episode finished after {} timesteps".format(t+1))
                 break
         make_gif(frame, 'out.gif')                                                              # save output as gif
+
     env.close()
