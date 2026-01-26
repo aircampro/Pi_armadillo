@@ -40,15 +40,18 @@ def sigmoid(x):
 
 if __name__ == "__main__":
 
-    env = gym.make('CartPole-v1')                                                                                        # choose gym model 
+    if len(sys.argv) > 2:
+        env = gym.make(str(sys.argv[2]))                                                                                     # change to CartPole-v0 Pendulum-v0 
+    else:
+        env = gym.make('CartPole-v1')                                                                                        # choose gym model 
     if mode == "pid":
-        if len(sys.argv) > 2:
-            P = int(sys.argv[2])
-            I = int(sys.argv[3])
-            D = int(sys.argv[4]) 
-            if len(sys.argv) > 4:
-                desired_state = np.array([int(sys.argv[5]), int(sys.argv[6]), int(sys.argv[7]), int(sys.argv[8])])        # this is the setpoint for the PID when in that mode
-                desired_mask = np.array([int(sys.argv[9]), int(sys.argv[10]), int(sys.argv[11]), int(sys.argv[12])])            
+        if len(sys.argv) > 3:
+            P = int(sys.argv[3])
+            I = int(sys.argv[4])
+            D = int(sys.argv[5]) 
+            if len(sys.argv) > 5:
+                desired_state = np.array([int(sys.argv[6]), int(sys.argv[7]), int(sys.argv[8]), int(sys.argv[9])])        # this is the setpoint for the PID when in that mode
+                desired_mask = np.array([int(sys.argv[10]), int(sys.argv[11]), int(sys.argv[12]), int(sys.argv[13])])            
             else:
                 desired_state = np.array([0, 0, 0, 0])                                                                    # this is the setpoint for the PID when in that mode
                 desired_mask = np.array([0, 0, 1, 0])            
