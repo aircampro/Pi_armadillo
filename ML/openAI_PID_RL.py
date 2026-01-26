@@ -3,6 +3,7 @@
 #
 # apt-get install -y python-numpy python-dev cmake zlib1g-dev libjpeg-dev xvfb libav-tools xorg-dev python-opengl libboost-all-dev libsdl2-dev swig
 # $ sudo apt install python3-pip
+# $ sudo apt install g++
 # $ pip3 install gym tensorflow==1.14.0 stable-baselines
 #
 import numpy as np
