@@ -1627,6 +1627,17 @@ def Enocean2Telemetry(s_port, telem_opt):
     # Oracle database
     def putValueOracle(descrip1, temp_data1, descrip2, temp_data2):
 
+        # connect to oracle database
+        params = oracledb.ConnectParams(host="localhost", port=1521, service_name="XE")
+        connection = oracledb.connect(user="system", password="your_PassWord", dsn="localhost/XE", params=params)
+
+        if not connection.is_connected():
+            raise Exception("Oracle - database will not connect")
+            sys.exit(6) 
+    
+        # now get the cursor
+        cursor = connection.cursor()
+
         # insert values
         t=datetime.datetime.now(pytz.timezone(MY_TZ))
         cursor.execute("""INSERT INTO ENO_TABLE (DESCRIPTION, TEMPERATURE, TS) VALUES ('{d1}', {t1}, {ts});
@@ -1674,6 +1685,14 @@ def Enocean2Telemetry(s_port, telem_opt):
         # create table
         cursor.execute("""CREATE TABLE ENO_TABLE (DESCRIPTION VARCHAR(255),TEMPERATURE FLOAT, TS VARCHAR(255) );
             """)
+
+        # cursor and connection close
+        cursor.close()
+        connection.close()
+
+        # set pointers to nulls
+        cursor = None
+        connection = None
 
     # SQLite database
     def putValueSQLite(descrip1, temp_data1, descrip2, temp_data2):
