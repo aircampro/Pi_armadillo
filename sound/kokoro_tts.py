@@ -4,7 +4,7 @@
 import torch
 import soundfile as sf
 from models import build_model
-from koko import torch
+#from koko import torch
 import soundfile as sf
 from models import build_model
 from kokoro import generate
