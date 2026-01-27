@@ -17,7 +17,7 @@ parser.add_argument('--txt2', type=str, default='second sentance')
 parser.add_argument('--voice_id', type=int, default=1, help='select voice 0 to 10')
 parser.add_argument('--us_gb', type=str, default='gb')
 parser.add_argument('--outfile', type=str, default='output_audio.wav',  help='audio output file name')
-							 
+						 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 MODEL = build_model('kokoro-v0_19.pth', device)
 
