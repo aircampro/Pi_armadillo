@@ -45,10 +45,16 @@ class Context : public CustomInstance {
  public:
   Context(
       const std::string& instance_name, const ModelConfig& config,
-      const int gpu_device);
+      const int gpu_device,
+      float distance_threshold = 0.6, 
+	  std::string pth_mdl="/models/face_recognition_model/dlib_face_recognition_resnet_model_v1.dat", 
+	  std::string pth_sp="/models/face_recognition_model/shape_predictor_5_face_landmarks.dat", 
+	  std::string ds1="/dataset/face/face.csv", 
+	  std::string ds2="/dataset/face/image/"
+);
   ~Context();
 
-  int Init(float distance_threshold = 0.6, std::string pth_mdl="/models/face_recognition_model/dlib_face_recognition_resnet_model_v1.dat", pth_sp="/models/face_recognition_model/shape_predictor_5_face_landmarks.dat", std::string ds1="/dataset/face/face.csv", std::string ds2="/dataset/face/image/");
+  int Init(float distance_threshold = 0.6, std::string pth_mdl="/models/face_recognition_model/dlib_face_recognition_resnet_model_v1.dat", std::string pth_sp="/models/face_recognition_model/shape_predictor_5_face_landmarks.dat", std::string ds1="/dataset/face/face.csv", std::string ds2="/dataset/face/image/");
 
   int Execute(
       const uint32_t payload_cnt, CustomPayload* payloads,
@@ -415,7 +421,7 @@ int CustomInstance::Create(
     const CustomInitializeData* data,
     float distance_threshold = 0.6, 
 	std::string pth_mdl="/models/face_recognition_model/dlib_face_recognition_resnet_model_v1.dat", 
-	pth_sp="/models/face_recognition_model/shape_predictor_5_face_landmarks.dat", 
+	std::string pth_sp="/models/face_recognition_model/shape_predictor_5_face_landmarks.dat", 
 	std::string ds1="/dataset/face/face.csv", 
 	std::string ds2="/dataset/face/image/"
 	)
@@ -431,5 +437,6 @@ int CustomInstance::Create(
 
   return context->Init(distance_threshold, pth_mdl, pth_sp, ds1, ds2);
 }
+
 
 }}}  // namespace nvidia::inferenceserver::custom
