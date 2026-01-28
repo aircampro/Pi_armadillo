@@ -40,7 +40,7 @@ FaceWrapper::~FaceWrapper() {
 }
 
 int
-FaceWrapper::Initialize(float distance_threshold, std::string pth_mdl="/models/face_recognition_model/dlib_face_recognition_resnet_model_v1.dat", pth_sp="/models/face_recognition_model/shape_predictor_5_face_landmarks.dat", std::string ds1="/dataset/face/face.csv", std::string ds2="/dataset/face/image/" ) {
+FaceWrapper::Initialize(float distance_threshold, std::string pth_mdl="/models/face_recognition_model/dlib_face_recognition_resnet_model_v1.dat", std::string  pth_sp="/models/face_recognition_model/shape_predictor_5_face_landmarks.dat", std::string ds1="/dataset/face/face.csv", std::string ds2="/dataset/face/image/" ) {
   // set parameter
   face_detector = get_frontal_face_detector();
   this->distance_threshold = distance_threshold;
@@ -266,3 +266,4 @@ FaceWrapper::split_text(const std::string s, char delim)
 
 }  // namespace face_recognition_model
 }}}  // namespace nvidia::inferenceserver::custom
+
