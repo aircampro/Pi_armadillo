@@ -3,6 +3,8 @@
 # realsense depth from camera SDK to modbus tcp slave (server) values 
 # added if you pass arguments of ipaddr tag slot type etc.. to script it will also write to s AB Controllogix PLC
 #
+# usage <prog> optional: 0-4 (endianess) AB_IP_ADDR AB_TAG CPU_SLOT 0-1 (1==micro 800 series)
+#
 import sys
 import pyrealsense2 as rs
 import struct
@@ -15,27 +17,41 @@ from pymodbus.device import ModbusDeviceIdentification
 from pymodbus.transaction import ModbusRtuFramer
 from pymodbus.payload import BinaryPayloadBuilder
 import platform
-if len(sys.argv) > 1:                                                              # if you pass arguments to script then also write to allen bradley
+
+# class to choose endian mode
+class endian_mode:
+    little = 0
+    big = 1
+    network = 2
+    native = 3
+    native_ali = 4
+    no_of_modes = 5   
+e = endian_mode()  
+
+ENDIANESS = e.little                                                              # default little endian
+if len(sys.argv) > 1:                                                             # if you pass arguments to script then also write to allen bradley
+    if len(sys.argv) > 1:                                                         # arg 1
+        ENDIANESS=int(sys.argv[1]) % e.no_of_modes
     from pylogix import PLC
     # ref:- https://control.com/technical-articles/using-python-for-subsea-simulation-and-control/
     # set-up for allen bradley ip addr
-    if len(sys.argv) > 1:                                                         # arg 1
-        AB_IP=str(sys.argv[1])
+    if len(sys.argv) > 2:                                                         # arg 2
+        AB_IP=str(sys.argv[2])
     else:
         AB_IP='192.168.1.9'
     # tag to write
-    if len(sys.argv) > 2:                                                         # arg 2
-        TAG_N=str(sys.argv[2])
+    if len(sys.argv) > 3:                                                         # arg 3
+        TAG_N=str(sys.argv[3])
     else:
         TAG_N='ASSET[1].PARTCOUNT'
     # cpu slot
-    if len(sys.argv) > 3:                                                         # arg3
-        CPU_SLOT=str(sys.argv[3])
+    if len(sys.argv) > 4:                                                         # arg 4
+        CPU_SLOT=str(sys.argv[4])
     else:
         CPU_SLOT = 2
     # set True for Micro8xx PLC
-    if len(sys.argv) > 4:                                                         # arg4
-        CPU_SLOT=bool(sys.argv[4])
+    if len(sys.argv) > 5:                                                         # arg 5
+        CPU_SLOT=bool(sys.argv[5])
     else:
         MIC_800 = False
 
@@ -88,14 +104,23 @@ async def update_datablock(store: ModbusSlaveContext):
         # !	Network
         # =	Native
         # @	Native (with alignment
-        d_bytes = struct.pack('d', dist)                              # make 64bit int from double precision number
+        if ENDIANESS == e.little:
+            d_bytes = struct.pack('<d', dist)                         # make 64bit int from double precision number little end
+        elif ENDIANESS == e.big:
+            d_bytes = struct.pack('>d', dist)                         # make 64bit int from double precision number big end 
+        elif ENDIANESS == e.network:
+            d_bytes = struct.pack('!d', dist)                         # make 64bit int from double precision number big end 
+        elif ENDIANESS == e.native:
+            d_bytes = struct.pack('=d', dist)                         # make 64bit int from double precision number big end 
+        elif ENDIANESS == e.native_ali:
+            d_bytes = struct.pack('@d', dist)                         # make 64bit int from double precision number big end             
         w_bytes = struct.unpack('HHHH', d_bytes)
 
         for b in range(0, len(w_bytes)):                              # foreach byte
             store.setValues(4, b, w_bytes[b])                         # write distance to object to 4 modbus 16bit registers (double)               		
         store.setValues(4, len(w_bytes), int(dist*100.0))             # value as int multiplied by 100
         if len(sys.argv) > 1:                                         # we also request to send to AB PLC the distance
-            write_ab( dist )                                          # write the distance to the AB controllogix tag specified above
+            write_ab( dist )                                          # write the the AB controllogix tag specified above
             
 # run the modbus tcp server (slave)
 async def run_tcp():
@@ -159,4 +184,3 @@ if __name__ == "__main__":
     else:
         print(f"python version {pv} not able to run asyncio") 
     
-
