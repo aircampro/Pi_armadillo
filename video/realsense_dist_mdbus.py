@@ -95,7 +95,7 @@ async def update_datablock(store: ModbusSlaveContext):
             store.setValues(4, b, w_bytes[b])                         # write distance to object to 4 modbus 16bit registers (double)               		
         store.setValues(4, len(w_bytes), int(dist*100.0))             # value as int multiplied by 100
         if len(sys.argv) > 1:                                         # we also request to send to AB PLC the distance
-            write_ab( dist )                                          # write the the AB controllogix tag specified above
+            write_ab( dist )                                          # write the distance to the AB controllogix tag specified above
             
 # run the modbus tcp server (slave)
 async def run_tcp():
@@ -159,3 +159,4 @@ if __name__ == "__main__":
     else:
         print(f"python version {pv} not able to run asyncio") 
     
+
