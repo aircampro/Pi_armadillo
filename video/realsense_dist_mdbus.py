@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 #
-# relasense depth to modbus tcp slave (server) values 
+# realsense depth from camera SDK to modbus tcp slave (server) values 
+# added if you pass arguments of ipaddr tag slot type etc.. to script it will also write to s AB Controllogix PLC
 #
 import sys
 import pyrealsense2 as rs
@@ -14,13 +15,47 @@ from pymodbus.device import ModbusDeviceIdentification
 from pymodbus.transaction import ModbusRtuFramer
 from pymodbus.payload import BinaryPayloadBuilder
 import platform
+if len(sys.argv) > 1:                                                              # if you pass arguments to script then also write to allen bradley
+    from pylogix import PLC
+    # ref:- https://control.com/technical-articles/using-python-for-subsea-simulation-and-control/
+    # set-up for allen bradley ip addr
+    if len(sys.argv) > 1:                                                         # arg 1
+        AB_IP=str(sys.argv[1])
+    else:
+        AB_IP='192.168.1.9'
+    # tag to write
+    if len(sys.argv) > 2:                                                         # arg 2
+        TAG_N=str(sys.argv[2])
+    else:
+        TAG_N='ASSET[1].PARTCOUNT'
+    # cpu slot
+    if len(sys.argv) > 3:                                                         # arg3
+        CPU_SLOT=str(sys.argv[3])
+    else:
+        CPU_SLOT = 2
+    # set True for Micro8xx PLC
+    if len(sys.argv) > 4:                                                         # arg4
+        CPU_SLOT=bool(sys.argv[4])
+    else:
+        MIC_800 = False
+
+    def write_ab( dist ):
+        with PLC() as comm:
+            # NOTE: If your PLC is in a slot other than zero (like can be done with ControLogix), then you can specify the slot with the following:
+            if CPU_SLOT != 0:
+                comm.ProcessorSlot = CPU_SLOT
+            comm.Micro800 = MIC_800
+            comm.IPAddress = AB_IP
+            comm.write(TAG_N, dist)
+            ret = comm.Read(TAG_N)
+            print(ret.TagName, ret.Value, ret.Status)
 
 pipeline = rs.pipeline()                                       # Create a pipeline 
 pipeline.start()                                               # Start streaming the data
 do_it = 1
 NO_IR_INTS = 4                                                 # 1 double == 4 16 bit integers in modbus
 
-MY_TCP_SLAVE="localhost"
+MY_TCP_SLAVE="localhost"                                       # modbus tcp ip and port
 TCP_SLAVE_PORT=502
 
 # check the version of python we have for compatibility with asyncio
@@ -30,14 +65,12 @@ def chk_python_version():
     v = 0
     lp = len(p)
     m = 100
-    else:
-        print(f"unknown version of python {my_py} ?")
     for s in range(0, lp):
         v += (int(p[s])*m)
         m /= 10 
     return v
     
-# modbus tcp to HMI data transfer
+# modbus tcp data transfer
 async def update_datablock(store: ModbusSlaveContext):
     print('start of modbus tcp slave (server) interface')
     while do_it == 1:
@@ -60,7 +93,11 @@ async def update_datablock(store: ModbusSlaveContext):
 
         for b in range(0, len(w_bytes)):                              # foreach byte
             store.setValues(4, b, w_bytes[b])                         # write distance to object to 4 modbus 16bit registers (double)               		
-
+        store.setValues(4, len(w_bytes), int(dist*100.0))             # value as int multiplied by 100
+        if len(sys.argv) > 1:                                         # we also request to send to AB PLC the distance
+            write_ab( dist )                                          # write the the AB controllogix tag specified above
+            
+# run the modbus tcp server (slave)
 async def run_tcp():
     global do_it
     try:
@@ -68,6 +105,7 @@ async def run_tcp():
         builder = BinaryPayloadBuilder(byteorder=Endian.Big)           
         for i in range(0, NO_IR_INTS):                                # make a database for modbus with 4 IR integers 16 bit                               
             builder.add_16bit_int(i)
+        builder.add_16bit_int(NO_IR_INTS+1)                           # additional repeat of less accurate int*100 of dist
         block = ModbusSequentialDataBlock(1, builder.to_registers())
         store = ModbusSlaveContext( ir=block )
         context = ModbusServerContext(slaves=store, single=True)
