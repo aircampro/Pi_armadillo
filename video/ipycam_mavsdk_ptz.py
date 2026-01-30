@@ -973,14 +973,14 @@ if __name__ == "__main__":
     if len(p) == 1:
         v = float(p[0])
     elif len(p) == 2:
-        v = float(p[0])+float(p[1])/10
+        v = float(p[0])+(float(p[1])/10)
     elif len(p) == 3:
-        v = float(p[0])+float(p[1])/10+float(p[2])/100  
+        v = float(p[0])+(float(p[1])/10)+(float(p[2])/100)  
     else:
         print(f"unsupported python version {platform.python_version()}")
     if v < 3:
         print("use python 3 with asyncio")
-    elif v < 4:                                                                  # less than python version 3.10    
+    elif v < 3.7:                                                                  # less than python version 3.7    
         loop = asyncio.get_event_loop()
         loop.run_until_complete(main())
     else:

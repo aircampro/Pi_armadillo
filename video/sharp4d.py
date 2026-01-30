@@ -68,10 +68,10 @@ class SharpProcessor:
             video_path_str = str(video_path)
             
             if (video_path_str == "0"):                                                        # specified to use webcam
-			    for i, frame in enumerate(imageio.imiter("<video0>")):
+                for i, frame in enumerate(imageio.imiter("<video0>")):
                     frame_path = temp_dir / f"frame_{i:05d}.jpg"
                     imageio.imsave(frame_path, frame)
-					if _NO_OF_FRM < i:
+                    if _NO_OF_FRM < i:
                         break
             else:
                 # Force ffmpeg backend to ensure MP4 support
