@@ -35,6 +35,11 @@ thickness = 2
 
 if __name__ == "__main__":
 
+    if len(sys.argv) > 1:
+        fm_pos = float(sys.argv[1])
+    else:
+        fm_pos = 0.0
+
     # load library
     optris.load_DLL(LIB_path)
     # USB connection initialisation
@@ -44,14 +49,16 @@ if __name__ == "__main__":
     print('{} x {}'.format(w, h))
 
     # set up the camera 
-	if optris.set_shutter_mode(optris.ShutterMode.AUTO) == 0:
+    if optris.set_shutter_mode(optris.ShutterMode.AUTO) == 0:
         if optris.set_palette.(optris.ColouringPalette.IRON_HI) == 0:
             if optris.set_palette_scale(optris.PaletteScalingMethod.SIGMA3) == 0:
-			    if optris.set_temperature_range(TMIN, TMAX) == 0:
+                if optris.set_temperature_range(TMIN, TMAX) == 0:
                     emissivity, transmissivity, ambientTemperature = 0.9, 0.5, 20.0
                     if optris.set_radiation_parameters(emissivity, transmissivity, ambientTemperature) == 0:
                         print("optris camera set-up correctly")
-	
+                        if optris.set_focus_motor_position(fm_pos) == 0:
+                            print(f"focus motor position set to {fm_pos}")	
+
     # Get the thermal frame as (numpy array)
     thermal_frame = optris.get_thermal_image(w, h)
     # Conversion to temperature values are to be performed as follows:
@@ -81,4 +88,3 @@ if __name__ == "__main__":
                 print("error setting focus")
     optris.terminate()
     cv2.destroyAllWindows()
-
