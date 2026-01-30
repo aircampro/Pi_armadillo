@@ -32,7 +32,7 @@ camera = Camera()
 camera.start_preview(False)
 
 def getImgAndTimestamp():
-	# represent the frame as a numpy array
+    # represent the frame as a numpy array
     frame = camera.getFrame()
     img = cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)       
 	cvMat = np.asanyarray(img)
@@ -64,25 +64,25 @@ class EtherSenseServer(asyncore.dispatcher):
         return True
 
     def update_frame(self):
-	    img, timestamp = getImgAndTimestamp()
+        img, timestamp = getImgAndTimestamp()
         if img is not None:
-	        # convert the image to a string for broadcast
+            # convert the image to a string for broadcast
             data = pickle.dumps(img)
-	        # capture the lenght of the data portion of the message	
+            # capture the lenght of the data portion of the message	
             length = struct.pack('<I', len(data))
-	        # include the current timestamp for the frame
+            # include the current timestamp for the frame
             ts = struct.pack('<d', timestamp)
-	        # for the message for transmission
+            # for the message for transmission
             self.frame_data = ''.join([length, ts, data])
 
     def handle_write(self):
-	    # first time the handle_write is called
+        # first time the handle_write is called
         if not hasattr(self, 'frame_data'):
             self.update_frame()
         if len(self.frame_data) == 0:
             self.update_frame()
         else:
-	        # send the remainder of the frame_data until there is no data remaining for transmition
+            # send the remainder of the frame_data until there is no data remaining for transmition
             remaining_size = self.send(self.frame_data)
             self.frame_data = self.frame_data[remaining_size:]
 
@@ -100,7 +100,7 @@ class MulticastServer(asyncore.dispatcher):
     def handle_read(self):
         data, addr = self.socket.recvfrom(42)
         print('Recived Multicast message %s bytes from %s' % (data, addr))
-	    # Once the server recives the multicast signal, open the frame server
+        # Once the server recives the multicast signal, open the frame server
         focus = data.split("::")[1]                                                             # set focus
         arducam_vcm.vcm_write(int(focus))
         EtherSenseServer(addr)
@@ -130,4 +130,3 @@ if __name__ == '__main__':
     arducam_vcm.vcm_init()
     arducam_vcm.vcm_write(args.focus)
     main()
-
