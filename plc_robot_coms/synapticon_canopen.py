@@ -64,7 +64,7 @@ class Synapticon:
 		return self.node.sdo[0x2403].raw
     def get_ani4(self):
 		return self.node.sdo[0x2404].raw
-		
+	
     # https://doc-legacy.synapticon.com/software/41/documentation_html/object_htmls/6073/index.html	
 	def set_current(self, torque:float=100):
         current = int(self.max_current * torque / 100)
@@ -111,7 +111,7 @@ class Synapticon:
         self.node.sdo[0x6040].raw = b
     def fault_reset(self):                                
         self.node.sdo[0x6040].raw |= b10000000
-		
+	
 	def set_following_error(self, error:float|None=None):
 		if error is None:
 			error = 0.1 * self.rev_units
