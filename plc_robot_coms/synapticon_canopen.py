@@ -110,7 +110,7 @@ class Synapticon:
     def shutdown_drive(self, b=0b110):                                  # default shutdown
         self.node.sdo[0x6040].raw = b
     def fault_reset(self):                                
-        self.node.sdo[0x6040].raw |= b10000000
+        self.node.sdo[0x6040].raw |= 0b10000000
 	
 	def set_following_error(self, error:float|None=None):
 		if error is None:
