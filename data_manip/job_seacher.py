@@ -42,7 +42,7 @@ def fetch_jobs(loc=None, skil=None, site=None):
             print(f"Searching for {term} in {location}...")
             try:
                 jobs = scrape_jobs(
-                    site_name = ["indeed", "linkedin", "glassdoor", "google", "zip_recruiter", "jonserve", "ni-jobs"],
+                    site_name = site_nm,
                     search_term=term,
                     location=location,
                     results_wanted=20,
@@ -117,4 +117,5 @@ def main():
     print(f"Successfully generated {OUTPUT_FILE}")
 
 if __name__ == "__main__":
+
     main()
