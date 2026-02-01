@@ -70,7 +70,7 @@ class Wachendorf:
 
     def set_freq_lim(self, res:int):
 		return self.node.sdo[0x2107].raw = res
-        
+      
     def set_meas_range(self, res:int):
 		return self.node.sdo[0x6002].raw = res
 
