@@ -1,18 +1,19 @@
 # 
 # driver for syanpticon (SOMANET Drive) ref:- https://doc-legacy.synapticon.com/software/41/object_dict/all_objects/index.html
+# https://doc.synapticon.com/circulo/sw5.1/object_dict/all_objects.html
+#
 #
 import canopen
 
 class Synapticon:
 
-	def __init__(self, slave:int, name:str, rev_units:float=360, conn_method=0):
-		super().__init__(slave)
+	def __init__(self, slave:int=6, name:str, rev_units:float=360, conn_method=0):
 		self.name = name
 		self.rev_units = rev_units
 		self.pos_factor = 4096 / rev_units
 		self.pos_offset = conf.getfloat(name, 'offset', fallback=0.0)
         self.network = canopen.Network()
-        self.node = canopen.RemoteNode(6, '/path/to/object_dictionary.eds')
+        self.node = canopen.RemoteNode(slave, '/path/to/object_dictionary.eds')
         self.network.add_node(node)
         # (see https://python-can.readthedocs.io/en/latest/bus.html).
         if conn_method == 0:
@@ -29,6 +30,7 @@ class Synapticon:
             self.network.connect(interface='vector', app_name='CANalyzer', channel=0, bitrate=250000)
         elif conn_method == 6:
             self.network.connect(interface='nican', channel='CAN0', bitrate=250000)
+        self.node.nmt.state = 'OPERATIONAL'
 
     # https://doc-legacy.synapticon.com/software/41/documentation_html/object_htmls/6075/index.html
 	def initialize(self):
@@ -55,6 +57,17 @@ class Synapticon:
     def get_velocity(self):
 		return self.node.sdo[0x606C].raw 
 
+    # Bit 0: Shows Negative Limit Switch Status (1 = Active, 0 = Inactive )
+    # Bit 1: Shows Positive Limit Switch Status (1 = Active, 0 = Inactive )
+    # Bit 2: Shows Home Switch Status (1 = Active, 0 = Inactive )
+    # Bit 3: Shows Interlock Status (1 = Drive cannot be enabled, 0 = Drive can be enabled)
+    # Bit 4 to 15: Reserved
+    # The manufacturer-specific bits (16 to 31) show the state of the Drive's digital inputs.
+    # Bit 16: Digital input 1
+    # Bit 17: Digital input 2
+    def get_di(self):
+		return self.node.sdo[0x60FD].raw 
+       
     # https://doc-legacy.synapticon.com/software/41/documentation_html/object_htmls/2401/index.html
     def get_ani1(self):
 		return self.node.sdo[0x2401].raw 
