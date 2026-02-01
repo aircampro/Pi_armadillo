@@ -3,6 +3,7 @@
 # https://doc.synapticon.com/circulo/sw5.1/object_dict/all_objects.html
 #
 #
+from typing import Literal
 import canopen
 import struct
 
@@ -233,6 +234,7 @@ class Synapticon:
             raw_pos = self.node.sdo[0x2113.1].raw
             adj_pos = self.node.sdo[0x2113.2].raw
             velo = self.node.sdo[0x2113.3].raw
+        return raw_pos, adj_pos, velo
 
     def send_protection(self, a:int, b:int, c:int):
         self.node.sdo[0x2006.1].raw = a
@@ -396,4 +398,5 @@ class Synapticon:
         self.node.sdo[0x2011.3].raw = struct.pack('f',d)
         self.node.sdo[0x2011.4].raw = a
         self.node.sdo[0x2011.5].raw = b
+
 
