@@ -78,7 +78,7 @@ class Wachendorf:
 		return self.node.sdo[0x6003].raw = res
 
     def eeprom_save(self, md:int=self.emode.all):
-		return self.node.sdo[0x1010.md].raw = 1
+		return self.node.sdo[0x1010.md].raw = 0x65766173
 
     def eeprom_recall(self, md:int=self.emode.all):
-		return self.node.sdo[0x1011.md].raw = 1
+		return self.node.sdo[0x1011.md].raw = 0x65766173
