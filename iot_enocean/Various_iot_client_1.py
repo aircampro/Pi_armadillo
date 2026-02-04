@@ -1228,9 +1228,13 @@ def Enocean2Telemetry(s_port, telem_opt):
         influx_json(field,ts)  
 
     # REDIS
+    redis_opt = "zadd"
     def put_data_redis(desc1,v1,desc2,v2):
         ts = datetime.datetime.now(pytz.timezone(MY_TZ)).timestamp()
-        redis_client.hmset('enOcean Temperatures', { desc1 : v1, desc2 : v2, 'time' :  ts }) 
+        if redis_opt == "hmset":
+            redis_client.hmset('enOcean Temperatures', { desc1 : v1, desc2 : v2, 'time' :  ts }) 
+        elif redis_opt == "zadd":
+            redis_client.zadd('enOcean Temperatures', { desc1 : v1, desc2 : v2, 'time' :  ts })
 
     def get_data_redis(hashkey='enOcean Temperatures'):
         return redis_client.hgetall(hashkey) 
