@@ -29,7 +29,7 @@ if print_opt == True:                                                           
 else: 
     blur = 11 
     if len(args) > 4:                                                                                        # read distance from markers and aspect ratio from command line
-        x_dis, y_dis = (int(args[2]),int(args[3]))                                                           # AR marker actual size 150mm apart in a square
+        x_dis, y_dis = (int(args[2]),int(args[3]))                                                           # AR marker actual size arg2&3 apart in a square
         size= int(args[4])                                                                                   # Display image size = actual size × size between AR markers aspect ratio
     else:
         x_dis, y_dis = (150,150)                                                                             # AR marker actual size 150mm apart in a square
@@ -60,7 +60,7 @@ else:
                 continue
             w = cap.get(cv2.CAP_PROP_FRAME_WIDTH)                                                           # get width and height from camera
             h = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
-            if w != width and h != height:
+            if w != width or h != height:
                 if rs == "imutil":
                     img = imutils.resize(img, width=width, height=height)                                       # try resize of image
                 else:
@@ -178,3 +178,4 @@ else:
 
     cap.release()
     cv2.destroyAllWindows()
+
