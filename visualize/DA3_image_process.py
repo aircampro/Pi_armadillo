@@ -107,5 +107,7 @@ def main():
             export_format="glb",
             use_ray_pose=True,                                 # Enable ray-based pose estimation
         )
+if __name__ == '__main__':
+    main()
 
 
