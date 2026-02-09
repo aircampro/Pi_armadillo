@@ -48,7 +48,7 @@ class ZohoUser(object):
 
         # Get instance of Profile Class
         profile = Profile()
-        uniq = datetime.now().strftime('%Y%m%d%H%M%S')                                   # create a uniquw id for the user profile
+        uniq = int(datetime.now().strftime('%Y%m%d%H%M%S'))                                   # create a uniquw id for the user profile
         #profile.set_id(3409643000000395047)
         profile.set_id(uniq)
         # Set profile instance to profile in User instance
