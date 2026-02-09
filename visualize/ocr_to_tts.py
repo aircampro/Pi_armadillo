@@ -13,22 +13,6 @@ from PIL import Image
 import cv2
 import pyttsx3
 
-    engine = pyttsx3.init()
-    # Get the available voices
-    voices = engine.getProperty('voices')
-    # Set the desired voice (index 0 represents the first voice in the list)
-    print(voices)
-    engine.setProperty('voice', voices[1].id)
-    # Set the speech rate (words per minute)
-    engine.setProperty('rate', 150)
-    # Set the volume (0.0 to 1.0)
-    engine.setProperty('volume', 0.7)
-
-text = "This is an example of customizing the speech using pyttsx3."
-
-engine.say(text)
-engine.runAndWait()
-
 # define compression level on output results
 C_LVL=9
 def main():
@@ -51,7 +35,8 @@ def main():
     voices = engine.getProperty('voices')
     # Set the desired voice (index 0 represents the first voice in the list)
     print(voices)
-    engine.setProperty('voice', voices[1].id)
+    idx=int(input("select voice number - index 0 represents the first voice in the list"))
+    engine.setProperty('voice', voices[idx].id)
     # Set the speech rate (words per minute)
     engine.setProperty('rate', 150)
     # Set the volume (0.0 to 1.0)
