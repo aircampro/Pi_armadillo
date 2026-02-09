@@ -15,10 +15,9 @@ import pyttsx3
 
 # define compression level on output results
 C_LVL=9                                                     # compression level on output png
-def main():
+def main(args):
     lang='eng'                                              # default use english
     pre_prop_param = 0
-    args = sys.argv
     if len(args) > 1:                                       # 1st arg is file name to look for text in
         img_file_name = str(args[1])
     else:
@@ -91,4 +90,5 @@ def main():
         cv2.imwrite('ocr_output.png', draw_img, [cv2.IMWRITE_PNG_COMPRESSION, C_LVL])
 
 if __name__ == "__main__":
-    main()
+    args = sys.argv
+    main(args)
