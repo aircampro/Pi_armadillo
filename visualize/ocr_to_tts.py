@@ -2,7 +2,7 @@
 #
 # Example of performing OCR using PyTessBaseAPI 
 #
-# usage sys.argv[0] <file to process> <language> <optional arg to only show ROI>
+# usage sys.argv[0] <file to process> <language> <optional arg to only show ROI> <option amount of blur on the grayscale image converted>
 #
 import sys
 import locale
@@ -14,9 +14,10 @@ import cv2
 import pyttsx3
 
 # define compression level on output results
-C_LVL=9
+C_LVL=9                                                     # compression level on output png
 def main():
     lang='eng'                                              # default use english
+    pre_prop_param = 0
     args = sys.argv
     if len(args) > 1:                                       # 1st arg is file name to look for text in
         img_file_name = str(args[1])
@@ -28,6 +29,8 @@ def main():
         show_roi = True
     else:
         show_roi = False
+    if len(args) > 4:                                       # amount of median blur for pre-process
+        pre_prop_param = int(args[4])
     roi_file = "roi.png"
     # text to speach engine
     engine = pyttsx3.init()
@@ -48,7 +51,11 @@ def main():
         y1 = ROI[1]
         x2 = ROI[2]
         y2 = ROI[3]   
-        img_crop = draw_img[int(y1):int(y1+y2),int(x1):int(x1+x2)]    
+        img_crop = draw_img[int(y1):int(y1+y2),int(x1):int(x1+x2)] 
+        if pre_prop_param != 0:                                                                # option to perform a pre-process on the roi image first
+            img_crop = cv2.cvtColor(img_crop, cv2.COLOR_BGR2GRAY)   
+            img_ctop = cv2.medianBlur(img_crop, pre_prop_param)
+            img_crop = cv2.threshold(img_crop, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[0]
         cv2.imwrite(roi_file, img_crop)
         image = Image.open(roi_file)                                                           # use the roi instead of the whole file
         draw_img = img_crop    
