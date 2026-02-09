@@ -252,7 +252,7 @@ class ZohoUser(object):
                         if fn == fir and ln == last:                                # requested user has been found then return the id
                             return id
                     return -1
-                    
+      
                 # Check if the request returned an exception
                 elif isinstance(response_object, APIException):
                     # Get the Status
@@ -273,7 +273,7 @@ class ZohoUser(object):
                 return -1
         else:
             return -1
-            
+    
 REC_LEN=2000                                                                                                    # recirding length 2 second
 
 def convert_to_wav(audio, tmpFileName):
@@ -351,15 +351,18 @@ def answer(call):
                     state = 0                    
                 buffer = []
                 buff_length = 0
+
         if action == 1 and not first == None and not second == None:
+            print(f"creating {first} {second}")
             z.create_user(first, second)
         elif action == 2 and not first == None and not second == None:
+            print(f"deleting {first} {second}")
             id = z.get_user_id(first, second)
             if id != -1:
                  z.delete_user(id)
             else:
                  print("unable to find that user requested")
-                 
+             
     except Exception as e:
         print(e)
     finally:
