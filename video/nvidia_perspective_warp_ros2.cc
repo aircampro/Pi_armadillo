@@ -262,12 +262,13 @@ void ImagePublisher::cleanup()
 	cap.release();
 	invid.release();
 	std::cout << "Video capture released." << std::endl;
+	/* ctx should do all these uncomment if not
     vpiStreamDestroy(stream);
     vpiImageDestroy(imgVid);
     vpiImageDestroy(imgDisp);
     vpiImageDestroy(imgTemp);
     vpiImageDestroy(imgOutput);
-    vpiImageDestroy(imgInput);
+    vpiImageDestroy(imgInput); */
 }
 
 void ImagePublisher::publishImagePoll()
