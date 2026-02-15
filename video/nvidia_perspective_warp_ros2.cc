@@ -181,6 +181,7 @@ private:
   VPIImage imgDisp = nullptr;
   cv::Ptr<cv::aruco::DetectorParameters> detectorParams;
   cv::Ptr<cv::aruco::Dictionary> dictionary;
+  VPIStream stream;
 };
 
 ImagePublisher::ImagePublisher(rclcpp::NodeOptions options) : Node("image_publisher", options)
@@ -211,7 +212,6 @@ ImagePublisher::ImagePublisher(rclcpp::NodeOptions options) : Node("image_publis
 		CHECK_STATUS(vpiContextSetCurrent(ctx));
 
 		/* Create the stream for the given backend */
-		VPIStream stream;
 		CHECK_STATUS(vpiStreamCreate(VPI_BACKEND_CUDA, &stream));
 		CHECK_STATUS(vpiImageCreate(cap_wt, cap_ht,	VPI_IMAGE_FORMAT_NV12_ER, 0, &imgInput)	);
 		CHECK_STATUS(vpiImageCreate(cap_wt, cap_ht, VPI_IMAGE_FORMAT_NV12_ER, 0, &imgOutput	));
@@ -262,6 +262,12 @@ void ImagePublisher::cleanup()
 	cap.release();
 	invid.release();
 	std::cout << "Video capture released." << std::endl;
+    vpiStreamDestroy(stream);
+    vpiImageDestroy(imgVid);
+    vpiImageDestroy(imgDisp);
+    vpiImageDestroy(imgTemp);
+    vpiImageDestroy(imgOutput);
+    vpiImageDestroy(imgInput);
 }
 
 void ImagePublisher::publishImagePoll()
