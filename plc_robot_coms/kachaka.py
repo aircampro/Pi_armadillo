@@ -114,7 +114,8 @@ def main() -> None:
         except KeyboardInterrupt:
             g_RUN = False       
     # join thread
-    time.sleep(6)
+    stop_timeout = 60
+    time.sleep(stop_timeout)
     if mv_thread.is_alive(): mv_thread.raise_exception()
     mv_thread.join()
 if __name__ == "__main__":
