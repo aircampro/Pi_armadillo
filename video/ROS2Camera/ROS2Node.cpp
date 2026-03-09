@@ -18,7 +18,7 @@ public:
 		opt = static_cast<int>(parser.get<cv::int>("opt"));
 		fr_time = static_cast<int>(parser.get<cv::int>("frame_time"));
         try { 
-                int port_no = stoi(src_path);  
+                int port_no = std::stoi(src_path);  
                 if (!camera.open(port_no, capture_width, capture_height, capture_fps))
                 {
                     throw std::runtime_error("Can't open capture device.");
@@ -63,4 +63,5 @@ int main(int argc, char** argv)
     rclcpp::spin(std::make_shared<CamCvNode>());
     rclcpp::shutdown();
     return 0;
+
 }
