@@ -88,6 +88,58 @@ cv::Mat draw_dot(const cv::Mat image, const cv::Point center, const float radius
     return drawed_image;
 }
 
+cv::Mat adjust_brightness(const cv::Mat& image, const float brightness_bias) {
+    cv::Mat colored_image = convert_colorimage(image);
+    cv::Mat brightness_adjusted_image = colored_image + cv::Scalar(brightness_bias, brightness_bias, brightness_bias);
+    return brightness_adjusted_image;
+}
+
+cv::Mat extract_by_color(const cv::Mat& image, const int extract_value[6], const int cv_color_code) {
+    cv::Mat object_img = convert_colorimage(image);
+    cv::Mat extracted_image;
+    cv::Mat colored_image;
+
+    cv::Mat lut = cv::Mat(256, 1, CV_8UC3);
+    int lower[3] = {extract_value[0], extract_value[2], extract_value[4]};
+    int upper[3] = {extract_value[1], extract_value[3], extract_value[5]};
+
+    cv::cvtColor(object_img, colored_image, cv_color_code);
+
+    for (int i = 0; i < 256; i++) {
+        for (int k = 0; k < 3; k++) {
+            if (lower[k] <= upper[k]) {
+                if ((lower[k] <= i) && (i <= upper[k])) {
+                    lut.data[i * lut.step + k] = 255;
+                } else {
+                    lut.data[i * lut.step + k] = 0;
+                }
+            } else {
+                if ((i <= upper[k]) || (lower[k] <= i)) {
+                    lut.data[i * lut.step + k] = 255;
+                } else {
+                    lut.data[i * lut.step + k] = 0;
+                }
+            }
+        }
+    }
+
+    cv::LUT(colored_image, lut, colored_image);
+    std::vector<cv::Mat> planes;
+    cv::split(colored_image, planes);
+
+    cv::Mat mask_image;
+    cv::bitwise_and(planes[0], planes[1], mask_image);
+    cv::bitwise_and(mask_image, planes[2], mask_image);
+
+    object_img.copyTo(extracted_image, mask_image);
+    return extracted_image;
+}
+
+cv::Mat adjust_contrast(const cv::Mat& image, const float contrast_gain) {
+    cv::Mat contrast_adjusted_image = contrast_gain * image;
+    return contrast_adjusted_image;
+}
+
 //
 // Camera Class
 //
@@ -237,7 +289,32 @@ public:
             const cv::Point2f moment_point = get_moment_point(cam_frame);
             const cv::Mat drawed_image = draw_dot(cam_frame, moment_point, 20, cv::Scalar(0, 0, 255));
             drawed_image >> cv_img.image;
-			break;			
+			break;	
+            case 13:
+            const float brightness_bias = -25.f;
+            const cv::Mat adjusted_image = adjust_brightness(cam_frame, brightness_bias);
+            adjusted_image >> cv_img.image;
+            break;	
+            case 14:
+            const float brightness_bias = 25.f;
+            const cv::Mat adjusted_image = adjust_brightness(cam_frame, brightness_bias);
+            adjusted_image >> cv_img.image;
+            break;
+			case 15:
+            const int extract_value[6] = {40, 100, 0, 255, 0, 180};
+            const cv::Mat color_extracted_image = extract_by_color(cam_frame, extract_value, cv::COLOR_BGR2HSV);
+            color_extracted_image >> cv_img.image;
+            break;	
+            case 16:
+            const float contrast_gain = 1.8f;
+            const cv::Mat adjusted_image = adjust_contrast(cam_frame, contrast_gain);	
+            adjusted_image >> cv_img.image;
+            break;
+            case 17:
+            const float contrast_gain = 0.2f;
+            const cv::Mat adjusted_image = adjust_contrast(cam_frame, contrast_gain);	
+            adjusted_image >> cv_img.image;
+            break;			
 			default:
             cam_frame >> cv_img.image;
 			break;
