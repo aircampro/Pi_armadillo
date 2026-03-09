@@ -52,6 +52,42 @@ cv::Mat morphology(const cv::Mat& image, const int morphology_mode, const int nu
     return result_image;
 }
 
+cv::Mat convert_grayscale(const cv::Mat& image) {
+    const int grayscale_channel_num = 1;
+    if (image.channels() == grayscale_channel_num) {
+        return image.clone();
+    }
+    cv::Mat gray_image;
+    cvtColor(image, gray_image, cv::COLOR_BGR2GRAY);
+    return gray_image;
+}
+
+cv::Mat convert_colorimage(const cv::Mat& image) {
+    const int colorimage_channel_num = 3;
+    if (image.channels() == colorimage_channel_num) {
+        return image.clone();
+    }
+    cv::Mat color_image;
+    cvtColor(image, color_image, cv::COLOR_GRAY2BGR);
+    return color_image;
+}
+
+cv::Point2f get_moment_point(const cv::Mat& image) {
+    cv::Mat image_gray = convert_grayscale(image);
+    const cv::Moments image_moment = cv::moments(image_gray, false);
+    const cv::Point2f moment_center = cv::Point2f(
+            static_cast<float>(image_moment.m10 / image_moment.m00),
+            static_cast<float>(image_moment.m01 / image_moment.m00));
+    return moment_center;
+}
+
+cv::Mat draw_dot(const cv::Mat image, const cv::Point center, const float radius, const cv::Scalar color) {
+    cv::Mat drawed_image = convert_colorimage(image);
+    const int thickness = -1;
+    cv::circle(drawed_image, center, static_cast<int>(radius), color, thickness, CV_MSA);
+    return drawed_image;
+}
+
 //
 // Camera Class
 //
@@ -196,6 +232,11 @@ public:
 			const int times = 10;
             const cv::Mat morphology_image = morphology(cam_frame, cv::MORPH_BLACKHAT, times);
             morphology_image >> cv_img.image;
+			break;	
+            case 12:
+            const cv::Point2f moment_point = get_moment_point(cam_frame);
+            const cv::Mat drawed_image = draw_dot(cam_frame, moment_point, 20, cv::Scalar(0, 0, 255));
+            drawed_image >> cv_img.image;
 			break;			
 			default:
             cam_frame >> cv_img.image;
