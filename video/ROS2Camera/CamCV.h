@@ -35,7 +35,7 @@ cv::Mat set_reference_text(const cv::Mat& image, double message) {
     int bar_color = 255;
     int font_thickness = 1;
     int bar_height = 60;
-    std::string message1{std::format(" {}", message)};
+    std::string message1{std::format("frame time {}", message)};
 	
     cv::Mat message_bar = cv::Mat::ones(bar_height, image.cols, CV_8UC1) * bar_color;
     cv::Size text_size = cv::getTextSize(message1, font_style, font_scale, font_thickness, 0);
