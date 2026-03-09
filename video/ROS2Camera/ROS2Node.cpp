@@ -63,5 +63,4 @@ int main(int argc, char** argv)
     rclcpp::spin(std::make_shared<CamCvNode>());
     rclcpp::shutdown();
     return 0;
-
 }
