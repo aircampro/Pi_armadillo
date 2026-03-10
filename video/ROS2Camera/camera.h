@@ -1,4 +1,5 @@
 //#pragma once
+//#pragma once
 #ifndef __CameraROS
 #define __CameraROS
 
@@ -217,7 +218,6 @@ public:
   // Ovrvision Pro 
   virtual void decreaseGain() {};
 
-  void 
   // transmit the grabbed frame to ROS2
   void transmit(time ts, int option)
   {
