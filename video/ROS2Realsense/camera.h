@@ -1,4 +1,5 @@
 //#pragma once
+//#pragma once
 #ifndef __CameraRSROS
 #define __CameraRSROS
 
@@ -157,7 +158,7 @@ protected:
   bool run;
   unsigned int seqc = 0;
   rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr image_pub_;
-  virtual void capture() {};
+  virtual void capture(float depth_near_value, float depth_far_value) {};
 
 public:
 
@@ -307,5 +308,6 @@ public:
   }
 };
 #endif
+
 
 
