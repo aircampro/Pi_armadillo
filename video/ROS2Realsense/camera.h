@@ -141,7 +141,7 @@ cv::Mat adjust_contrast(const cv::Mat& image, const float contrast_gain) {
 }
 
 //
-// Camera Class
+// Realsense Camera Class
 //
 class Camera
 {
@@ -307,3 +307,5 @@ public:
   }
 };
 #endif
+
+
