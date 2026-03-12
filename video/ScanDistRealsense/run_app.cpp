@@ -15,7 +15,7 @@ void signalHandler(int sig)
 int main(int argc, const char* argv[])
 {
 
-  CamCv camera;
+  CamRsScan camera;
   cv::String keys = "{no_rpt_frames||}""{fps||}";
   cv::CommandLineParser parser(argc, argv, keys);
   int no_of_rpt_frms = static_cast<int>(parser.get<cv::int>("width"));
