@@ -22,7 +22,7 @@ cv::Mat crop_depth_image_by_depth_value(const cv::Mat& depth_image, const float 
 }
 
 // Realsense camera  
-class CamRs
+class CamRsScan
   : public Camera
 {
   crewbo::camera::RealSense camera;
@@ -98,9 +98,9 @@ class CamRs
 
 public:
 
-  CamRs() {}
+  CamRsScan() {}
 
-  virtual ~CamRs()
+  virtual ~CamRsScan()
   {
     stop();
   }
