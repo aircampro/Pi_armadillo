@@ -49,4 +49,6 @@ int main(int argc, const char* argv[])
   {
     camera.transmit();
   }
+  return 0;
 }
+
