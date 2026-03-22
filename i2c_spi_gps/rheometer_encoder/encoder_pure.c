@@ -29,7 +29,8 @@
     ferr("opt_setup", "failed to set up interrupt for pin %d", opt_pins[0]);
 
 // globals required for optenc operation
-static const uint8_t opt_pins[OPTENC_COUNT] = {20, 21, 22, 23, 24};
+//static const uint8_t opt_pins[OPTENC_COUNT] = {20, 21, 22, 23, 24}; includes ground pin (which would count every time)
+static const uint8_t opt_pins[OPTENC_COUNT] = {21, 22, 23, 24};
 static struct run_data *ord = NULL;
 
 #define EDIFF 3                                      // this many pulses sees and error between the encoders 
@@ -114,7 +115,7 @@ double measure_speed()
     }
 
     double dtripc = ((double)count) / (((double)OPTENC_COUNT) - wire_errors);               // average over the OPTENC_COUNT number of encoders 
-    last_speed = dtripc / dt;                                                               // returns speed in hz (rev. per second)
+    last_speed = dtripc / (2.0f * dt);                                                      // returns speed in hz (rev. per second) counts rising and falling edge
 
   if (wire_errors > 0.0f) {
       printf("error with encoder wire connections\n");
