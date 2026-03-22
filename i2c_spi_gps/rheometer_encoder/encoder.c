@@ -1,6 +1,5 @@
 /*
     ref :- https://github.com/cbosoft/rheometer/tree/master/src/sensors/encoder
-	modified to have 4 encoders attached (counts ground as well so there are 5 pulse counters)
 	modified so any encoders reading low are removed (lost wire)
 	you could also look at rate of change of each encoder and elimate noisy signals
 */
@@ -29,7 +28,8 @@
     ferr("opt_setup", "failed to set up interrupt for pin %d", opt_pins[0]);
 
 // globals required for optenc operation
-static const uint8_t opt_pins[OPTENC_COUNT] = {20, 21, 22, 23, 24};
+//static const uint8_t opt_pins[OPTENC_COUNT] = {20, 21, 22, 23, 24};
+static const uint8_t opt_pins[OPTENC_COUNT] = {20, 21};
 static struct run_data *ord = NULL;
 
 #define EDIFF 3                                      // this many pulses sees and error between the encoders 
@@ -70,9 +70,9 @@ void opt_setup(struct run_data *rd)
   }
   OPT_SETUP(0);                                             /* set interrupt to counter encoder on channel GND */
   OPT_SETUP(1);                                             /* set interrupt to counter encoder on channel 1 */
-  OPT_SETUP(2);                                             /* set interrupt to counter encoder on channel 2 */
-  OPT_SETUP(3);                                             /* set interrupt to counter encoder on channel 3 */
-  OPT_SETUP(4);                                             /* set interrupt to counter encoder on channel 4 */
+  //OPT_SETUP(2);                                             /* set interrupt to counter encoder on channel 2 */
+  //OPT_SETUP(3);                                             /* set interrupt to counter encoder on channel 3 */
+  //OPT_SETUP(4);                                             /* set interrupt to counter encoder on channel 4 */
   gettimeofday(&last_convert, NULL);
   sleep(1);
 
@@ -137,7 +137,7 @@ double measure_speed()
     }
 
     double dtripc = ((double)count) / (((double)OPTENC_COUNT) - wire_errors);               // average over the OPTENC_COUNT number of encoders 
-    last_speed = dtripc / (12.0 * dt);                                                     // returns speed in hz (rev. per second)
+    last_speed = dtripc / (12.0 * dt);                                                      // returns speed in hz (rev. per second)
   }
   if (wire_errors > 0.0f) {
       printf("error with encoder wire connections\n");
