@@ -166,17 +166,17 @@ int main(int argc, char * argv[]) try
 
         // get color frame and write out to the video file
         // pc.map_to(color);
-        cv::Mat colorf(cv::Size(1920, 1080), CV_8UC3, (void*)color.get_data(), cv::Mat::AUTO_STEP);
+        cv::Mat colorf(cv::Size(width, height), CV_8UC3, (void*)color.get_data(), cv::Mat::AUTO_STEP);
         Videowriter << colorf;
 
         // get depth frame and write out to the video file
         rs2::colorizer color_map;
         auto depth_frame = color_map(aligned_frames.get_depth_frame());
-        cv::Mat depthf(cv::Size(1280, 720), CV_8UC3, (void*)depth_frame.get_data(), cv::Mat::AUTO_STEP);
+        cv::Mat depthf(cv::Size(width2, height2), CV_8UC3, (void*)depth_frame.get_data(), cv::Mat::AUTO_STEP);
         Videowriter2 << depthf;
 
         // re-size colot frame and combine with depth show and spool to file
-        cv::Mat colorf(cv::Size(1920, 1080), CV_8UC3, (void*)color.get_data(), cv::Mat::AUTO_STEP);
+        cv::Mat colorf(cv::Size(width2, height2), CV_8UC3, (void*)color.get_data(), cv::Mat::AUTO_STEP);
         cv::Mat disp(colorf.rows + depthf.rows, std::max(colorf.cols, depthf.cols), CV_8UC3);
         colorf.copyTo(cv::Mat(disp, cv::Rect(0, 0, colorf.cols, colorf.rows)));
         depthf.copyTo(cv::Mat(disp, cv::Rect(0, colorf.rows, depthf.cols, depthf.rows)));
