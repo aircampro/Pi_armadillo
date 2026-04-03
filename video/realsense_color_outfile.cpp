@@ -128,8 +128,8 @@ int main(int argc, char * argv[]) try
 
     int    fourcc3, width3, height3;
     double fps3;
-    width3 = 1280;	
-    height3 = 720;	
+    width3 = 832;	
+    height3 = 468;	
     fps3 = 30.0;					
     fourcc3 = cv::VideoWriter::fourcc('m', 'p', '4', 'v');	
     VideoWriter Videowriter3("rs_combined.mp4", fourcc3, fps3 * 2, cv::Size(width3, height3), true);
