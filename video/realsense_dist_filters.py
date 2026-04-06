@@ -17,7 +17,7 @@ class Kalman():
         self.P_k_minus_1 = 0.0  # a posteri error estimate
         self.R = measvar  # estimate of measurement variance, change to see effect
         self.DEBUG = db
-       
+
     def guess(self, input):
 
         if self.ctr == 0:
@@ -37,7 +37,7 @@ class Kalman():
             # error variance and kalman gain should become stable soon
             if self.DEBUG: print("Kalman:","Input",input,"Estimate",int(estimate), "ErrorVar {:.2}".format(self.P_k_minus_1), "KalmanGain {:.2}".format(self.K))
             return estimate
-            
+ 
 pipeline = rs.pipeline()
 config = rs.config()
 config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)
