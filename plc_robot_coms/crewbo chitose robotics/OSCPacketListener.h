@@ -70,7 +70,7 @@ protected:
                 const crewbo::Pose input_rel_pose{input_x, input_y, input_z, input_ra, input_rb, input_rc};	
                 updater.updateGoalByRelPose_(input_rel_pose);				
 			} else {
-                std::cout << "unsupported osc packet" << satd::endl;			
+                std::cout << "unsupported osc packet" << std::endl;			
 			}
 		}
 		catch (osc::Exception& e){
