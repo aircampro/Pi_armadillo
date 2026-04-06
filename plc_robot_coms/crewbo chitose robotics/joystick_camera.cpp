@@ -119,7 +119,7 @@ int main(int argc, char** argv) {
     const int hue = static_cast<int>(parser.get<cv::int>("hue"));
     const int gam = static_cast<int>(parser.get<cv::int>("gamma"));
     const std::string ip_addr = static_cast<std::string>(parser.get<cv::string>("ipaddress"));	
-    const unsigned int iport = static_cast<unsigned int>(parser.get<cv::int>("gamma"));
+    const unsigned int iport = static_cast<unsigned int>(parser.get<cv::int>("port"));
 	
     system("start_melfa");
 
