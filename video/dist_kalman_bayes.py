@@ -19,6 +19,7 @@ import cv2
 import time
 
 TEST_IT=True                                                                      # true means use the test data to check prog false means use the camera
+SPATIAL=True                                                                      # apply spatial filter
 
 # -------------------- Parameters  --------------------
 np.random.seed(42)                                                                # Random seed
@@ -47,14 +48,19 @@ else:                                                                           
     x_pos = 500
     y_pos = 500
     obs = []
+    if SPATIAL == True:
+        spatial = rs.spatial_filter()
+    temporal = rs.temporal_filter()
     for z in range(0,no_samples):
         try:
             frames = pipeline.wait_for_frames()  
-            depth_frame = flames.get_depth_frame 
+            depth_frame = flames.get_depth_frame() 
             if not depth_frame:
                 continue
+            # apply spatial filter
+            if SPATIAL == True:
+                depth_frame = spatial.process(depth_frame)
             # apply temporal filter
-            temporal = rs.temporal_filter()
             depth_frame = temporal.process(depth_frame)
             depth_frame = depth_frame.as_depth_frame()　
             # get distance from point
