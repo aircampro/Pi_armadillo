@@ -53,7 +53,7 @@ a = 0.8
 try:
     while True:
         frames = pipeline.wait_for_frames()  
-        depth_frame = flames.get_depth_frame 
+        depth_frame = flames.get_depth_frame()
 
         if not depth_frame:
             continue
