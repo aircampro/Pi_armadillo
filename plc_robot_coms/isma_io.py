@@ -14,7 +14,7 @@
 # modes 
 Voltage_out_0_10_V = 0
 PWM_1_Hz = 1
-PWM _10_Hz = 2
+PWM_10_Hz = 2
 PWM_100_Hz = 3
 PWM_0_1_Hz = 4
 PWM_0_01_Hz = 5
