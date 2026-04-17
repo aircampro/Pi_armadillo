@@ -28,7 +28,7 @@ def conect_isma():
     client = ModbusClient_isma(IP_ADDRESS_OF_ISMA_IO, port=ISMA_TCP_PORT)
     client.connect() 
     return client
-	
+
 def write_holding_regs(client, reg=1, values=[0,2,3], method="tcp", unit=1):
     print("Write to multiple holding registers and read back")
     if method == "tcp":
