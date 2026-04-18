@@ -25,6 +25,13 @@ import numpy as np
 import pyrealsense2 as rs
 import json
 import matplotlib.pyplot as plt
+import signal
+
+LOOP_RUN=True
+def handle_signal(signum, frame):
+    global LOOP_RUN
+    print(f"Signal {signum} received")
+    LOOP_RUN = False
 
 class AppState:
 
@@ -58,6 +65,9 @@ class AppState:
 state = AppState()
 
 jsonObj = json.load(open("param.json"))
+signal.signal(signal.SIGINT, handle_signal)
+signal.signal(signal.SIGUSR1, handle_signal)
+signal.signal(signal.SIGUSR2, handle_signal)
 
 # Configure depth and color streams
 # RealSense start-up
@@ -352,7 +362,7 @@ elapsed_time = 0
 lastest_position = []
 lastest_center = []
 
-while True:
+while LOOP_RUN == True:
     # Grab camera data
     if not state.paused:
         # Wait for a coherent pair of frames: depth and color
