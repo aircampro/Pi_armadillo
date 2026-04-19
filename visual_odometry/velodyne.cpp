@@ -32,6 +32,9 @@
 #define RGB(r, g, b) ((int(r) << 16) + (int(g) << 8) + int(b) )
 
 #define FRAME_CNT_START 35000
+// Point Type:
+// pcl::PointXYZ, pcl::PointXYZI, pcl::PointXYZRGBA
+typedef pcl::PointXYZ PointType;
 
 inline void loadPCDAsyncToViewer(const std::string& filename, PointCloudViewer& viewer, bool apply_coloring) {
     std::vector<Point> points;
@@ -83,9 +86,23 @@ inline void loadPCDAsyncToViewer(const std::string& filename, PointCloudViewer& 
     }
 }
 
-// Point Type:
-// pcl::PointXYZ, pcl::PointXYZI, pcl::PointXYZRGBA
-typedef pcl::PointXYZ PointType;
+// removes point cloud data which is Nan
+pcl::PointCloud<PointType>::ConstPtr removeNan(pcl::PointCloud<pcl::PointType>::ConstPtr target){
+  pcl::PointCloud<pcl::PointType>::ConstPtr cloud(new pcl::PointCloud<pcl::PointType>);
+  int n_point = target->points.size();
+  for(int i=0;i<n_point; i++){
+    pcl::PointType tmp_point;
+    if(std::isfinite(target->points[i].x) && std::isfinite(target->points[i].y) && std::isfinite(target->points[i].z)){
+      tmp_point.x = target->points[i].x;
+      tmp_point.y = target->points[i].y;
+      tmp_point.z = target->points[i].z;
+      cloud->points.push_back(tmp_point);
+    }
+  }
+  return cloud;
+}
+
+
 
 const std::string makeFilename(const std::string& prefix, size_t idx, size_t idx_length, const std::string& suffix)
 {
@@ -178,12 +195,13 @@ int main(int argc, char *argv[])
 
             // Point Cloud Processing
 
-            cloud = ptr;
+            // read the point cloud we are now removing non-finite points before using it....   cloud = ptr;
+			cloud = removeNan(ptr);
             std::cerr << "Got new frame with " << cloud->points.size() << " points" << std::endl;
-            for (int i = 0; i < cloud->points.size(); i++) {
-                unsigned int col = RGB(cloud->points[i].z * 5, 128 + 3*cloud->points[i].x, 128 + 3 * cloud->points[i].y);
-		std::cerr << "    " << cloud->points[i].x << " " << cloud->points[i].y << " " << cloud->points[i].z << " color: " << col << std::endl;
-            }            
+	        for (int i = 0; i < cloud->points.size(); i++) {
+		        unsigned int col = RGB(cloud->points[i].z * 5, 128 + 3*cloud->points[i].x, 128 + 3 * cloud->points[i].y);
+		        std::cerr << "    " << cloud->points[i].x << " " << cloud->points[i].y << " " << cloud->points[i].z << " color: " << col << std::endl;
+	        }            
             // Save each frame to .pcd file
             if (g_saveframes)
             {
@@ -191,8 +209,9 @@ int main(int argc, char *argv[])
                 if (frame_counter > FRAME_CNT_START)
                 {
                     //pcl::io::savePCDFileBinary(g_filename, *cloud);
-                    pcl::io::savePCDFile(g_filename, *cloud);
-                }                
+					pcl::io::savePCDFile(g_filename, *cloud);
+                }
+                
                 g_frame_counter++;
                 std::cerr << "Saved " << cloud->points.size () << " data points to " << g_filename << std::endl;
             }
@@ -238,31 +257,31 @@ int main(int argc, char *argv[])
     //}
 
     int exit_grabber = 0;
-    bool apply_coloring = true;                                  // Apply color mapping to point cloud (configurable)
-    while (exit_grabber == 0) {
+	bool apply_coloring = true;                                  // Apply color mapping to point cloud (configurable)
+	while (exit_grabber == 0) {
         boost::mutex::scoped_try_lock lock(mutex);
         if (lock.owns_lock() && cloud)
         {
-             // Initialize viewer with predefined configuration parameters
-             PointCloudViewer viewer(Config::WINDOW_WIDTH, Config::WINDOW_HEIGHT, Config::WINDOW_TITLE);
+            // Initialize viewer with predefined configuration parameters
+            PointCloudViewer viewer(Config::WINDOW_WIDTH, Config::WINDOW_HEIGHT, Config::WINDOW_TITLE);
 
-             // Launch async thread to load and stream PCD data to the viewer
-             std::thread loader_thread(loadPCDAsyncToViewer, g_filename, std::ref(viewer), apply_coloring);
+            // Launch async thread to load and stream PCD data to the viewer
+            std::thread loader_thread(loadPCDAsyncToViewer, g_filename, std::ref(viewer), apply_coloring);
 
-             // Execute the main viewer loop (blocks until viewer window is closed)
-             viewer.run();
+            // Execute the main viewer loop (blocks until viewer window is closed)
+            viewer.run();
 
-             // Ensure the loader thread is properly joined before exiting
-             if (loader_thread.joinable()) {
+            // Ensure the loader thread is properly joined before exiting
+            if (loader_thread.joinable()) {
                 loader_thread.join();
-		std::cout << "enter 0 to continue or 1 to exit") << std::endl;
-		std::cin >> exit_grabber;
-		// do it once ! exit_grabber = 1;
-             }
-	     if (exit_grabber != 0) {
+				std::cout << "enter 0 to continue or 1 to exit") << std::endl;
+				std::cin >> exit_grabber;
+				// do it once ! exit_grabber = 1;
+            }
+			if (exit_grabber != 0) {
                 std::cerr << "Viewer has been closed. Exiting application! " << std::endl;
-             }
-          }			
+			}
+        }			
     }
 	
     // Stop Grabber
