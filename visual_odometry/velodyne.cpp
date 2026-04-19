@@ -87,11 +87,11 @@ inline void loadPCDAsyncToViewer(const std::string& filename, PointCloudViewer& 
 }
 
 // removes point cloud data which is Nan
-pcl::PointCloud<PointType>::ConstPtr removeNan(pcl::PointCloud<pcl::PointType>::ConstPtr target){
-  pcl::PointCloud<pcl::PointType>::ConstPtr cloud(new pcl::PointCloud<pcl::PointType>);
+pcl::PointCloud<PointType>::ConstPtr removeNan(pcl::PointCloud<PointType>::ConstPtr target){
+  pcl::PointCloud<PointType>::ConstPtr cloud(new pcl::PointCloud<PointType>);
   int n_point = target->points.size();
   for(int i=0;i<n_point; i++){
-    pcl::PointType tmp_point;
+    PointType tmp_point;
     if(std::isfinite(target->points[i].x) && std::isfinite(target->points[i].y) && std::isfinite(target->points[i].z)){
       tmp_point.x = target->points[i].x;
       tmp_point.y = target->points[i].y;
