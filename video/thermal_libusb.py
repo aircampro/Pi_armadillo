@@ -28,7 +28,7 @@ def main():
             logger.info(f"Cmax: {pt2_camera.thermal_image_cercius.max()}")
             logger.info(f"Cmin: {pt2_camera.thermal_image_cercius.min()}")
             logger.info(f"Cmean: {pt2_camera.thermal_image_cercius.mean()}")
-            logger.info(f"Cstd: {pt2_camera.thermal_image_cercius.srd()}")
+            logger.info(f"Cstd: {pt2_camera.thermal_image_cercius.std()}")
         key = cv2.waitKey(10)
 
         if key & 0xFF in [ord("q"), 27]:
