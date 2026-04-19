@@ -102,8 +102,20 @@ pcl::PointCloud<PointType>::ConstPtr removeNan(pcl::PointCloud<PointType>::Const
   return cloud;
 }
 
+// Estimate the normal vector.
+void estimateNormal( pcl::PointCloud<PointType>::ConstPtr cloud, pcl::PointCloud<pcl::Normal>::Ptr &cloud_normals )
+{
+	// Normal Estimation Class
+	pcl::IntegralImageNormalEstimation<PointType, pcl::Normal>  ne;
 
+	ne.setNormalEstimationMethod( ne.AVERAGE_DEPTH_CHANGE );
+	ne.setMaxDepthChangeFactor( 0.01 );
+	ne.setNormalSmoothingSize( 5.0 );
+	ne.setInputCloud( cloud );
+	ne.compute( *cloud_normals );
+}
 
+// make file name to save pointclouds
 const std::string makeFilename(const std::string& prefix, size_t idx, size_t idx_length, const std::string& suffix)
 {
     std::ostringstream result;
@@ -117,6 +129,7 @@ const std::string makeFilename(const std::string& prefix, size_t idx, size_t idx
 }
 
 bool g_saveframes = true;
+bool g_makeNormal = true;
 unsigned int g_frame_counter = 0;
 std::string g_filename = "dummy.pcd";
 
@@ -215,6 +228,20 @@ int main(int argc, char *argv[])
                 g_frame_counter++;
                 std::cerr << "Saved " << cloud->points.size () << " data points to " << g_filename << std::endl;
             }
+			//
+			if (g_makeNormal)
+			{
+				pcl::PointCloud<pcl::Normal>::Ptr cloud_normals( new pcl::PointCloud < pcl::Normal > );
+				estimateNormal( cloud, cloud_normals );
+                g_filename = makeFilename("cloud_normal", g_frame_counter, 5, ".pcd");
+                if (frame_counter > FRAME_CNT_START)
+                {
+                    //pcl::io::savePCDFileBinary(g_filename, *cloud);
+					pcl::io::savePCDFile(g_filename, *cloud_normals);
+                }
+                
+                std::cerr << "Saved " << cloud_normals->points.size () << " data points to " << g_filename << std::endl;
+			}
         };
 
     // VLP Grabber
