@@ -131,7 +131,7 @@ if __name__ == '__main__':
     e = TfPoseEstimator(get_graph_path(args.model), target_size=(w, h))
     logger.debug('cam read+')
     ######## if you want webcam 0,1,2 etc.... cam = cv2.VideoCapture(args.camera) 
-    cam = cv2.VideoCapture(GST_STR, cv2.CAP_GSTREAMER)
+    # easoi cam cam = cv2.VideoCapture(GST_STR, cv2.CAP_GSTREAMER)
 	cam = RS_T265()
     # ret_val, image = cam.read()
 	pos, vel, acc, image = cam.run()
